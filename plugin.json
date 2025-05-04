@@ -1,7 +1,7 @@
 {
-  "name": "syplugin-aMCPServer",
+  "name": "syplugin-anMCPServer",
   "author": "OpaqueGlass",
-  "url": "https://github.com/OpaqueGlass/syplugin-aMCPServer",
+  "url": "https://github.com/OpaqueGlass/syplugin-anMCPServer",
   "version": "0.1.0",
   "minAppVersion": "2.9.0",
   "backends": [
@@ -14,11 +14,11 @@
   ],
   "displayName": {
     "default": "A MCP server for Siyuan",
-    "zh_CN": "一个MCP服务"
+    "zh_CN": "这是一个MCP服务端插件"
   },
   "description": {
     "default": "Start a MCP server in siyuan",
-    "zh_CN": "在思源中启动MCP服务端"
+    "zh_CN": "在思源中启动MCP服务"
   },
   "readme": {
     "default": "README.md",

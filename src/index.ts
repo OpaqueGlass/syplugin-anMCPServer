@@ -90,6 +90,9 @@ export default class OGaMCPServerPlugin extends Plugin {
                 portInputElem.min = "1";
                 portInputElem.placeholder = "Readonly text in the menu";
                 portInputElem.value = this.data[STORAGE_NAME].port;
+                portInputElem.addEventListener("change", ()=>{
+                    this.data[STORAGE_NAME]['port'] = portInputElem.value;
+                });
                 return portInputElem;
             },
         });

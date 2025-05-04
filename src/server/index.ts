@@ -11,6 +11,8 @@ import { appendToDocTool } from '@/tools/docWrite';
 import { fullTextSearchTool } from '@/tools/search';
 import { getPluginInstance } from '@/utils/pluginHelper';
 import { CONSTANTS } from '@/constants';
+import { showMessage } from 'siyuan';
+import { lang } from '@/utils/lang';
 const http = require("http");
 export default class MyMCPServer {
     runningFlag: boolean = false;
@@ -82,28 +84,41 @@ export default class MyMCPServer {
     }
     start() {
         let port = 16806;
-        const plugin = getPluginInstance();
-        const newPort = plugin?.data[CONSTANTS.STORAGE_NAME]["port"];
-        if (newPort) {
-            if (port >= 0 && port <= 65535) {
-                port = newPort;
+        try {
+            const plugin = getPluginInstance();
+            let newPort = plugin?.data[CONSTANTS.STORAGE_NAME]["port"];
+            if (newPort) {
+                newPort = parseInt(newPort);
+                if (port >= 0 && port <= 65535) {
+                    port = newPort;
+                }
             }
+        } catch (err) {
+            errorPush(err);
         }
         try {
             logPush("启动服务中");
             const httpServer = http.createServer(this.expressApp);
             httpServer.listen(port, "127.0.0.1", () => {
                 logPush("服务运行在端口：", port);
+                showMessage(lang("server_running_on") + port);
                 this.runningFlag = true;
                 this.httpServer = httpServer;
                 this.workingPort = port;
             });
-            httpServer.on('error', (err) => {
+            httpServer.on('error', (err : Error) => {
                 errorPush("http server ERROR: ", err);
+                if (err.message.includes("EADDRINUSE")) {
+                    showMessage(`${lang("port_error")} ${err} [${lang("plugin_name")}]`, 10000, "error")
+                } else {
+                    showMessage(`${lang("start_error")} ${err} [${lang("plugin_name")}]`, 10000, "error");
+                }
                 this.runningFlag = false;
+                this.workingPort = -1;
             });
         } catch (err) {
             errorPush("创建http server ERROR: ", err);
+            showMessage(`${lang("start_error")} ${err} [${lang("plugin_name")}]`, 10000, "error");
             this.runningFlag = false;
             this.workingPort = -1;
         }
@@ -121,6 +136,7 @@ export default class MyMCPServer {
             this.workingPort = -1;
             logPush("MCP服务关闭");
         } catch (err) {
+            showMessage(`${lang("server_stop_error")} ${err.message} ${lang("plugin_name")}`);
             errorPush("MCP服务关闭时出错", err);
         }
     }

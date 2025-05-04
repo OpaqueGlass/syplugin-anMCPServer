@@ -1,8 +1,12 @@
 {
   "plugin_name": "An MCP Service Plugin",
   "removeSpace": "Remove Space",
+  "start_error": "MCP service failed to start. ",
+  "port_error": "MCP service failed to start. ",
+  "server_stop_error": "MCP service failed to stop. ",
+  "server_running_on": "The MCP service runs on port ",
   "setting_port": "Port",
-  "setting_port_desp": "The port used by the MCP service",
+  "setting_port_desp": "The port used by the MCP service. After modification, you need to save the settings before starting the service. Fill in the application with: http://127.0.0.1:[port_number]/sse",
   "setting_autoStart": "Auto Start",
   "setting_autoStart_desp": "Control whether the MCP service starts with SiYuan",
   "setting_control": "Control",
@@ -16,5 +20,6 @@
   "setting_status_refresh": "Refresh Status",
   "setting_status_desp": "Displays the current status of the MCP server, including connection count and running state.",
   "setting_copyright": "About",
-  "setting_copyright_desp": "Translator: GPT 4o-mini & OpaqueGlass;<br>Developer: <a target='_blank' href='https://github.com/OpaqueGlass'>OpaqueGlass</a>；<br/>Feedback & sponsor: <a target='_blank' href='https://github.com/OpaqueGlass/syplugin-aMCPServer'>github</a>;<br/>Released under <a target='_blank' href='https://www.gnu.org/licenses/agpl-3.0.html'>AGPLv3</a> license;<br/>Read 'README' file before using it."
+  "setting_copyright_desp": "Translator: GPT 4o-mini & OpaqueGlass;<br>Developer: <a target='_blank' href='https://github.com/OpaqueGlass'>OpaqueGlass</a>；<br/>Feedback & sponsor: <a target='_blank' href='https://github.com/OpaqueGlass/syplugin-anMCPServer'>github</a>;<br/>Released under <a target='_blank' href='https://www.gnu.org/licenses/agpl-3.0.html'>AGPLv3</a> license;<br/>Read 'README' file before using it.",
+  "tool_append_dailynote": "Append Markdown content to today's daily note in the specified notebook in SiYuan.\nThis tool is typically used to log information, thoughts, or summaries into the daily journal page automatically. \nOnly open notebooks (not in a closed state) are valid targets for appending."
 }

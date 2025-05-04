@@ -4,13 +4,11 @@ import { appendBlockAPI, createDailyNote, queryAPI } from "@/syapi";
 import { McpTool } from "@/types";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { isValidStr } from "@/utils/commonCheck";
+import { lang } from "@/utils/lang";
 
 export const appendToDailynoteTool: McpTool<any> = {
     name: "siyuan_append_to_dailynote",
-    description: `Append Markdown content to today's daily note in the specified notebook in SiYuan.
-
-This tool is typically used to log information, thoughts, or summaries into the daily journal page automatically.
-Only open notebooks (not in a closed state) are valid targets for appending.`,
+    description: lang("tool_append_dailynote"),
     schema: {
         markdownContent: z.string().describe("The Markdown-formatted content to append to today's daily note."),
         notebookId: z.string().describe("The ID of the target notebook where the daily note is located. The notebook must not be in a closed state."),

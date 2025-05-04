@@ -2,7 +2,7 @@
 
 ## ✨快速开始
 
-- 从集市下载 或 1、解压Release中的`package.zip`，2、将文件夹移动到`工作空间/data/plugins/`，3、并将文件夹重命名为`syplugin-aMCPServer`;
+- 从集市下载 或 1、解压Release中的`package.zip`，2、将文件夹移动到`工作空间/data/plugins/`，3、并将文件夹重命名为`syplugin-anMCPServer`;
 - 开启插件；
 - 插件默认监听`16806`端口（Host: `127.0.0.1`），请使用`http://127.0.0.1:16806/sse`作为服务端访问地址；
 
