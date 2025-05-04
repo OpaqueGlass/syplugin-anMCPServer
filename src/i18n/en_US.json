@@ -1,0 +1,20 @@
+{
+  "plugin_name": "An MCP Service Plugin",
+  "removeSpace": "Remove Space",
+  "setting_port": "Port",
+  "setting_port_desp": "The port used by the MCP service",
+  "setting_autoStart": "Auto Start",
+  "setting_autoStart_desp": "Control whether the MCP service starts with SiYuan",
+  "setting_control": "Control",
+  "setting_control_desp": "Start or stop the MCP service",
+  "setting_control_start": "Start Service",
+  "setting_control_stop": "Stop Service",
+  "setting_status": "Status",
+  "setting_status_connection": "Connections",
+  "setting_status_open": "✅ Running",
+  "setting_status_close": "❌ Stopped",
+  "setting_status_refresh": "Refresh Status",
+  "setting_status_desp": "Displays the current status of the MCP server, including connection count and running state.",
+  "setting_copyright": "About",
+  "setting_copyright_desp": "Translator: GPT 4o-mini & OpaqueGlass;<br>Developer: <a target='_blank' href='https://github.com/OpaqueGlass'>OpaqueGlass</a>；<br/>Feedback & sponsor: <a target='_blank' href='https://github.com/OpaqueGlass/syplugin-aMCPServer'>github</a>;<br/>Released under <a target='_blank' href='https://www.gnu.org/licenses/agpl-3.0.html'>AGPLv3</a> license;<br/>Read 'README' file before using it."
+}

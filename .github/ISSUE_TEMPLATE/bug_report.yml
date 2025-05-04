@@ -1,0 +1,82 @@
+name: Bug Report
+description: Submit a report for unexpected behavior, errors, or defects
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for submitting a bug report! Please provide as much detail as possible to help us understand and resolve the issue.
+        
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: Issue Description
+      description: Describe the issue in as much detail as possible.
+      placeholder: Describe the issue here...
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        If the issue cannot be consistently reproduced through specific steps, please check the `Console` in `Ctrl+Shift+I` Developer Tools for relevant messages and upload a screenshot of the error when the error occurs.
+
+  - type: textarea
+    id: reproduce-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Describe the steps or settings required to reproduce the issue. If it cannot be consistently reproduced, specify the frequency of occurrence and upload error messages if available.
+      placeholder: |
+        1. Open the xxx feature in the plugin;
+        2. Open the xxx document;
+        3. The issue occurs;
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots-or-recordings
+    attributes:
+      label: Screenshots or Recordings
+      description: Please upload screenshots or recordings to demonstrate the issue. (Optional)
+      placeholder: Provide screenshots or recordings here...
+  
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: Describe what you expect the plugin to do or the correct outcome. (Optional)
+      placeholder: Describe the expected behavior here...
+
+  - type: textarea
+    attributes:
+      label: Device and System Information
+      description: |
+        Example:
+          - **Operating System**: Windows 11 24H2
+          - **Siyuan**: v3.1.25
+          - **Plugin Version**: v0.2.0
+      value: |
+          - Operating System:
+          - Siyuan:
+          - Plugin Version:
+      render: markdown
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: check_list
+    attributes:
+      label: Checklist
+      description: Before submitting, please confirm the following
+      options:
+      - label: I have searched the issue list and found no similar reports
+        required: true
+      - label: I have updated the plugin to the latest version
+        required: true
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Provide any other relevant details here, such as plugin settings or Siyuan settings.
+      placeholder: Provide additional information here...

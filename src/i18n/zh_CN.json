@@ -1,0 +1,20 @@
+{
+  "plugin_name": "一个MCP服务插件",
+  "removeSpace": "移除空格",
+  "setting_port": "端口",
+  "setting_port_desp": "MCP服务占用的端口",
+  "setting_autoStart": "自动启动",
+  "setting_autoStart_desp": "控制是否随思源启动MCP服务",
+  "setting_control": "控制",
+  "setting_control_desp": "启动或停止MCP服务",
+  "setting_control_start": "开启服务",
+  "setting_control_stop": "关闭服务",
+  "setting_status": "状态",
+  "setting_status_connection": "连接数",
+  "setting_status_open": "✅运行",
+  "setting_status_close": "❌停止",
+  "setting_status_refresh": "刷新状态",
+  "setting_status_desp": "显示连接状态",
+  "setting_copyright": "关于",
+  "setting_copyright_desp": "作者：<a target='_blank' href='https://github.com/OpaqueGlass'>OpaqueGlass</a>；<br/>问题反馈&赞助支持：<a target='_blank' href='https://github.com/OpaqueGlass/syplugin-aMCPServer'>github</a> 或 <a target='_blank' href='https://wj.qq.com/s2/12395364/b69f/'>填写问卷</a>；<br/>插件基于<a target='_blank' href='https://www.gnu.org/licenses/agpl-3.0.html'>AGPLv3</a>授权使用；<br/>使用前，请阅读”README.md“说明文档或集市下载页说明文档。"
+}
