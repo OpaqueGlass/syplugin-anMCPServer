@@ -19,14 +19,14 @@ export const appendToDocTool: McpTool<any> = {
 }
 
 async function appendBlockHandler(params, extra) {
-    const {id, content} = params;
+    const {id, markdownContent} = params;
     checkIdValid(id);
     if (!await isADocId(id)) {
         return createErrorResponse("Failed to append to document: The provided ID is not the document's ID.");
     }    
-    const result = await appendBlockAPI(content, id);
+    const result = await appendBlockAPI(markdownContent, id);
     if (result == null) {
-        return createErrorResponse("Failed to append to dailynote");
+        return createErrorResponse("Failed to append to the document");
     }
     
     return createSuccessResponse("Successfully appened, the block ID for the new content is " + result.id);
