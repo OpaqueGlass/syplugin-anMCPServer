@@ -25,9 +25,9 @@ export default class OGaMCPServerPlugin extends Plugin {
             "port": 16806,
             "autoStart": false
         };
+        setLanguage(this.i18n);
         setPluginInstance(this);
         this.myMCPServer = new MyMCPServer();
-        setLanguage(this.i18n);
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
 

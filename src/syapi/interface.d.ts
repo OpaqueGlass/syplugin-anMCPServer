@@ -232,4 +232,5 @@ export interface FullTextSearchQuery {
     orderBy?: number;
     page?: number;
     reqId?: number;
+    pageSize?: number;
 }

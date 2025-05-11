@@ -848,6 +848,10 @@ export async function createDailyNote(notebook:string, app: string) {
 
 export async function fullTextSearchBlock({query, method = 0, paths = [], groupBy = 1, orderBy = 0, page = 1, types = DEFAULT_FILTER}:FullTextSearchQuery) {
     const url = "/api/search/fullTextSearchBlock";
+    if (groupBy == 0 && orderBy == 5){
+        orderBy = 0;
+        warnPush("orderBy取值不合法，已被重置");
+    }
     let postBody = {
         query,
         method,
@@ -856,6 +860,7 @@ export async function fullTextSearchBlock({query, method = 0, paths = [], groupB
         groupBy,
         orderBy,
         types,
+        pageSize: 10,
     }
     postBody["reqId"] = Date.now();
     let response = await postRequest(postBody, url);
