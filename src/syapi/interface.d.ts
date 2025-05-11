@@ -1,3 +1,5 @@
+import { IOperation, IProtyle } from "siyuan";
+
 interface Window {
     echarts: {
         init(element: HTMLElement, theme?: string, options?: {

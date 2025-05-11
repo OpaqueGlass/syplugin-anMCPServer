@@ -1,18 +1,17 @@
 import { errorPush, logPush } from '../logger';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import { z } from "zod";
 import { Request, Response } from "express";
 import * as express from "express";
-import { blockReadTool } from '@/tools/docRead';
-import { sqlQueryTool, sqlSchemaTool } from '@/tools/sql';
-import { appendToDailynoteTool, listNotebookTool } from '@/tools/dailynote';
-import { appendToDocTool } from '@/tools/docWrite';
-import { fullTextSearchTool } from '@/tools/search';
+import { DailyNoteToolProvider} from '@/tools/dailynote';
 import { getPluginInstance } from '@/utils/pluginHelper';
 import { CONSTANTS } from '@/constants';
 import { showMessage } from 'siyuan';
 import { lang } from '@/utils/lang';
+import { DocWriteToolProvider } from '@/tools/docWrite';
+import { SearchToolProvider } from '@/tools/search';
+import { SqlToolProvider } from '@/tools/sql';
+import { DocReadToolProvider } from '@/tools/docRead';
 const http = require("http");
 export default class MyMCPServer {
     runningFlag: boolean = false;
@@ -65,22 +64,27 @@ export default class MyMCPServer {
             await this.transports[sessionId].handlePostMessage(req, res);
         });
     }
-    loadTools() {
-        const toolList = [
-            blockReadTool, 
-            sqlQueryTool, sqlSchemaTool, 
-            appendToDailynoteTool, listNotebookTool, 
-            appendToDocTool, 
-            fullTextSearchTool
+    async loadTools() {
+        // 工具提供者列表
+        const toolProviders = [
+            new DailyNoteToolProvider(),
+            new DocWriteToolProvider(),
+            new SearchToolProvider(),
+            new SqlToolProvider(),
+            new DocReadToolProvider(),
         ];
-        toolList.forEach(item =>{
-            this.mcpServer.tool(
-                item.name,
-                item.description,
-                item.schema,
-                item.handler
-            );
-        })
+
+        for (const provider of toolProviders) {
+            const tools = await provider.getTools();
+            for (const tool of tools) {
+                this.mcpServer.tool(
+                    tool.name,
+                    tool.description,
+                    tool.schema,
+                    tool.handler
+                );
+            }
+        }
     }
     start() {
         let port = 16806;

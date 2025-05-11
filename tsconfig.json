@@ -3,7 +3,6 @@
     // "noImplicitAny": true,
     "module": "commonjs",
     "target": "es6",
-    "typeRoots": ["./src/types"],
     "strict": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -16,12 +15,14 @@
       "ES2021", //ES2020.String不支持.replaceAll
       "DOM",
       "DOM.Iterable"
-    ],
+    ]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
     "static/*.md"
   ],
-  "root": "."
+  "root": ".",
+  "skipLibCheck": true,
+
 }
