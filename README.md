@@ -3,6 +3,8 @@
 
 [中文](./README_zh_CN.md)
 
+> A plugin that provides MCP service for [Siyuan Note](https://github.com/siyuan-note/siyuan).
+
 ## ✨ Quick Start
 
 - Download from the marketplace or 1. unzip the `package.zip` in Release, 2. move the folder to `workspace/data/plugins/`, 3. and rename the folder to `syplugin-anMCPServer`;
