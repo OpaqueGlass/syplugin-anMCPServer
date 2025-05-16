@@ -7,11 +7,10 @@ import {
 import "./index.scss";
 import MyMCPServer from "./server";
 import { setPluginInstance } from "./utils/pluginHelper";
-import { appendToDailynoteTool, listNotebookTool } from "./tools/dailynote";
 import { logPush } from "./logger";
-import { fullTextSearchTool } from "./tools/search";
 import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
+import { SearchToolProvider } from "./tools/search";
 
 const STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
@@ -53,18 +52,10 @@ export default class OGaMCPServerPlugin extends Plugin {
         //     "icon": "iconSetting",
         //     "title": "测试MCP",
         //     "callback": async ()=>{
-        //         let response = await appendToDailynoteTool.handler({
-        //             "notebookId": "20210821105258-irgl53w",
-        //             "markdownContent": "helloworld" + Date.now()
-        //         }, undefined);
-        //         logPush("log", response);
-
-        //         response = await listNotebookTool.handler({}, {});
-        //         logPush("list", response);
-
-        //         response = await fullTextSearchTool.handler({"query": "存储池"}, {});
+        //         let searchToolProvider = new SearchToolProvider();
+        //         let tools = await searchToolProvider.getTools();
+        //         let response = await tools[0].handler({"query": "docker", "includingCodeBlock": true, "includingDatabase": true}, {});
         //         logPush("search", response);
-
         //     }
         // });
         const portInputElem = document.createElement("input");

@@ -5,7 +5,6 @@
 import { getToken } from "@/utils/common";
 import { isValidStr } from "@/utils/commonCheck";
 import { warnPush, errorPush, debugPush } from "@/logger"
-import { BlockTypeFilter, FullTextSearchQuery } from "./interface";
 /**向思源api发送请求
  * @param data 传递的信息（body）
  * @param url 请求的地址
@@ -868,6 +867,22 @@ export async function fullTextSearchBlock({query, method = 0, paths = [], groupB
         return response.data;
     } else {
         throw new Error("fullTextSearchBlock Failed: " + response.msg);
+    }
+}
+
+export async function exportMdContent({id, refMode, embedMode, yfm}: ExportMdContentBody) {
+    const url = "/api/export/exportMdContent";
+    let postBody = {
+        id,
+        refMode,
+        embedMode,
+        yfm,
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data;
+    } else {
+        throw new Error("exportMdContent Failed: " + response.msg);
     }
 }
 

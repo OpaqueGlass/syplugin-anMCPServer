@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createJsonResponse } from "../utils/mcpResponse";
 import { getKramdown } from "@/syapi";
-import { McpTool } from "@/types";
 import { McpToolsProvider } from "./baseToolProvider";
 
 export class DocReadToolProvider extends McpToolsProvider<any> {

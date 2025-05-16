@@ -1,5 +1,4 @@
 import { logPush } from "@/logger";
-import { FullTextSearchQuery } from "@/syapi/interface";
 import { isValidStr } from "./commonCheck";
 
 /**

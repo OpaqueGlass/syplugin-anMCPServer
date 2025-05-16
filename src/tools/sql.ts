@@ -1,10 +1,9 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
 import { queryAPI } from "@/syapi";
-import { McpTool } from "@/types";
 import databaseSchema from "@/../static/database_schema.md";
 import { isSelectQuery } from "@/utils/commonCheck";
-import { debugPush } from "@/logger";
+import { commonPushCheck, debugPush, logPush } from "@/logger";
 import { McpToolsProvider } from "./baseToolProvider";
 
 export class SqlToolProvider extends McpToolsProvider<any> {
@@ -45,6 +44,6 @@ async function sqlHandler(params, extra) {
 }
 
 async function schemaHandler(params, extra) {
-    debugPush("debug", databaseSchema);
+    debugPush("schema API被调用");
     return createSuccessResponse(databaseSchema);
 }

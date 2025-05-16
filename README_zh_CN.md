@@ -12,6 +12,7 @@
 
 - 从集市下载 或 1、解压Release中的`package.zip`，2、将文件夹移动到`工作空间/data/plugins/`，3、并将文件夹重命名为`syplugin-anMCPServer`;
 - 开启插件；
+- 打开插件设置，启动服务；
 - 插件默认监听`16806`端口（Host: `127.0.0.1`），请使用`http://127.0.0.1:16806/sse`作为服务端访问地址；
 
 > ⭐ 如果这对你有帮助，请考虑点亮Star！
@@ -75,7 +76,10 @@
   - 请参考：https://github.com/punkpeye/awesome-mcp-clients 或 https://modelcontextprotocol.io/clients ；
 - Q: 可以在docker使用吗？
   - 不可以，插件依赖nodejs环境，不支持在移动端、docker运行；
-  - 要在docker中使用，可能需要像`mcp-obsidian`一样基于python构建、通过API访问思源内容；或者将插件和思源前端解耦；
+  
+    > 若要支持docker中部署的思源，插件需要像`mcp-obsidian`一样基于python构建、通过API访问思源内容；
+    > 
+    > 或者将本插件和思源前端解耦；
 
 ## 🙏参考&感谢
 

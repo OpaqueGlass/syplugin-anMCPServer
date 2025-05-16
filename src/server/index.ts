@@ -1,4 +1,4 @@
-import { errorPush, logPush } from '../logger';
+import { debugPush, errorPush, logPush } from '../logger';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { Request, Response } from "express";
@@ -61,6 +61,7 @@ export default class MyMCPServer {
                 return;
             }
             logPush("SSE-messages", sessionId);
+            debugPush("SSE-messages content", req.body);
             await this.transports[sessionId].handlePostMessage(req, res);
         });
     }

@@ -56,15 +56,6 @@ type Block = {
     updated: string;
 }
 
-type doOperation = {
-    action: string;
-    data: string;
-    id: BlockId;
-    parentID: BlockId | DocumentId;
-    previousID: BlockId;
-    retData: null;
-}
-
 /**
  * By OpaqueGlass. Copy from https://github.com/siyuan-note/siyuan/blob/master/app/src/types/index.d.ts
  */

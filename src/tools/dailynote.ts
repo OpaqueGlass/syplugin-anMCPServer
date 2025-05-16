@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
 import { appendBlockAPI, createDailyNote, queryAPI } from "@/syapi";
-import { McpTool } from "@/types";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { isValidStr } from "@/utils/commonCheck";
 import { lang } from "@/utils/lang";

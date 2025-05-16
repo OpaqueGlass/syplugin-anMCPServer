@@ -14,13 +14,23 @@
     "lib": [
       "ES2021", //ES2020.String不支持.replaceAll
       "DOM",
-      "DOM.Iterable"
-    ]
+      "DOM.Iterable",
+    ],
+    "types": [
+      "zod",
+      "siyuan",
+    ],
+    "typeRoots": ["./src/types"]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
     "static/*.md"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
   ],
   "root": ".",
   "skipLibCheck": true,

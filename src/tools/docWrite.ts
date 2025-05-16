@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createSuccessResponse } from "../utils/mcpResponse";
 import { appendBlockAPI } from "@/syapi";
-import { McpTool } from "@/types";
 import { checkIdValid, isADocId } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush } from "@/logger";

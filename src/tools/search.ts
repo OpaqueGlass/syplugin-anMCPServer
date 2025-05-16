@@ -1,10 +1,8 @@
 import { z } from "zod";
 import { createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
 import { DEFAULT_FILTER, fullTextSearchBlock } from "@/syapi";
-import { McpTool } from "@/types";
 import searchSyntax from "@/../static/query_syntax.md";
 import { McpToolsProvider } from "./baseToolProvider";
-import { FullTextSearchQuery } from "@/syapi/interface";
 import { formatSearchResult } from "@/utils/resultFilter";
 import { debugPush, errorPush, isDebugMode, logPush } from "@/logger";
 import { showMessage } from "siyuan";
