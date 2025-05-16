@@ -4,6 +4,10 @@ import { DEFAULT_FILTER, fullTextSearchBlock } from "@/syapi";
 import { McpTool } from "@/types";
 import searchSyntax from "@/../static/query_syntax.md";
 import { McpToolsProvider } from "./baseToolProvider";
+import { FullTextSearchQuery } from "@/syapi/interface";
+import { formatSearchResult } from "@/utils/resultFilter";
+import { debugPush, errorPush, isDebugMode, logPush } from "@/logger";
+import { showMessage } from "siyuan";
 
 export class SearchToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -60,18 +64,30 @@ The syntax supports complex search patterns across paragraphs, headings, code bl
 
 async function searchHandler(params, extra) {
     const { query, page, includingCodeBlock, includingDatabase, method, orderBy, groupBy } = params;
-    const queryObj = {
+    debugPush("搜索工具被调用", params);
+    const queryObj: FullTextSearchQuery = {
         query,
         page,
-        type: DEFAULT_FILTER,
+        types: DEFAULT_FILTER,
         orderBy,
         method,
         groupBy,
     };
-    queryObj.type.codeBlock = includingCodeBlock;
-    queryObj.type.databaseBlock = includingDatabase;
+    queryObj.types.codeBlock = includingCodeBlock;
+    queryObj.types.databaseBlock = includingDatabase;
     const response = await fullTextSearchBlock(queryObj);
-    return createJsonResponse(response);
+    try {
+        const result = formatSearchResult(response, queryObj);
+        return createSuccessResponse(result);
+    } catch (err) {
+        errorPush("精简搜索API返回时出现问题", err);
+        if (isDebugMode()) {
+            showMessage("搜索API处理时出现问题");
+        }
+        return createJsonResponse(response);
+    } finally {
+        debugPush("搜索工具调用结束");
+    }
 }
 
 async function querySyntaxHandler(params, extra) {

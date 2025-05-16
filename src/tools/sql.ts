@@ -36,6 +36,7 @@ export class SqlToolProvider extends McpToolsProvider<any> {
 
 async function sqlHandler(params, extra) {
     const { stmt } = params;
+    debugPush("SQL API 被调用", stmt);
     if (!isSelectQuery(stmt)) {
         return createErrorResponse("Not a SELECT statement");
     }

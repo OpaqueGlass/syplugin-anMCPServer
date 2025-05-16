@@ -4,6 +4,7 @@ import { appendBlockAPI } from "@/syapi";
 import { McpTool } from "@/types";
 import { checkIdValid, isADocId } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
+import { debugPush } from "@/logger";
 
 export class DocWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -27,6 +28,7 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
 
 async function appendBlockHandler(params, extra) {
     const { id, markdownContent } = params;
+    debugPush("追加内容块API被调用");
     checkIdValid(id);
     if (!await isADocId(id)) {
         return createErrorResponse("Failed to append to document: The provided ID is not the document's ID.");
