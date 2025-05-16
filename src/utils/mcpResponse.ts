@@ -1,5 +1,3 @@
-import { McpResponse } from "@/types";
-
 /**
  * Success response helper
  */

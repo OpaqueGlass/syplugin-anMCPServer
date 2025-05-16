@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createJsonResponse } from "../utils/mcpResponse";
-import { getKramdown } from "@/syapi";
+import { createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
+import { exportMdContent, getKramdown } from "@/syapi";
 import { McpToolsProvider } from "./baseToolProvider";
 
 export class DocReadToolProvider extends McpToolsProvider<any> {
@@ -9,7 +9,9 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
             name: "siyuan_read_doc_content_markdown",
             description: 'Retrieve the content of a document or block by its ID',
             schema: {
-                id: z.string().describe("The unique identifier of the document or block")
+                id: z.string().describe("The unique identifier of the document or block"),
+                offset: z.number().default(0).describe("The starting character offset for partial content reading (for pagination/large docs)"),
+                limit: z.number().default(5000).describe("The maximum number of characters to return in this request"),
             },
             handler: blockReadHandler,
             annotations: {
@@ -21,8 +23,16 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
 }
 
 async function blockReadHandler(params, extra) {
-    const { id } = params;
-    const kramdown = await getKramdown(id, true);
-
-    return createJsonResponse(kramdown);
+    const { id, offset = 0, limit = 5000 } = params;
+    const markdown = await exportMdContent({id, refMode: 4, embedMode: 1, yfm: false});
+    const content = markdown["content"] || "";
+    const sliced = content.slice(offset, offset + limit);
+    const hasMore = offset + limit < content.length;
+    return createJsonResponse({
+        content: sliced,
+        offset,
+        limit,
+        "hasMore": hasMore,
+        "totalLength": content.length
+    });
 }

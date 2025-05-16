@@ -34,7 +34,7 @@ export default class MyMCPServer {
         this.loadTools();
     }
     initialize() {
-        logPush("hello");
+        logPush("hello mcp server");
         this.expressApp = express();
         this.expressApp.get('/health', (_, res) => {
             res.status(200).send("ok");
