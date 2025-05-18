@@ -1,7 +1,7 @@
 import {
     Plugin,
     getFrontend,
-    Custom, exitSiYuan,
+    Custom,
     Setting
 } from "siyuan";
 import "./index.scss";
@@ -10,7 +10,6 @@ import { setPluginInstance } from "./utils/pluginHelper";
 import { logPush } from "./logger";
 import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
-import { SearchToolProvider } from "./tools/search";
 
 const STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 

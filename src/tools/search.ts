@@ -18,7 +18,7 @@ export class SearchToolProvider extends McpToolsProvider<any> {
                     page: z.number().default(1).describe("The page number of the search results to return (starting from 1)."),
                     includingCodeBlock: z.boolean().describe("Whether to include code blocks in the search results."),
                     includingDatabase: z.boolean().describe("Whether to include database blocks in the search results."),
-                    method: z.number().default(0).describe("Search method: 0 for keyword search, 1 for query syntax (see documentation), 2 for regular expression matching."),
+                    method: z.number().default(0).describe("Search method: 0 for keyword search, 1 for query syntax (see `siyuan_query_syntax`), 2 for regular expression matching."),
                     orderBy: z.number().default(0).describe(`Sorting method for results:
                         0: By block type (default)
                         1: By creation time (ascending)
@@ -41,15 +41,7 @@ export class SearchToolProvider extends McpToolsProvider<any> {
             },
             {
                 name: "siyuan_query_syntax",
-                description: `Provides detailed documentation about SiYuan's advanced query syntax for searching content blocks. This includes:
-
-* Search method options (keyword, query syntax, regex)
-* String and phrase construction rules
-* Boolean operators (AND, OR, NOT) and grouping with parentheses
-* Special characters handling and escaping rules
-* Tokenization behavior for Chinese and English text
-
-The syntax supports complex search patterns across paragraphs, headings, code blocks and database content. Use this reference to construct precise queries for the siyuan_search tool.`,
+                description: `Provides documentation about SiYuan's advanced query syntax for searching content blocks, including boolean operators (AND, OR, NOT).`,
                 schema: {},
                 handler: querySyntaxHandler,
                 annotations: {
