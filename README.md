@@ -29,6 +29,8 @@
 
 - Q: How do I use it in an MCP client?
   - A: Modify the MCP application's configuration to select the SSE type and configure the endpoint, for example:
+    
+    (Below is an example using [chatmcp](https://github.com/daodao97/chatmcp). For different MCP clients, different configuration formats may be required; please refer to the MCP client's documentation for specifics.)
     ```json
     {
     "mcpServers": {
@@ -51,6 +53,9 @@
     npm install -g mcp-remote
     ```
     Use a configuration similar to the one below in the application:
+
+    (Below is an example using [5ire](https://5ire.app/). For different MCP clients, different configuration formats may be required; please refer to the MCP client's documentation for specifics.)
+
     ```json
     {
       "servers": [

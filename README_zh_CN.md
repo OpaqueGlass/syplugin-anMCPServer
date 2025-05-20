@@ -32,7 +32,10 @@
 ## ❓可能常见的问题
 
 - Q: 如何在MCP客户端中使用？
-  - A: 修改MCP应用的配置，选择`SSE`类型，并配置端点，例如：
+  - A: 修改MCP应用的配置，选择`SSE`类型，并配置端点。
+    配置格式可能例如：
+
+    （下面的配置以 [chatmcp](https://github.com/daodao97/chatmcp) 为例，针对不同的MCP客户端，可能需要不同的配置格式，请以MCP客户端文档为准）
     ```json
     {
     "mcpServers": {
@@ -54,7 +57,9 @@
     ```bash
     npm install -g mcp-remote
     ```
-    在应用中使用类似下面的配置：
+    在应用中使用类似下面的配置
+
+    （下面的配置以 [5ire](https://5ire.app/) 为例，针对不同的MCP客户端，可能需要不同的配置格式，请以MCP客户端文档为准）
     ```json
     {
       "servers": [
