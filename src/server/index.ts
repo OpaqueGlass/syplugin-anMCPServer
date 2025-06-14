@@ -1,6 +1,7 @@
 import { debugPush, errorPush, logPush } from '../logger';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { Request, Response } from "express";
 import * as express from "express";
 import { DailyNoteToolProvider} from '@/tools/dailynote';
@@ -12,13 +13,15 @@ import { DocWriteToolProvider } from '@/tools/docWrite';
 import { SearchToolProvider } from '@/tools/search';
 import { SqlToolProvider } from '@/tools/sql';
 import { DocReadToolProvider } from '@/tools/docRead';
+import { isValidStr } from '@/utils/commonCheck';
 const http = require("http");
 export default class MyMCPServer {
     runningFlag: boolean = false;
     httpServer: any = null;
     mcpServer: McpServer = null;
     expressApp: express.Application = null;
-    transports: { [id: string]: SSEServerTransport } = {};
+    sseTransports: { [id: string]: SSEServerTransport } = {};
+    transports: { [id: string]: StreamableHTTPServerTransport } = {};
     workingPort: number = -1;
     constructor() {
         this.mcpServer = new McpServer({
@@ -33,43 +36,131 @@ export default class MyMCPServer {
 
         this.loadTools();
     }
+    cleanTransport(transport) {
+        if (transport == null) {
+            return;
+        }
+        this.transports[transport.sessionId]?.close();
+        delete this.transports[transport.sessionId];
+    }
     initialize() {
         logPush("hello mcp server");
         this.expressApp = express();
         this.expressApp.get('/health', (_, res) => {
             res.status(200).send("ok");
         });
+        const plugin = getPluginInstance();
+        const authToken = plugin?.data[CONSTANTS.STORAGE_NAME]["authCode"];
+        /* SSE Deprecated */
         this.expressApp.get("/sse", async (req: Request, res: Response) => {
+            showMessage("正在通过已弃用的方式（SSE）连接到MCP服务，推荐参考README.md或集市下载页重新配置。");
+            // 检查请求头
+            if (isValidStr(authToken)) {
+                const authHeader = req.headers["authorization"];
+                const token = authHeader?.replace("Bearer ", "");
+                if (token !== authToken) {
+                    res.status(403).send("Invalid Token");
+                    return;
+                }
+            }
             const transport = new SSEServerTransport(
                 "/messages",
                 res,
             );
-            logPush("新SSE连接", transport.sessionId);
+            logPush("新SSE连接", transport.sessionId, req);
 
-            this.transports[transport.sessionId] = transport;
+            this.sseTransports[transport.sessionId] = transport;
             res.on("close", () => {
                 logPush("SSE连接断开", transport.sessionId);
-                this.transports[transport.sessionId].close();
-                delete this.transports[transport.sessionId];
+                this.sseTransports[transport.sessionId].close();
+                delete this.sseTransports[transport.sessionId];
             });
             res.on("error", (e)=>{
                 logPush("SSE连接断开", transport.sessionId, e.message);
-                this.transports[transport.sessionId].close();
-                delete this.transports[transport.sessionId];
+                this.sseTransports[transport.sessionId].close();
+                delete this.sseTransports[transport.sessionId];
             });
             await this.mcpServer.connect(transport);
         });
 
         this.expressApp.post("/messages", async (req: Request, res: Response) => {
             const sessionId = req.query.sessionId as string;
-            if (!this.transports[sessionId]) {
+            if (!this.sseTransports[sessionId]) {
                 res.status(400).send(`No transport found for sessionId ${sessionId}`);
                 return;
             }
             logPush("SSE-messages", sessionId);
-            debugPush("SSE-messages content", req.body);
-            await this.transports[sessionId].handlePostMessage(req, res);
+            await this.sseTransports[sessionId].handlePostMessage(req, res);
         });
+        /* New Way */
+        this.expressApp.post("/mcp", async (req: Request, res: Response) => {
+            if (isValidStr(authToken)) {
+                const authHeader = req.headers["authorization"];
+                const token = authHeader?.replace("Bearer ", "");
+                logPush("auth", authHeader);
+                if (token !== authToken) {
+                    if (authHeader) {
+                        res.status(403).send("Invalid Token. Authentication is requied. 鉴权失败");
+                    }else {
+                        res.status(403).send("Authentication is requied. 鉴权失败");
+                    }
+                    return
+                }
+            }
+            try {
+                const transport = new StreamableHTTPServerTransport({
+                    sessionIdGenerator: undefined,
+                });
+                this.transports[transport.sessionId] = transport;
+                res.on('close', ()=>{
+                    logPush("Session Close", transport.sessionId);
+                    this.cleanTransport(transport);
+                });
+                res.on('error', (e)=>{
+                    errorPush("An Error Occured: ", e);
+                    this.cleanTransport(transport);
+                })
+                await this.mcpServer.connect(transport);
+                await transport.handleRequest(req, res, req.body);
+            } catch (error) {
+                errorPush("Error handling MCP start request: ", error);
+                if (!res.headersSent) {
+                    res.status(500).json({
+                        jsonrpc: '2.0',
+                        error: {
+                        code: -32603,
+                        message: 'Internal server error',
+                        },
+                        id: null,
+                    });
+                }
+            }
+            
+        });
+        this.expressApp.get('/mcp', async (req: Request, res: Response) => {
+            console.log('Received GET MCP request');
+            res.writeHead(405).end(JSON.stringify({
+                jsonrpc: "2.0",
+                error: {
+                code: -32000,
+                message: "Method not allowed."
+                },
+                id: null
+            }));
+        });
+
+        this.expressApp.delete('/mcp', async (req: Request, res: Response) => {
+            console.log('Received DELETE MCP request');
+            res.writeHead(405).end(JSON.stringify({
+                jsonrpc: "2.0",
+                error: {
+                code: -32000,
+                message: "Method not allowed."
+                },
+                id: null
+            }));
+        });
+
     }
     async loadTools() {
         // 工具提供者列表
@@ -110,7 +201,11 @@ export default class MyMCPServer {
         try {
             logPush("启动服务中");
             const httpServer = http.createServer(this.expressApp);
-            httpServer.listen(port, "127.0.0.1", () => {
+            const bindAddress = "127.0.0.1";
+            if (bindAddress !== "127.0.0.1") {
+                throw new Error("Please set an authentication code (authCode) for security reasons");
+            }
+            httpServer.listen(port, bindAddress, () => {
                 logPush("服务运行在端口：", port);
                 showMessage(lang("server_running_on") + port);
                 this.runningFlag = true;
@@ -139,9 +234,12 @@ export default class MyMCPServer {
             return;
         }
         try {
-            Object.values(this.transports).forEach(ts => ts.close());
+            Object.values(this.sseTransports).forEach(ts => ts.close());
             if (this.httpServer) {
                 this.httpServer.close();
+            }
+            if (this.mcpServer) {
+                this.mcpServer.close();
             }
             this.runningFlag = false;
             this.workingPort = -1;
@@ -159,6 +257,6 @@ export default class MyMCPServer {
         return this.runningFlag;
     }
     getConnectionCount() {
-        return Object.values(this.transports).length;
+        return Object.values(this.sseTransports).length + Object.values(this.transports).length;
     }
 }

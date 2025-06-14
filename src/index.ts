@@ -21,7 +21,8 @@ export default class OGaMCPServerPlugin extends Plugin {
     onload() {
         this.data[STORAGE_NAME] = {
             "port": 16806,
-            "autoStart": false
+            "autoStart": false,
+            "authCode": "",
         };
         setLanguage(this.i18n);
         setPluginInstance(this);
@@ -58,6 +59,7 @@ export default class OGaMCPServerPlugin extends Plugin {
         //     }
         // });
         const portInputElem = document.createElement("input");
+        const authInputElem = document.createElement("input");
         const autoStartSwitchElem = document.createElement("input");
         autoStartSwitchElem.type = "checkbox";
         autoStartSwitchElem.checked = this.data[STORAGE_NAME].autoStart || false;
@@ -65,7 +67,8 @@ export default class OGaMCPServerPlugin extends Plugin {
             confirmCallback: () => {
                 this.saveData(STORAGE_NAME, {
                     autoStart: autoStartSwitchElem.checked,
-                    port: portInputElem.value
+                    port: portInputElem.value,
+                    authCode: authInputElem.value,
                 });
             }
         });
@@ -78,12 +81,28 @@ export default class OGaMCPServerPlugin extends Plugin {
                 portInputElem.type = "number";
                 portInputElem.max = "65535";
                 portInputElem.min = "1";
-                portInputElem.placeholder = "Readonly text in the menu";
+                portInputElem.placeholder = "Port Number";
                 portInputElem.value = this.data[STORAGE_NAME].port;
                 portInputElem.addEventListener("change", ()=>{
                     this.data[STORAGE_NAME]['port'] = portInputElem.value;
                 });
                 return portInputElem;
+            },
+        });
+
+        this.setting.addItem({
+            title: lang("setting_auth"),
+            direction: "column",
+            description: lang("setting_auth_desp"),
+            createActionElement: () => {
+                authInputElem.className = "b3-text-field fn__flex-center fn__size200";
+                authInputElem.type = "text";
+                authInputElem.placeholder = "Blank is Disable";
+                authInputElem.value = this.data[STORAGE_NAME]["authCode"] ? this.data[STORAGE_NAME]["authCode"] : "";
+                authInputElem.addEventListener("change", ()=>{
+                    this.data[STORAGE_NAME]['authCode'] = authInputElem.value;
+                });
+                return authInputElem;
             },
         });
         
@@ -153,7 +172,6 @@ export default class OGaMCPServerPlugin extends Plugin {
                     connectionCountElem.textContent = `${lang("setting_status_connection")}: ${this.myMCPServer.getConnectionCount() || 0}`;
                     portElem.textContent = `${lang("setting_port")}: ${this.myMCPServer.workingPort || -1}`;
                 });
-
                 // Append elements to container
                 container.appendChild(statusTextElem);
                 container.appendChild(connectionCountElem);

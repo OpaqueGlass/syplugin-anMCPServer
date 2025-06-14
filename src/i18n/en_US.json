@@ -9,6 +9,8 @@
   "setting_port_desp": "The port used by the MCP service. After modification, you need to save the settings before starting the service. Fill in the application with: http://127.0.0.1:[port_number]/sse",
   "setting_autoStart": "Auto Start",
   "setting_autoStart_desp": "Control whether the MCP service starts with SiYuan",
+  "setting_auth": "Client Access Control (Authentication Code / Token)",
+  "setting_auth_desp": "Enter here; only clients that provide the correct authentication code can connect to the MCP service; the code can only consist of uppercase and lowercase letters, digits, and six specific symbols (plus, minus, slash, period, underscore, tilde); if left blank, no authentication is required and all clients can access",
   "setting_control": "Control",
   "setting_control_desp": "Start or stop the MCP service",
   "setting_control_start": "Start Service",
