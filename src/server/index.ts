@@ -49,6 +49,12 @@ export default class MyMCPServer {
             this.transports[transport.sessionId] = transport;
             res.on("close", () => {
                 logPush("SSE连接断开", transport.sessionId);
+                this.transports[transport.sessionId].close();
+                delete this.transports[transport.sessionId];
+            });
+            res.on("error", (e)=>{
+                logPush("SSE连接断开", transport.sessionId, e.message);
+                this.transports[transport.sessionId].close();
                 delete this.transports[transport.sessionId];
             });
             await this.mcpServer.connect(transport);
