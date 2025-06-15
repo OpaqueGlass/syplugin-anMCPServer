@@ -2,9 +2,11 @@
 
 > 为[思源笔记](https://github.com/siyuan-note/siyuan)提供MCP服务的插件。
 
-> 当前版本: v0.2.0 此版本包含API更改
+> 当前版本: v0.2.0 此版本包含破坏性更新
 >
-> 改进：弃用SSE连接方式，换用Streamable HTTP，对应有端点更改，请参考文档重新设置；
+> 改进：支持Streamable HTTP连接方式，对应有端点更改；原有SSE连接方式标记为弃用，将在后续版本移除，**请参考文档重新设置**；
+> 改进：不同设备可以使用不同的配置文件，这意味着**升级到此版本后原有的配置将丢失**；
+> 新增：支持设置访问授权码；
 >
 > 其他详见[更新日志](./CHANGELOG.md)。
 
@@ -37,40 +39,45 @@
   - 请参考：https://github.com/punkpeye/awesome-mcp-clients 或 https://modelcontextprotocol.io/clients ；
 - Q：插件支持鉴权吗？
   - v0.2.0版本已支持鉴权，在插件设置处设置鉴权token后，在MCP客户端，需要设置`authorization`请求头，其值为 `Bearer 你的Token`；
+- Q：连接数是什么？
+  - 在SSE方式下，这代表了仍在保持状态的连接数量，由于客户端未正确断开连接、其他未知软件连入等原因，连接数可能有变动；
+  - 在Streamable HTTP方式下，插件将在请求结束后断开连接，连接数始终为0，后期版本将不再展示连接数；
 - Q: 可以在docker使用吗？
   - 不可以，插件依赖nodejs环境，不支持在移动端、docker运行；
   
-    > 若要支持docker中部署的思源，插件需要像`mcp-obsidian`一样基于python构建、通过API访问思源内容；
+    > 若要支持docker中部署的思源，建议转为使用其他MCP项目，部分项目可能在[这里](https://github.com/siyuan-note/siyuan/issues/13795)列出；
     > 
-    > 或者将本插件和思源前端解耦；
+    > 或者，修改代码，将本插件和思源前端解耦；
+- Q: 如何查看已经设置的授权码？
+  - 授权码哈希后保存，只能修改，不能查看生效中的授权码；
 
-## 如何在MCP客户端中配置？
+## ✅如何在MCP客户端中配置？
 
-> 针对不同的MCP客户端，需要不同的配置方式，请以MCP客户端文档为准；
-> 
 > MCP客户端不断迭代更新，这里的配置或使用说明未必能够直接套用，仅供参考；
 >
-> 这里假设：插件设置的端口号为`16806`，权限控制认证码为 `abcdefg`。
+> 这里假设：插件设置的端口号为 `16806`，授权码为 `abcdefg`，请以实际填写的插件设置为准。
 
 修改MCP应用的配置，选择`Streamable HTTP`类型，并配置端点。
 
-### 一般地
+### 支持Streamable HTTP类型的客户端
 
 下面的配置以 [Cherry Studio](https://github.com/CherryHQ/cherry-studio) 为例，针对不同的MCP客户端，可能需要不同的配置格式，请以MCP客户端文档为准。
 
-**插件未设置认证码**
+**插件未设置授权码**
 
-1. 类型：选择 可流式传输的HTTP（streamablehttp）
-2. URL：`http://127.0.0.1:16806/mcp`
-3. 请求头：空
+1. 类型：选择 可流式传输的HTTP（streamablehttp）；
+2. URL：`http://127.0.0.1:16806/mcp`；
+3. 请求头：空；
 
-**插件已设置认证码**
+**插件已设置授权码**
 
-1. 类型：选择 可流式传输的HTTP（streamablehttp）
-2. URL：`http://127.0.0.1:16806/mcp`
-3. 请求头：`Authorization=Bearer abcedfg`
+1. 类型：选择 可流式传输的HTTP（streamablehttp）；
+2. URL：`http://127.0.0.1:16806/mcp`；
+3. 请求头：`Authorization=Bearer abcedfg`；
 
-### 仅支持stdio的MCP客户端
+> 这里假设：插件设置的端口号为 `16806`，授权码为 `abcdefg`，请以实际填写的插件设置为准。
+
+### 仅支持stdio的客户端
 
 若MCP客户端不支持基于HTTP的通信方式，仅支持stdio，则需要通过转换后使用。
 
@@ -83,9 +90,9 @@
   npm install -g mcp-remote@next
   ```
 
-下面的配置以 [5ire](https://5ire.app/) 为例，针对不同的MCP客户端，可能需要不同的配置格式，请以MCP客户端文档为准
+下面的配置以 [5ire](https://5ire.app/) 为例，针对不同的MCP客户端，可能需要不同的配置格式，请以MCP客户端文档为准。
 
-**插件未设置认证码**
+**插件未设置授权码**
 
 命令：
 
@@ -93,7 +100,7 @@
 npx mcp-remote@next http://127.0.0.1:16806/mcp
 ```
 
-**插件已设置认证码**
+**插件已设置授权码**
 
 命令：
 ```
@@ -104,6 +111,8 @@ npx mcp-remote@next http://127.0.0.1:16806/mcp --header Authorization:${AUTH_HEA
 
 名称：`AUTH_HEADER`
 值：`Bearer abcdefg`
+
+> 这里假设：插件设置的端口号为 `16806`，授权码为 `abcdefg`，请以实际填写的插件设置为准。
 
 ## 🙏参考&感谢
 
