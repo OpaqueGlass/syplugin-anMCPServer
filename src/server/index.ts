@@ -14,7 +14,7 @@ import { SearchToolProvider } from '@/tools/search';
 import { SqlToolProvider } from '@/tools/sql';
 import { DocReadToolProvider } from '@/tools/docRead';
 import { isValidStr } from '@/utils/commonCheck';
-import { 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨 } from "@/utils/fakeEncrypt";
+import { isAuthTokenValid } from '@/utils/crypto';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -55,18 +55,22 @@ export default class MyMCPServer {
         
         /* SSE Deprecated */
         this.expressApp.get("/sse", async (req: Request, res: Response) => {
-            showMessage(lang("sse_warning"), 7000);
             const plugin = getPluginInstance();
             const authToken = plugin?.mySettings["authCode"];
-            // 检查请求头
-            if (isValidStr(authToken)) {
+            if (isValidStr(authToken) && authToken !== CONSTANTS.CODE_UNSET) {
                 const authHeader = req.headers["authorization"];
                 const token = authHeader?.replace("Bearer ", "");
-                if (token !== 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(authToken)) {
-                    res.status(403).send("Invalid Token");
-                    return;
+                logPush("auth", authHeader, authToken);
+                if (!await isAuthTokenValid(token)) {
+                    if (authHeader) {
+                        res.status(403).send("Invalid Token. Authentication is requied. 鉴权失败");
+                    }else {
+                        res.status(403).send("Authentication is requied. 鉴权失败");
+                    }
+                    return
                 }
             }
+            showMessage(lang("sse_warning"), 7000);
             const transport = new SSEServerTransport(
                 "/messages",
                 res,
@@ -100,11 +104,11 @@ export default class MyMCPServer {
         this.expressApp.post("/mcp", async (req: Request, res: Response) => {
             const plugin = getPluginInstance();
             const authToken = plugin?.mySettings["authCode"];
-            if (isValidStr(authToken)) {
+            if (isValidStr(authToken) && authToken !== CONSTANTS.CODE_UNSET) {
                 const authHeader = req.headers["authorization"];
                 const token = authHeader?.replace("Bearer ", "");
                 logPush("auth", authHeader);
-                if (token !== 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(authToken)) {
+                if (!await isAuthTokenValid(token)) {
                     if (authHeader) {
                         res.status(403).send("Invalid Token. Authentication is requied. 鉴权失败");
                     }else {

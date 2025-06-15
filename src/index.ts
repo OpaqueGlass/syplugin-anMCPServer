@@ -11,18 +11,18 @@ import { setPluginInstance } from "./utils/pluginHelper";
 import { logPush } from "./logger";
 import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
-import { isValidAuthCode, isValidStr } from "./utils/commonCheck";
-import { 𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨, 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨 } from "./utils/fakeEncrypt";
+import { isAuthCodeSetted, isValidAuthCode, isValidStr } from "./utils/commonCheck";
+import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
 const DEFAULT_SETTING = {
     "port": "16806",
     "autoStart": false,
-    "authCode": "",
+    "authCode": CONSTANTS.CODE_UNSET,
 }
 
-export default class OGaMCPServerPlugin extends Plugin {
+export default class OGanMCPServerPlugin extends Plugin {
 
     private custom: () => Custom;
     private isMobile: boolean;
@@ -66,22 +66,29 @@ export default class OGaMCPServerPlugin extends Plugin {
         const portInputElem = document.createElement("input");
         const authInputElem = document.createElement("input");
         const autoStartSwitchElem = document.createElement("input");
-        autoStartSwitchElem.type = "checkbox";
-        autoStartSwitchElem.checked = this.mySettings.autoStart || false;
+        
         this.setting = new Setting({
-            confirmCallback: () => {
-                let myAuthCode = this.mySettings["authCode"];
-                if (isValidStr(myAuthCode) && !isValidAuthCode(𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(myAuthCode))) {
-                    showMessage(lang("code_warning"));
-                    const id = 𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(window.Lute.NewNodeID());
-                    myAuthCode = id ?? "";
-                    this.mySettings["authCode"] = id;
+            confirmCallback: async () => {
+                let myAuthCode = authInputElem.value;
+                if (isValidStr(myAuthCode)) {
+                    if (isValidAuthCode(myAuthCode)) {
+                        myAuthCode = await encryptAuthCode(myAuthCode);
+                    } else if (myAuthCode != CONSTANTS.CODE_UNSET) {
+                        showMessage(lang("code_warning"));
+                        myAuthCode = this.mySettings["authCode"];
+                    }
+                } else {
+                    myAuthCode = this.mySettings["authCode"];
+                    if (!isValidStr(myAuthCode)) {
+                        myAuthCode = CONSTANTS.CODE_UNSET;
+                    }
                 }
-                this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), {
+                this.mySettings = {
                     autoStart: autoStartSwitchElem.checked,
                     port: portInputElem.value,
                     authCode: myAuthCode,
-                });
+                };
+                this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
             }
         });
         this.setting.addItem({
@@ -109,11 +116,8 @@ export default class OGaMCPServerPlugin extends Plugin {
             createActionElement: () => {
                 authInputElem.className = "b3-text-field fn__flex-center fn__size200";
                 authInputElem.type = "text";
-                authInputElem.placeholder = "Blank is Disable";
-                authInputElem.value = isValidStr(this.mySettings["authCode"]) ? 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(this.mySettings["authCode"]) : "";
-                authInputElem.addEventListener("change", ()=>{
-                    this.mySettings['authCode'] = 𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(authInputElem.value);
-                });
+                authInputElem.placeholder = isAuthCodeSetted(this.mySettings["authCode"]) ? lang("code_encrypted") : "";
+                authInputElem.value = isValidAuthCode(this.mySettings["authCode"]) ? "" : CONSTANTS.CODE_UNSET;
                 return authInputElem;
             },
         });
@@ -125,6 +129,8 @@ export default class OGaMCPServerPlugin extends Plugin {
             description: lang("setting_autoStart_desp"),
             createActionElement: () => {
                 autoStartSwitchElem.className = "b3-switch fn__flex-center";
+                autoStartSwitchElem.type = "checkbox";
+                autoStartSwitchElem.checked = this.mySettings.autoStart || false;
                 // autoStartSwitchElem.addEventListener("change", () => {
                 //     this.saveData(STORAGE_NAME, { autoStart: autoStartSwitchElem.checked });
                 // });

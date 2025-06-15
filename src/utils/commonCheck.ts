@@ -1,3 +1,5 @@
+import { CONSTANTS } from "@/constants";
+
 /**
  * 判定字符串是否有效
  * @param s 需要检查的字符串（或其他类型的内容）
@@ -12,6 +14,13 @@ export function isValidStr(s: any): boolean {
 
 export function isValidAuthCode(str) {
     return /^[A-Za-z0-9+\-\/._~]{6,}$/.test(str);
+}
+
+export function isAuthCodeSetted(str) {
+    if (str !== CONSTANTS.CODE_UNSET) {
+        return true;
+    }
+    return false;
 }
 
 /**
