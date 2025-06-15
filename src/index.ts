@@ -2,7 +2,8 @@ import {
     Plugin,
     getFrontend,
     Custom,
-    Setting
+    Setting,
+    showMessage
 } from "siyuan";
 import "./index.scss";
 import MyMCPServer from "./server";
@@ -10,20 +11,24 @@ import { setPluginInstance } from "./utils/pluginHelper";
 import { logPush } from "./logger";
 import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
+import { isValidAuthCode, isValidStr } from "./utils/commonCheck";
+import { 𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨, 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨 } from "./utils/fakeEncrypt";
 
-const STORAGE_NAME = CONSTANTS.STORAGE_NAME;
+let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
+
+const DEFAULT_SETTING = {
+    "port": "16806",
+    "autoStart": false,
+    "authCode": "",
+}
 
 export default class OGaMCPServerPlugin extends Plugin {
 
     private custom: () => Custom;
     private isMobile: boolean;
     private myMCPServer: MyMCPServer = null;
+    public mySettings = DEFAULT_SETTING;
     onload() {
-        this.data[STORAGE_NAME] = {
-            "port": 16806,
-            "autoStart": false,
-            "authCode": "",
-        };
         setLanguage(this.i18n);
         setPluginInstance(this);
         this.myMCPServer = new MyMCPServer();
@@ -39,7 +44,7 @@ export default class OGaMCPServerPlugin extends Plugin {
 //         statusIconTemp.content.firstElementChild.addEventListener("click", () => {
 //             confirm("⚠️", this.i18n.confirmRemove.replace("${name}", this.name), () => {
 //                 this.removeData(STORAGE_NAME).then(() => {
-//                     this.data[STORAGE_NAME] = {readonlyText: "Readonly"};
+//                     this.mySettings = {readonlyText: "Readonly"};
 //                     showMessage(`[${this.name}]: ${this.i18n.removedData}`);
 //                 });
 //             });
@@ -62,13 +67,20 @@ export default class OGaMCPServerPlugin extends Plugin {
         const authInputElem = document.createElement("input");
         const autoStartSwitchElem = document.createElement("input");
         autoStartSwitchElem.type = "checkbox";
-        autoStartSwitchElem.checked = this.data[STORAGE_NAME].autoStart || false;
+        autoStartSwitchElem.checked = this.mySettings.autoStart || false;
         this.setting = new Setting({
             confirmCallback: () => {
-                this.saveData(STORAGE_NAME, {
+                let myAuthCode = this.mySettings["authCode"];
+                if (isValidStr(myAuthCode) && !isValidAuthCode(𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(myAuthCode))) {
+                    showMessage(lang("code_warning"));
+                    const id = 𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(window.Lute.NewNodeID());
+                    myAuthCode = id ?? "";
+                    this.mySettings["authCode"] = id;
+                }
+                this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), {
                     autoStart: autoStartSwitchElem.checked,
                     port: portInputElem.value,
-                    authCode: authInputElem.value,
+                    authCode: myAuthCode,
                 });
             }
         });
@@ -82,9 +94,9 @@ export default class OGaMCPServerPlugin extends Plugin {
                 portInputElem.max = "65535";
                 portInputElem.min = "1";
                 portInputElem.placeholder = "Port Number";
-                portInputElem.value = this.data[STORAGE_NAME].port;
+                portInputElem.value = this.mySettings.port.toString();
                 portInputElem.addEventListener("change", ()=>{
-                    this.data[STORAGE_NAME]['port'] = portInputElem.value;
+                    this.mySettings['port'] = portInputElem.value;
                 });
                 return portInputElem;
             },
@@ -98,9 +110,9 @@ export default class OGaMCPServerPlugin extends Plugin {
                 authInputElem.className = "b3-text-field fn__flex-center fn__size200";
                 authInputElem.type = "text";
                 authInputElem.placeholder = "Blank is Disable";
-                authInputElem.value = this.data[STORAGE_NAME]["authCode"] ? this.data[STORAGE_NAME]["authCode"] : "";
+                authInputElem.value = isValidStr(this.mySettings["authCode"]) ? 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(this.mySettings["authCode"]) : "";
                 authInputElem.addEventListener("change", ()=>{
-                    this.data[STORAGE_NAME]['authCode'] = authInputElem.value;
+                    this.mySettings['authCode'] = 𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(authInputElem.value);
                 });
                 return authInputElem;
             },
@@ -195,10 +207,12 @@ export default class OGaMCPServerPlugin extends Plugin {
     }
 
     onLayoutReady() {
-        this.loadData(STORAGE_NAME).then(()=>{
-            logPush("this.data", this.data[STORAGE_NAME]);
+        const name = CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36);
+        this.loadData(name).then(()=>{
+            this.mySettings = Object.assign(this.mySettings, this.data[name]);
+            logPush("this.data", this.mySettings);
             this.myMCPServer.initialize();
-            if (this.data[STORAGE_NAME]["autoStart"]) {
+            if (this.mySettings["autoStart"]) {
                 this.myMCPServer.start();
             }
         })
@@ -224,7 +238,7 @@ export default class OGaMCPServerPlugin extends Plugin {
             width: this.isMobile ? "92vw" : "520px",
         });
         const inputElement = dialog.element.querySelector("textarea");
-        inputElement.value = this.data[STORAGE_NAME].readonlyText;
+        inputElement.value = this.mySettings.readonlyText;
         const btnsElement = dialog.element.querySelectorAll(".b3-button");
         dialog.bindInput(inputElement, () => {
             (btnsElement[1] as HTMLButtonElement).click();

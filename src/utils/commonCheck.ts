@@ -10,6 +10,10 @@ export function isValidStr(s: any): boolean {
 	return true;
 }
 
+export function isValidAuthCode(str) {
+    return /^[A-Za-z0-9+\-\/._~]{6,}$/.test(str);
+}
+
 /**
  * 判断字符串是否为空白
  * @param s 字符串

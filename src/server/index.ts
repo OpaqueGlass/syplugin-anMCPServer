@@ -14,6 +14,8 @@ import { SearchToolProvider } from '@/tools/search';
 import { SqlToolProvider } from '@/tools/sql';
 import { DocReadToolProvider } from '@/tools/docRead';
 import { isValidStr } from '@/utils/commonCheck';
+import { 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨 } from "@/utils/fakeEncrypt";
+
 const http = require("http");
 export default class MyMCPServer {
     runningFlag: boolean = false;
@@ -40,8 +42,9 @@ export default class MyMCPServer {
         if (transport == null) {
             return;
         }
-        this.transports[transport.sessionId]?.close();
-        delete this.transports[transport.sessionId];
+        transport.close();
+        // this.transports[transport.sessionId]?.close();
+        // delete this.transports[transport.sessionId];
     }
     initialize() {
         logPush("hello mcp server");
@@ -49,16 +52,17 @@ export default class MyMCPServer {
         this.expressApp.get('/health', (_, res) => {
             res.status(200).send("ok");
         });
-        const plugin = getPluginInstance();
-        const authToken = plugin?.data[CONSTANTS.STORAGE_NAME]["authCode"];
+        
         /* SSE Deprecated */
         this.expressApp.get("/sse", async (req: Request, res: Response) => {
-            showMessage("正在通过已弃用的方式（SSE）连接到MCP服务，推荐参考README.md或集市下载页重新配置。");
+            showMessage(lang("sse_warning"), 7000);
+            const plugin = getPluginInstance();
+            const authToken = plugin?.mySettings["authCode"];
             // 检查请求头
             if (isValidStr(authToken)) {
                 const authHeader = req.headers["authorization"];
                 const token = authHeader?.replace("Bearer ", "");
-                if (token !== authToken) {
+                if (token !== 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(authToken)) {
                     res.status(403).send("Invalid Token");
                     return;
                 }
@@ -94,11 +98,13 @@ export default class MyMCPServer {
         });
         /* New Way */
         this.expressApp.post("/mcp", async (req: Request, res: Response) => {
+            const plugin = getPluginInstance();
+            const authToken = plugin?.mySettings["authCode"];
             if (isValidStr(authToken)) {
                 const authHeader = req.headers["authorization"];
                 const token = authHeader?.replace("Bearer ", "");
                 logPush("auth", authHeader);
-                if (token !== authToken) {
+                if (token !== 𝑰𝑵𝑽𝑬𝑹𝑺𝑬_𝑬𝑿𝑻𝑹𝑨𝑽𝑨𝑮𝑨𝑵𝒁𝑨(authToken)) {
                     if (authHeader) {
                         res.status(403).send("Invalid Token. Authentication is requied. 鉴权失败");
                     }else {
@@ -111,7 +117,8 @@ export default class MyMCPServer {
                 const transport = new StreamableHTTPServerTransport({
                     sessionIdGenerator: undefined,
                 });
-                this.transports[transport.sessionId] = transport;
+                logPush("New Connection", transport.sessionId);
+                // this.transports[transport.sessionId] = transport;
                 res.on('close', ()=>{
                     logPush("Session Close", transport.sessionId);
                     this.cleanTransport(transport);
@@ -138,7 +145,7 @@ export default class MyMCPServer {
             
         });
         this.expressApp.get('/mcp', async (req: Request, res: Response) => {
-            console.log('Received GET MCP request');
+            logPush('Received GET MCP request');
             res.writeHead(405).end(JSON.stringify({
                 jsonrpc: "2.0",
                 error: {
@@ -150,7 +157,7 @@ export default class MyMCPServer {
         });
 
         this.expressApp.delete('/mcp', async (req: Request, res: Response) => {
-            console.log('Received DELETE MCP request');
+            logPush('Received DELETE MCP request');
             res.writeHead(405).end(JSON.stringify({
                 jsonrpc: "2.0",
                 error: {
@@ -188,7 +195,7 @@ export default class MyMCPServer {
         let port = 16806;
         try {
             const plugin = getPluginInstance();
-            let newPort = plugin?.data[CONSTANTS.STORAGE_NAME]["port"];
+            let newPort = plugin?.mySettings["port"];
             if (newPort) {
                 newPort = parseInt(newPort);
                 if (port >= 0 && port <= 65535) {
