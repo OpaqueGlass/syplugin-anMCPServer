@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/opaqueglass-syplugin-anmcpserver-badge.png)](https://mseep.ai/app/opaqueglass-syplugin-anmcpserver)
+
 
 # A little MCP server for siyuan-note
 
