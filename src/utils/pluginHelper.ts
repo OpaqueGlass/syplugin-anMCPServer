@@ -5,6 +5,6 @@ let pluginInstance: Plugin = null;
 export function setPluginInstance(instance:Plugin) {
     pluginInstance = instance;
 }
-export function getPluginInstance(): Plugin {
+export function getPluginInstance(): any {
     return pluginInstance;
 }

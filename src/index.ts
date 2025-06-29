@@ -13,6 +13,7 @@ import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
 import { isAuthCodeSetted, isValidAuthCode, isValidStr } from "./utils/commonCheck";
 import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
+import EventHandler from "./utils/eventHandler";
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
@@ -28,12 +29,14 @@ export default class OGanMCPServerPlugin extends Plugin {
     private isMobile: boolean;
     private myMCPServer: MyMCPServer = null;
     public mySettings = DEFAULT_SETTING;
+    private eventHandler = null;
     onload() {
         setLanguage(this.i18n);
         setPluginInstance(this);
         this.myMCPServer = new MyMCPServer();
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
+        this.eventHandler = new EventHandler();
 
 //         const statusIconTemp = document.createElement("template");
 //         statusIconTemp.innerHTML = `<div class="toolbar__item ariaLabel" aria-label="Remove plugin-sample Data">
@@ -218,6 +221,7 @@ export default class OGanMCPServerPlugin extends Plugin {
             this.mySettings = Object.assign(this.mySettings, this.data[name]);
             logPush("this.data", this.mySettings);
             this.myMCPServer.initialize();
+            this.eventHandler.bindHandler();
             if (this.mySettings["autoStart"]) {
                 this.myMCPServer.start();
             }
