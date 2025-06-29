@@ -4,7 +4,7 @@
  */
 import { getToken } from "@/utils/common";
 import { isValidStr } from "@/utils/commonCheck";
-import { warnPush, errorPush, debugPush } from "@/logger"
+import { warnPush, errorPush, debugPush, logPush } from "@/logger"
 /**向思源api发送请求
  * @param data 传递的信息（body）
  * @param url 请求的地址
@@ -634,12 +634,14 @@ export async function createDocWithMdAPI(notebookid, hpath, md) {
  * @param {*} contentMd 【可选】markdown格式的内容
  * @returns 
  */
-export async function createDocWithPath(notebookid, path, title = "Untitled", contentMd = "") {
+export async function createDocWithPath(notebookid, path, title = "Untitled", contentMd = "", listDocTree=false) {
     let url = "/api/filetree/createDoc";
-    let response = await postRequest({"notebook": notebookid, "path": path, "md": contentMd, "title": title}, url);
+    let response = await postRequest({"notebook": notebookid, "path": path, "md": contentMd, "title": title, "listDocTree": listDocTree}, url);
     if (response.code == 0) {
         return true;
     }
+    logPush("responseERROR", response);
+    throw Error(response.msg);
     return false;
 }
 
@@ -714,6 +716,39 @@ export async function getFileAPI(path) {
 
     }
     return result;
+}
+
+/**
+ * 获取工作空间中的文件，部分情况下返回blob
+ * @param path 文件路径
+ * @returns json内容或blob
+ */
+export async function getFileAPIv2(path:string) {
+    const url = "/api/file/getFile";
+    const data = { path };
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            "Authorization": "Token " + getToken(),
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+
+    const contentType = response.headers.get("Content-Type") || "";
+
+    if (contentType.includes("application/json")) {
+        const json = await response.json();
+        if (json.code === 404) {
+            return null;
+        }
+        return json;
+    } else {
+        // 如果是文件，返回二进制 blob
+        const blob = await response.blob();
+        return blob;
+    }
 }
 
 /**
@@ -883,6 +918,23 @@ export async function exportMdContent({id, refMode, embedMode, yfm}: ExportMdCon
         return response.data;
     } else {
         throw new Error("exportMdContent Failed: " + response.msg);
+    }
+}
+/**
+ * 获得子块
+ * @param id 块id或文档id
+ * @returns 子块信息,数组，有id, type, subType, content, markdown字段
+ */
+export async function getChildBlocks(id:string) {
+    const url = "/api/block/getChildBlocks";
+    let postBody = {
+        id
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data;
+    } else {
+        throw new Error("getChildBlocks Failed: " + response.msg);
     }
 }
 

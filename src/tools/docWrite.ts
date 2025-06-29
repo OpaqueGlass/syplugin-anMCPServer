@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { createErrorResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { appendBlockAPI } from "@/syapi";
-import { checkIdValid, isADocId } from "@/syapi/custom";
+import { appendBlockAPI, createDocWithPath } from "@/syapi";
+import { checkIdValid, getDocDBitem, isADocId } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush } from "@/logger";
+import { isValidStr } from "@/utils/commonCheck";
 
 export class DocWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -17,6 +18,21 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
             handler: appendBlockHandler,
             annotations: {
                 title: "Append To Document",
+                readOnlyHint: false,
+                destructiveHint: false,
+                idempotentHint: false,
+            }
+        }, {
+            name: "siyuan_create_new_note_with_markdown_content",
+            description: "Create a new note under a parent document in SiYuan with a specified title and Markdown content.",
+            schema: {
+                parentId: z.string().describe("The unique identifier (ID) of the parent document or notebook where the new note will be created."),
+                title: z.string().describe("The title of the new note to be created."),
+                markdownContent: z.string().describe("The Markdown content of the new note."),
+            },
+            handler: createNewNoteUnder,
+            annotations: {
+                title: "Create New Note",
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,
@@ -38,4 +54,35 @@ async function appendBlockHandler(params, extra) {
     }
 
     return createSuccessResponse("Successfully appended, the block ID for the new content is " + result.id);
+}
+
+async function createNewNoteUnder(params, extra) {
+    const { parentId, title, markdownContent } = params;
+    debugPush("添加新笔记被调用");
+    checkIdValid(parentId);
+    // 判断是否是笔记本id
+    const notebookIdFlag = isValidNotebookId(parentId);
+    const newDocId = window.Lute.NewNodeID();
+    const createParams = { 
+        "notebook": parentId, 
+        "path": `/${newDocId}.sy`, "title": title, "md": markdownContent, "listDocTree": false };
+    if (!isValidStr(title)) createParams["title"] = "Untitled";
+    if (!notebookIdFlag) {
+        // 判断是否是笔记id
+        const docInfo = await getDocDBitem(parentId);
+        if (docInfo == null) {
+            throw new Error("无效的输入参数`parentId`，parentId应当对应笔记本id或文档id，请检查输入的id参数");
+        }
+        createParams["path"] = docInfo["path"].replace(".sy", "") + createParams["path"];
+        createParams["notebook"] = docInfo["box"];
+    }
+    // 创建
+    const result = await createDocWithPath(createParams["notebook"], createParams["path"], createParams["title"], createParams["md"]);
+    return result ? createSuccessResponse(`成功创建文档，文档id为：${newDocId}`) : createErrorResponse("An Error Occured");
+}
+
+function isValidNotebookId(id: string) {
+    const notebooks = window.siyuan.notebooks;
+    const result = notebooks.find(item=>item.id === id);
+    return result != null;
 }

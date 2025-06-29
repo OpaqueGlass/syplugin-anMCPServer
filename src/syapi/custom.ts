@@ -238,3 +238,11 @@ export async function isADocId(id:string): Promise<boolean> {
     }
     return false;
 }
+
+export async function getDocDBitem(id:string) {
+    const queryResponse = await queryAPI(`SELECT * FROM blocks WHERE id = '${id}' and type = 'd'`);
+    if (queryResponse == null || queryResponse.length == 0) {
+        return null;
+    }
+    return queryResponse[0];
+}

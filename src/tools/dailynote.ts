@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { appendBlockAPI, createDailyNote, queryAPI } from "@/syapi";
+import { appendBlockAPI, createDailyNote, getChildBlocks, prependBlockAPI, queryAPI, removeBlockAPI } from "@/syapi";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { isValidStr } from "@/utils/commonCheck";
 import { lang } from "@/utils/lang";
 import { McpToolsProvider } from "./baseToolProvider";
-import { debugPush } from "@/logger";
+import { debugPush, logPush, warnPush } from "@/logger";
 
 export class DailyNoteToolProvider extends McpToolsProvider<any> {
     
@@ -57,9 +57,24 @@ async function appendToDailynoteHandler(params, extra) {
     // 追加写入
     let newBlockId = "";
     if (isValidStr(id)) {
+        // query先执行，否则可能真更新数据库了
+        const queryResult = await queryAPI(`SELECT * FROM blocks WHERE id = "${id}"`);
         const result = await appendBlockAPI(markdownContent, id);
         if (result == null) {
             return createErrorResponse("Failed to append to dailynote");
+        }
+        // 判断块个数，移除存在的唯一块
+        if (queryResult && queryResult.length == 0) {
+            try {
+                const childList = await getChildBlocks(id);
+                debugPush("貌似是新建日记，检查子块情况", childList);
+                if (childList && childList.length >= 1 && childList[0].type == "p" && !isValidStr(childList[0]["markdown"])) {
+                    debugPush("移除子块", childList[0]);
+                    removeBlockAPI(childList[0].id);
+                }
+            } catch(err) {
+                warnPush("err", err);
+            }
         }
         newBlockId = result.id;
     } else {
