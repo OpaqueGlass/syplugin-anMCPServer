@@ -14,12 +14,16 @@ export function createSuccessResponse(text: string, metadata?: Record<string, an
 /**
  * JSON response helper
  */
-export function createJsonResponse(data: any): McpResponse {
+export function createJsonResponse(data: any, otherData: any[]|null=null): McpResponse {
+  const result: McpContent[] = [{
+    type: "text",
+    text: JSON.stringify(data, null, 2)
+  } as McpContent];
+  if (otherData != null) {
+    result.push(...otherData as McpContent[]);
+  }
   return {
-    content: [{
-      type: "text",
-      text: JSON.stringify(data, null, 2)
-    }]
+    content: result
   };
 }
 

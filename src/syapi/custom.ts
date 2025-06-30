@@ -258,3 +258,38 @@ export async function getBlockDBItem(id:string) {
     }
     return queryResponse[0];
 }
+
+export interface IAssetsDBItem {
+    /** 引用 ID，资源自身的唯一标识 */
+    id: string;
+    /** 所属块的 ID，表示该资源挂载在哪个块上 */
+    block_id: string;
+    /** 所属文档的 ID */
+    root_id: string;
+    /** 所属笔记本（Box）的 ID */
+    box: string;
+    /** 所属文档的路径，比如 `/20200812220555-lj3enxa/20200915214115-42b8zma.sy` */
+    docpath: string;
+    /** 资源文件的相对路径，比如 `assets/siyuan-128-20210604092205-djd749a.png` */
+    path: string;
+    /** 资源文件名，比如 `siyuan-128-20210604092205-djd749a.png` */
+    name: string;
+    /** 资源的标题，比如 `源于思考，饮水思源`，可以为空 */
+    title: string;
+    /** 资源文件的 SHA256 哈希，用于校验或去重 */
+    hash: string;
+}
+
+
+/**
+ * 获取附件信息
+ * @param id 块id
+ * @returns 数组列表
+ */
+export async function getBlockAssets(id:string): Promise<IAssetsDBItem[]> {
+    const queryResponse = await queryAPI(`SELECT * FROM assets WHERE block_id = '${id}'`);
+    if (queryResponse == null || queryResponse.length == 0) {
+        return [];
+    }
+    return queryResponse;
+}

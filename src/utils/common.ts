@@ -274,3 +274,26 @@ export function replaceShortcutString(shortcut:string) {
     
     return shortcut;
 }
+
+export async function blobToBase64Object(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onloadend = () => {
+            const dataUrl = reader.result;  // 形如 data:image/png;base64,xxxxxxx
+            const [meta, base64Data] = dataUrl.split(',');
+
+            const mimeMatch = meta.match(/data:(.*);base64/);
+            const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+
+            resolve({
+                type: mimeType.split("/")[0],
+                data: base64Data,
+                mimeType: mimeType
+            });
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
