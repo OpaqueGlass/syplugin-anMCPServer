@@ -246,3 +246,15 @@ export async function getDocDBitem(id:string) {
     }
     return queryResponse[0];
 }
+/**
+ * 通过id获取数据库中的id
+ * @param id 块id或文档id
+ * @returns DB item
+ */
+export async function getBlockDBItem(id:string) {
+    const queryResponse = await queryAPI(`SELECT * FROM blocks WHERE id = '${id}'`);
+    if (queryResponse == null || queryResponse.length == 0) {
+        return null;
+    }
+    return queryResponse[0];
+}

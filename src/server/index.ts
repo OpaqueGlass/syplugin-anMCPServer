@@ -15,6 +15,7 @@ import { SqlToolProvider } from '@/tools/sql';
 import { DocReadToolProvider } from '@/tools/docRead';
 import { isValidStr } from '@/utils/commonCheck';
 import { isAuthTokenValid } from '@/utils/crypto';
+import { RelationToolProvider } from '@/tools/relation';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -181,6 +182,7 @@ export default class MyMCPServer {
             new SearchToolProvider(),
             new SqlToolProvider(),
             new DocReadToolProvider(),
+            new RelationToolProvider(),
         ];
 
         for (const provider of toolProviders) {
