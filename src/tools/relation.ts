@@ -8,7 +8,7 @@ import { getBlockDBItem } from "@/syapi/custom";
 export class RelationToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
         return [{
-            name: "siyuan_get_doc_relationship",
+            name: "siyuan_get_doc_backlinks",
             description: "Retrieve all documents or blocks that reference a specified document or block within the workspace. The result includes the referencing document's ID, name, notebook ID, and path. Useful for understanding backlinks and document relationships within the knowledge base.",
             schema: {
                 id: z.string().describe("The ID of the target document or block. The notebook where the target resides must be open."),

@@ -5,17 +5,7 @@
 
 > A plugin that provides MCP service for [Siyuan Note](https://github.com/siyuan-note/siyuan).
 
-> Current Version: v0.2.0 (This version contains breaking changes)  
-> 
-> Improvements:  
-> Added support for Streamable HTTP connections (endpoint changes required)  
-> 
-> Marked SSE connection as deprecated (will be removed in future versions) - Please reconfigure according to documentation  
-> 
-> Different devices can now use separate config files - Note: Upgrading will reset existing configurations  
-> 
-> New Feature:  
-> Added access authorization code support  
+> ⚠️ Breaking changes: Upgrading from v0.1.x to v0.2.x introduces breaking changes. [CHANGELOG_zh-CN](./CHANGELOG.md)
 
 ## ✨ Quick Start
 
