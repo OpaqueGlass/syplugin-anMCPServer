@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+lightrag
+openai
+transformers
+torch
+sentence-transformers
+pydantic-settings
+nest_asyncio

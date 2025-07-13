@@ -1,0 +1,4 @@
+data/
+models_cache/
+**/*/__pycache__
+*.ps1
