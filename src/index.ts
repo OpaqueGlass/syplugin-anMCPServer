@@ -14,6 +14,8 @@ import { CONSTANTS } from "./constants";
 import { isAuthCodeSetted, isValidAuthCode, isValidStr } from "./utils/commonCheck";
 import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
 import EventHandler from "./utils/eventHandler";
+import { setIndexProvider } from "./utils/indexerHelper";
+import { MyIndexProvider } from "./indexer/myProvider";
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
@@ -21,6 +23,7 @@ const DEFAULT_SETTING = {
     "port": "16806",
     "autoStart": false,
     "authCode": CONSTANTS.CODE_UNSET,
+    "ragBaseUrl": undefined,
 }
 
 export default class OGanMCPServerPlugin extends Plugin {
@@ -67,6 +70,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         //     }
         // });
         const portInputElem = document.createElement("input");
+        const ragBaseUrlInputElem = document.createElement("input");
         const authInputElem = document.createElement("input");
         const autoStartSwitchElem = document.createElement("input");
         
@@ -90,6 +94,7 @@ export default class OGanMCPServerPlugin extends Plugin {
                     autoStart: autoStartSwitchElem.checked,
                     port: portInputElem.value,
                     authCode: myAuthCode,
+                    ragBaseUrl: ragBaseUrlInputElem.value,
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
             }
@@ -163,6 +168,35 @@ export default class OGanMCPServerPlugin extends Plugin {
         });
 
         this.setting.addItem({
+            title: lang("setting_rag_baseurl"),
+            direction: "column",
+            description: lang("setting_rag_baseurl_desp"),
+            createActionElement: () => {
+                ragBaseUrlInputElem.className = "b3-text-field fn__flex-center fn__size200";
+                ragBaseUrlInputElem.type = "text";
+                ragBaseUrlInputElem.placeholder = "http://127.0.0.1:26806";
+                ragBaseUrlInputElem.value = this.mySettings.ragBaseUrl ?? "";
+                ragBaseUrlInputElem.addEventListener("change", ()=>{
+                    this.mySettings['ragBaseUrl'] = ragBaseUrlInputElem.value;
+                });
+                return ragBaseUrlInputElem;
+            },
+        });
+
+        // this.setting.addItem({
+        //     title: lang("setting_auth"),
+        //     direction: "column",
+        //     description: lang("setting_auth_desp"),
+        //     createActionElement: () => {
+        //         authInputElem.className = "b3-text-field fn__flex-center fn__size200";
+        //         authInputElem.type = "text";
+        //         authInputElem.placeholder = isAuthCodeSetted(this.mySettings["authCode"]) ? lang("code_encrypted") : "";
+        //         authInputElem.value = isValidAuthCode(this.mySettings["authCode"]) ? "" : CONSTANTS.CODE_UNSET;
+        //         return authInputElem;
+        //     },
+        // });
+
+        this.setting.addItem({
             title: lang("setting_status"),
             direction: "row",
             description: lang("setting_status_desp"),
@@ -222,9 +256,12 @@ export default class OGanMCPServerPlugin extends Plugin {
             logPush("this.data", this.mySettings);
             this.myMCPServer.initialize();
             this.eventHandler.bindHandler();
-            if (this.mySettings["autoStart"]) {
-                this.myMCPServer.start();
-            }
+            setIndexProvider(new MyIndexProvider(this.data["ragBaseUrl"], this.data["ragAuthKey"]));
+            this.myMCPServer.loadTools().then(()=>{
+                if (this.mySettings["autoStart"]) {
+                    this.myMCPServer.start();
+                }
+            });
         })
     }
 

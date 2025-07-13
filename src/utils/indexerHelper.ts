@@ -1,13 +1,25 @@
-import { NoteSendIndexer } from "@/indexer";
+import { CacheQueue } from "@/indexer";
+import { IndexProvider } from "@/indexer/baseIndexProvider";
+import { IndexConsumer } from "@/indexer/indexConsumer";
 import { MyIndexProvider } from "@/indexer/myProvider";
 
-let provider = new MyIndexProvider();
-let indexer = new NoteSendIndexer(provider, {cacheDir: "data/storage/petal/syplugin-anMCPServer"});
+let provider: IndexProvider;
+let indexer: CacheQueue<QueueDocIdItem> = new CacheQueue("data/storage/petal/syplugin-anMCPServer");
 
-export function getIndexer() {
+let indexConsumer = new IndexConsumer();
+
+export function useQueue():CacheQueue<QueueDocIdItem> {
     return indexer;
 }
 
-export function getProvider() {
+export function useProvider(): IndexProvider {
     return provider;
+}
+
+export function useConsumer(): IndexConsumer {
+    return indexConsumer;
+}
+
+export function setIndexProvider(ip) {
+    provider = ip;
 }

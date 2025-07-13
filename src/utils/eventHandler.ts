@@ -3,6 +3,8 @@ import {type IProtyle, type IEventBusMap, showMessage} from "siyuan";
 import * as siyuanAPIs from "siyuan";
 import { getAllShowingDocId, getHPathById, isMobile } from "@/syapi";
 import { getPluginInstance } from "./pluginHelper";
+import { useConsumer, useProvider, useQueue } from "./indexerHelper";
+import { getSubDocIds } from "@/syapi/custom";
 export default class EventHandler {
     private handlerBindList: Record<string, (arg1: CustomEvent)=>void> = {
         // "ws-main": this.wsMainHandler.bind(this),
@@ -73,13 +75,49 @@ export default class EventHandler {
     }
     async openMenuDocTreeHandler(event: CustomEvent<IEventBusMap["open-menu-doctree"]>) {
         logPush("data", event.detail);
-        if (event.detail.type !== "notebook") {
-            // 获取所有id
+        const provider = useProvider();
+        if (event.detail.type !== "notebook" && await provider.health()) {
+            if (event.detail.menu.menus && event.detail.menu.menus.length >= 1) {
+                event.detail.menu.addSeparator();
+            }
             event.detail.menu.addItem({
-                "label": "添加到索引范围",
+                "label": "对所选文档进行索引",
                 "click": (element, mouseEvent)=>{
                     const idList = [].map.call(event.detail.elements, (item)=>item.getAttribute("data-node-id"));
                     logPush("ids", idList);
+                    const queue = useQueue();
+                    if (queue) {
+                        queue.batchAddToQueue(idList.map(item=>{return {"id": item}})).then(()=>{
+                                useConsumer()?.consume();
+                        });;
+                        logPush("Docs added", idList.length);
+                    }
+                }
+            });
+            event.detail.menu.addItem({
+                "label": "对所选文档及其下层文档进行索引",
+                "click": (element, mouseEvent)=>{
+                    let parentIdList = [].map.call(event.detail.elements, (item)=>item.getAttribute("data-node-id"));
+                    logPush("ids", parentIdList);
+                    const resultIds = [];
+                    resultIds.push(...parentIdList);
+                    const handleSubIds = async (id)=>{
+                        const subDocIds = await getSubDocIds(id);
+                        if (subDocIds != null && subDocIds.length > 0) {
+                            resultIds.push(...subDocIds);
+                        }
+                    };
+                    const idsPromise = parentIdList.map(item=>handleSubIds(item));
+                    Promise.all(idsPromise).then((item)=>{
+                        const queue = useQueue();
+                        if (queue) {
+                            queue.batchAddToQueue(resultIds.map(item=>{return {"id": item}})).then(()=>{
+                                useConsumer()?.consume();
+                            });
+                            logPush("Docs added", resultIds.length);
+                        }
+                    });
+                    
                 }
             });
             // event.detail.menu.addItem({

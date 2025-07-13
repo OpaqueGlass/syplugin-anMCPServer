@@ -16,6 +16,7 @@ import { DocReadToolProvider } from '@/tools/docRead';
 import { isValidStr } from '@/utils/commonCheck';
 import { isAuthTokenValid } from '@/utils/crypto';
 import { RelationToolProvider } from '@/tools/relation';
+import { DocVectorSearchProvider } from '@/tools/vectorSearch';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -36,8 +37,6 @@ export default class MyMCPServer {
                 "tools": {},
             }
         });
-
-        this.loadTools();
     }
     cleanTransport(transport) {
         if (transport == null) {
@@ -183,6 +182,7 @@ export default class MyMCPServer {
             new SqlToolProvider(),
             new DocReadToolProvider(),
             new RelationToolProvider(),
+            new DocVectorSearchProvider(),
         ];
 
         for (const provider of toolProviders) {

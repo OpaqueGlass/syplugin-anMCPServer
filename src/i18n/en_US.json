@@ -15,6 +15,8 @@
   "setting_autoStart_desp": "Control whether the MCP service starts with SiYuan",
   "setting_auth": "Client Access Control (Authentication Code / Token)",
   "setting_auth_desp": "The authorization code controls MCP service access, requiring 5+ characters (letters, numbers, or <code>+-/._~</code>). Set to N/A to disable authentication. Codes are hashed locally and become unreadable after saving. See Marketplace or README.md for details.",
+  "setting_rag_baseurl": "The base url for plugin's RAG server",
+  "setting_rag_baseurl_desp": "Experimental Feature. For more infomation, please refer to RAG_BETA.md(zh-CN)",
   "setting_control": "Control",
   "setting_control_desp": "Start or stop the MCP service",
   "setting_control_start": "Start Service",

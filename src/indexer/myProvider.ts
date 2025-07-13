@@ -1,14 +1,19 @@
-import { logPush } from "@/logger";
+import { debugPush, logPush } from "@/logger";
+import {IndexProvider} from "@/indexer/baseIndexProvider";
+import { isValidStr } from "@/utils/commonCheck";
 
 type QueryResult = Record<string, any> | any[] | null;
 export class MyIndexProvider extends IndexProvider {
     private base_url: string;
     private api_key: string;
 
-    constructor() {
+    constructor(baseUrl=undefined, apiKey=undefined) {
         super();
-        this.base_url = "http://127.0.0.1:26808";
-        this.api_key = "";
+        this.base_url = baseUrl ?? "http://127.0.0.1:26808";
+        if (isValidStr(this.base_url)) {
+            this.base_url += this.base_url.endsWith("/") ? "api/v1" : "/api/v1";
+        }
+        this.api_key = apiKey ?? "";
     }
 
     private get headers() {
@@ -59,5 +64,23 @@ export class MyIndexProvider extends IndexProvider {
         const result = await resp.json();
         logPush("result", result);
         return result.result;
+    }
+
+    async health() {
+        const url = `${this.base_url}/health`;
+        try {
+            const resp = await fetch(url, {
+                method: "GET",
+                headers: this.headers,
+            });
+            if (!resp.ok) {
+                return null;
+            }
+            const result = await resp.json();
+            return result;
+        } catch (e) {
+            debugPush("health check error", e);
+            return null;
+        }
     }
 }

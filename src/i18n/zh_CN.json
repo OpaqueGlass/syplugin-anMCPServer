@@ -15,6 +15,8 @@
   "setting_autoStart_desp": "控制是否随思源启动MCP服务",
   "setting_auth": "（客户端连入控制）授权码/token",
   "setting_auth_desp": "授权码用于验证MCP服务访问权限，需包含5位以上字母、数字或+-/._~符号，设为N/A可禁用验证；授权码会哈希存储且生效后不可查看，详情请参考集市下载页或README.md文档。",
+  "setting_rag_baseurl": "插件RAG后端：请求baseURL",
+  "setting_rag_baseurl_desp": "（实验性功能！）插件会自动加入`/api/v1`后缀。如要了解使用方式，请阅读插件仓库 RAG_BETA.md",
   "setting_control": "控制",
   "setting_control_desp": "启动或停止MCP服务",
   "setting_control_start": "开启服务",

@@ -1,0 +1,3 @@
+interface QueueDocIdItem {
+    id: string;
+}

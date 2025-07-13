@@ -1,6 +1,6 @@
 import * as siyuanAPIs from "siyuan";
 import { debugPush } from "@/logger";
-import { queryAPI, listDocsByPathT, getTreeStat, getCurrentDocIdF } from ".";
+import { queryAPI, listDocsByPathT, getTreeStat, getCurrentDocIdF, listDocTree, getDocInfo } from ".";
 import { isValidStr } from "@/utils/commonCheck";
 /**
  * 统计子文档字符数
@@ -293,3 +293,26 @@ export async function getBlockAssets(id:string): Promise<IAssetsDBItem[]> {
     }
     return queryResponse;
 }
+
+export async function getSubDocIds(id:string) {
+    // 添加idx?
+    const docInfo = await getDocInfo(id);
+    const treeList = await listDocTree(docInfo["box"], docInfo["path"]);
+    const subIdsSet = new Set();
+    function addToSet(obj) {
+        if (obj == null) {
+            return;
+        }
+        if (isValidStr(obj["id"])) {
+            subIdsSet.add(obj["id"]);
+        }
+        if (obj["children"] != undefined ) {
+            for (let item of obj["children"]) {
+                addToSet(item);
+            }
+        }
+    }
+    addToSet(treeList);
+    return Array.from(subIdsSet);
+}
+

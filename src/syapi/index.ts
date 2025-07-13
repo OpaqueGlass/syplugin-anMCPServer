@@ -938,6 +938,20 @@ export async function getChildBlocks(id:string) {
     }
 }
 
+export async function listDocTree(notebook:string, path:string) {
+    const url = "/api/filetree/listDocTree";
+    let postBody = {
+        notebook,
+        path
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data.tree;
+    } else {
+        throw new Error("listDocTree Failed: " + response.msg);
+    }
+}
+
 export const DOC_SORT_TYPES = {
     FILE_NAME_ASC: 0,
     FILE_NAME_DESC: 1,
