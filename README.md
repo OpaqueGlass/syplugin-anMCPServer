@@ -23,9 +23,11 @@
 - [Retrieve]
   - Fetch document kramdown by ID;
   - List notebooks;
+  - Get back links;
 - [Write]
   - Append content to diary;
   - Append content to a specific document by ID;
+  - Create new note by parent ID;
 
 ## ❓ FAQ
 
