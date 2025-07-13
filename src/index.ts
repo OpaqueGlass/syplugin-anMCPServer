@@ -229,7 +229,7 @@ export default class OGanMCPServerPlugin extends Plugin {
                 });
                 // Append elements to container
                 container.appendChild(statusTextElem);
-                container.appendChild(connectionCountElem);
+                // container.appendChild(connectionCountElem);
                 container.appendChild(portElem);
                 container.appendChild(refreshBtnElem);
 

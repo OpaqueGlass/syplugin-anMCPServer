@@ -12,6 +12,18 @@ export class DocVectorSearchProvider extends McpToolsProvider<any> {
             logPush("Connection with RAG backend ERROR: (RAG Tool will not be load to MCP server)", healthResult);
             return [];
         }
+        const EXPORT_API = async (question)=>{
+            const provider = useProvider();
+            return await provider.query(question)
+        };
+        if (window["OpaqueGlassAPI"]) {
+            window["OpaqueGlassAPI"]["ragQuery"] = EXPORT_API;
+        } else {
+            window["OpaqueGlassAPI"] = {
+                "ragQuery": EXPORT_API 
+            }
+        }
+        window["OpaqueGlassAPI"][""]
         return [{
             name: "siyuan_generate_answer_with_doc",
             description: 'This tool provides a Retrieval-Augmented Generation (RAG) based Q&A capability. It generates context-aware answers using only the notes that the user has explicitly indexed from their siyuan-notes. Please note: the tool does not access or use all documents—only those that have been indexed by the user. ',

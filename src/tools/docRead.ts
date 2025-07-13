@@ -4,7 +4,8 @@ import { exportMdContent, getFileAPIv2, getKramdown } from "@/syapi";
 import { McpToolsProvider } from "./baseToolProvider";
 import { getBlockAssets, getBlockDBItem } from "@/syapi/custom";
 import { blobToBase64Object } from "@/utils/common";
-import { errorPush, logPush } from "@/logger";
+import { debugPush, errorPush, logPush } from "@/logger";
+import { isValidStr } from "@/utils/commonCheck";
 
 export class DocReadToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -40,8 +41,11 @@ async function blockReadHandler(params, extra) {
             errorPush("转换Assets为图片时出错", error);
         }
     }
-    // TODO: 返回块内容时，不应当返回文档标题，需要判断设置项
     const markdown = await exportMdContent({id, refMode: 4, embedMode: 1, yfm: false});
+    // 返回块内容时，不应当返回文档标题，需要判断设置项
+    if (dbItem.type != "d" && isValidStr(markdown["content"]) && window.siyuan.config.export.addTitle) {
+        markdown["content"] = markdown["content"].replace(/^#{1,6}\s+.*\n?/, '');
+    }
     const content = markdown["content"] || "";
     const sliced = content.slice(offset, offset + limit);
     const hasMore = offset + limit < content.length;
