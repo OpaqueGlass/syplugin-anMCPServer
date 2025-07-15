@@ -17,6 +17,7 @@ import { isValidStr } from '@/utils/commonCheck';
 import { isAuthTokenValid } from '@/utils/crypto';
 import { RelationToolProvider } from '@/tools/relation';
 import { DocVectorSearchProvider } from '@/tools/vectorSearch';
+import { FlashcardToolProvider } from '@/tools/flashCard';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -183,6 +184,7 @@ export default class MyMCPServer {
             new DocReadToolProvider(),
             new RelationToolProvider(),
             new DocVectorSearchProvider(),
+            new FlashcardToolProvider(),
         ];
 
         for (const provider of toolProviders) {

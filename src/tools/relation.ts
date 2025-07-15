@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { appendBlockAPI, createDailyNote, getBackLink2T, getChildBlocks, prependBlockAPI, queryAPI, removeBlockAPI } from "@/syapi";
+import { getBackLink2T } from "@/syapi";
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush, logPush, warnPush } from "@/logger";
-import { getBlockDBItem } from "@/syapi/custom";
+import { getBlockDBItem, getChildDocumentIds, getDocDBitem, getSubDocIds } from "@/syapi/custom";
 
 export class RelationToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -19,6 +19,20 @@ export class RelationToolProvider extends McpToolsProvider<any> {
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,
+            }
+        },{
+            "name": "siyuan_get_sub_doc_ids",
+            "description": "Retrieve the IDs of sub-documents under a specified document within the SiYuan workspace. Optionally, recursively fetch all sub-documents in nested hierarchies. Useful for analyzing document structure and hierarchy relationships.",
+            "schema": {
+                "id": z.string().describe("The ID of the parent document. The notebook containing this document must be open."),
+                "recursive": z.boolean().describe("Whether to recursively retrieve all sub-documents in nested hierarchies. If false, only direct children are returned.")
+            },
+            "handler": getChildrenDocIds,
+            "annotations": {
+                "title": "Get Sub-Document IDs",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
             }
         }]
     }
@@ -51,3 +65,15 @@ async function getDocBacklink(params, extra) {
     return createJsonResponse(result);
 }
 
+async function getChildrenDocIds(params, extra) {
+    const { id, recursive } = params;
+    const sqlResult = await getDocDBitem(id);
+    if (sqlResult == null) {
+        return createErrorResponse("查询的文档id不存在，请检查输入");
+    }
+    if (recursive) {
+        return createJsonResponse(await getSubDocIds(id));
+    } else {
+        return createJsonResponse(await getChildDocumentIds(sqlResult, 65535));
+    }
+}

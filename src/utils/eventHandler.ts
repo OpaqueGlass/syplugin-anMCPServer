@@ -5,16 +5,17 @@ import { getAllShowingDocId, getHPathById, isMobile } from "@/syapi";
 import { getPluginInstance } from "./pluginHelper";
 import { useConsumer, useProvider, useQueue } from "./indexerHelper";
 import { getSubDocIds } from "@/syapi/custom";
+import { useWsIndexQueue } from "./wsMainHelper";
 export default class EventHandler {
     private handlerBindList: Record<string, (arg1: CustomEvent)=>void> = {
-        // "ws-main": this.wsMainHandler.bind(this),
+        "ws-main": this.wsMainHandler.bind(this),
         "open-menu-doctree": this.openMenuDocTreeHandler.bind(this)
     };
     // 关联的设置项，如果设置项对应为true，则才执行绑定
     private relateGsettingKeyStr: Record<string, string> = {
         "loaded-protyle-static": null, // mutex需要访问EventHandler的属性
         "switch-protyle": null,
-        "ws-main": "immediatelyUpdate",
+        "ws-main": null,
     };
 
     private simpleMutex: number = 0;
@@ -46,37 +47,19 @@ export default class EventHandler {
     }
 
     async wsMainHandler(detail: CustomEvent<IEventBusMap["ws-main"]>){
-        const cmdType = ["moveDoc", "rename", "removeDoc"];
-        if (cmdType.indexOf(detail.detail.cmd) != -1) {
-            try {
-                debugPush("检查刷新中（由重命名、删除或移动触发）");
-                if (siyuanAPIs.getAllEditor == null) {
-                    warnPush("不支持的思源版本，请关闭 及时更新 设置项! This version of SiYuan is not supported, please disable the 'immediatelyUpdate' setting!");
-                    return;
-                }
-                const allEditor = siyuanAPIs.getAllEditor();
-                const ids = getAllShowingDocId();
-                if (ids != null && ids.length > 0) {
-                    for (let editor of allEditor) {
-                        if (ids.includes(editor.protyle.block.rootID)) {
-                            debugPush("由重命名、删除或移动触发");
-                            const hello = new CustomEvent("loaded-protyle-static", {
-                                detail: { protyle: editor.protyle }
-                            });
-
-                            // dosth
-                        }
-                    }
-                }
-            }catch(err) {
-                errorPush(err);
+        const cmdTypeD = {
+            "databaseIndexCommit": ()=>{
+                useWsIndexQueue()?.signalOne();
             }
+        };
+        if (cmdTypeD[detail.detail.cmd]) {
+            cmdTypeD[detail.detail.cmd]();
         }
     }
     async openMenuDocTreeHandler(event: CustomEvent<IEventBusMap["open-menu-doctree"]>) {
         logPush("data", event.detail);
         const provider = useProvider();
-        if (event.detail.type !== "notebook" && await provider.health()) {
+        if (event.detail.type !== "notebook") {
             if (event.detail.menu.menus && event.detail.menu.menus.length >= 1) {
                 event.detail.menu.addSeparator();
             }
@@ -84,9 +67,9 @@ export default class EventHandler {
                 "label": "对所选文档进行索引",
                 "click": (element, mouseEvent)=>{
                     const idList = [].map.call(event.detail.elements, (item)=>item.getAttribute("data-node-id"));
-                    logPush("ids", idList);
                     const queue = useQueue();
                     if (queue) {
+                        logPush("ids", idList);
                         queue.batchAddToQueue(idList.map(item=>{return {"id": item}})).then(()=>{
                                 useConsumer()?.consume();
                         });;
@@ -98,19 +81,23 @@ export default class EventHandler {
                 "label": "对所选文档及其下层文档进行索引",
                 "click": (element, mouseEvent)=>{
                     let parentIdList = [].map.call(event.detail.elements, (item)=>item.getAttribute("data-node-id"));
-                    logPush("ids", parentIdList);
                     const resultIds = [];
                     resultIds.push(...parentIdList);
                     const handleSubIds = async (id)=>{
-                        const subDocIds = await getSubDocIds(id);
-                        if (subDocIds != null && subDocIds.length > 0) {
-                            resultIds.push(...subDocIds);
+                        try {
+                            const subDocIds = await getSubDocIds(id);
+                            if (subDocIds != null && subDocIds.length > 0) {
+                                resultIds.push(...subDocIds);
+                            }
+                        } catch (err) {
+                            debugPush("无子文档或其他错误", err);
                         }
                     };
                     const idsPromise = parentIdList.map(item=>handleSubIds(item));
                     Promise.all(idsPromise).then((item)=>{
                         const queue = useQueue();
                         if (queue) {
+                            logPush("ids", resultIds);
                             queue.batchAddToQueue(resultIds.map(item=>{return {"id": item}})).then(()=>{
                                 useConsumer()?.consume();
                             });

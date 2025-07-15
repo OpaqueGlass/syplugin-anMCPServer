@@ -67,3 +67,9 @@ export function isEventCtrlKey(event) {
 export function isSelectQuery(sql: string): boolean {
     return sql.trim().toUpperCase().startsWith("SELECT");
 }
+
+export function isValidNotebookId(id: string) {
+    const notebooks = window.siyuan.notebooks;
+    const result = notebooks.find(item=>item.id === id);
+    return result != null;
+}

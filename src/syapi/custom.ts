@@ -1,6 +1,6 @@
 import * as siyuanAPIs from "siyuan";
-import { debugPush } from "@/logger";
-import { queryAPI, listDocsByPathT, getTreeStat, getCurrentDocIdF, listDocTree, getDocInfo } from ".";
+import { debugPush, logPush } from "@/logger";
+import { queryAPI, listDocsByPathT, getTreeStat, getCurrentDocIdF, listDocTree, getDocInfo, getRiffDecks } from ".";
 import { isValidStr } from "@/utils/commonCheck";
 /**
  * 统计子文档字符数
@@ -38,6 +38,11 @@ export async function getChildDocumentsWordCount(docId:string) {
 export async function getChildDocuments(sqlResult:SqlResult, maxListCount: number): Promise<IFile[]> {
     let childDocs = await listDocsByPathT({path: sqlResult.path, notebook: sqlResult.box, maxListCount: maxListCount});
     return childDocs;
+}
+
+export async function getChildDocumentIds(sqlResult:SqlResult, maxListCount: number): Promise<IFile[]> {
+    let childDocs = await listDocsByPathT({path: sqlResult.path, notebook: sqlResult.box, maxListCount: maxListCount});
+    return childDocs.map(item=>item.id);
 }
 
 export async function isChildDocExist(id: string) {
@@ -294,12 +299,21 @@ export async function getBlockAssets(id:string): Promise<IAssetsDBItem[]> {
     return queryResponse;
 }
 
+/**
+ * 递归地获取所有下层级文档的id
+ * @param id 文档id
+ * @returns 所有下层级文档的id
+ */
 export async function getSubDocIds(id:string) {
     // 添加idx?
-    const docInfo = await getDocInfo(id);
-    const treeList = await listDocTree(docInfo["box"], docInfo["path"]);
+    const docInfo = await getDocDBitem(id);
+    const treeList = await listDocTree(docInfo["box"], docInfo["path"].replace(".sy", ""));
     const subIdsSet = new Set();
     function addToSet(obj) {
+        if (obj instanceof Array) {
+            obj.forEach(item=>addToSet(item));
+            return;
+        }
         if (obj == null) {
             return;
         }
@@ -313,6 +327,14 @@ export async function getSubDocIds(id:string) {
         }
     }
     addToSet(treeList);
+    logPush("subIdsSet", subIdsSet, treeList);
     return Array.from(subIdsSet);
 }
 
+export const QUICK_DECK_ID = "20230218211946-2kw8jgx";
+
+export async function isValidDeck(deckId) {
+    if (deckId === QUICK_DECK_ID) return true;
+    const deckResponse = await getRiffDecks();
+    return !!deckResponse.find(item => item.id == deckId);
+}
