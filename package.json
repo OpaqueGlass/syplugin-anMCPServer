@@ -19,7 +19,7 @@
     "@typescript-eslint/parser": "5.29.0",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.1",
-    "esbuild-loader": "^3.0.1",
+    "esbuild-loader": "^4.3.0",
     "eslint": "^8.42.0",
     "mini-css-extract-plugin": "2.3.0",
     "raw-loader": "^4.0.2",
@@ -33,7 +33,7 @@
     "zip-webpack-plugin": "^4.0.1"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.0",
+    "@modelcontextprotocol/sdk": "^1.15.1",
     "express": "^5.1.0",
     "zod": "^3.24.3"
   }
