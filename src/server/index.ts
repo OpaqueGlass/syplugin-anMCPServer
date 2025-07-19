@@ -18,6 +18,7 @@ import { isAuthTokenValid } from '@/utils/crypto';
 import { RelationToolProvider } from '@/tools/relation';
 import { DocVectorSearchProvider } from '@/tools/vectorSearch';
 import { FlashcardToolProvider } from '@/tools/flashCard';
+import promptCreateCardsSystemCN from '@/../static/prompt_create_cards_system_CN.md';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -31,11 +32,11 @@ export default class MyMCPServer {
     constructor() {
         this.mcpServer = new McpServer({
             "name": "siyuan",
-            "version": "0.1.0"
+            "version": "0.3.1"
         }, {
             "capabilities": {
-                "resources": {},
                 "tools": {},
+                "prompts": {},
             }
         });
     }
@@ -174,6 +175,21 @@ export default class MyMCPServer {
         });
 
     }
+    async loadPrompts() {
+        // this.mcpServer.("create_flashcards", );
+        this.mcpServer.prompt("create_flashcards_system_cn", (args, extra)=>{
+           return {
+            messages: [{
+                    role: "user",
+                    content: {
+                        type: "text",
+                        text: promptCreateCardsSystemCN
+                    }
+                }]
+           }
+        });
+
+    }
     async loadTools() {
         // 工具提供者列表
         const toolProviders = [
@@ -198,6 +214,7 @@ export default class MyMCPServer {
                 );
             }
         }
+        await this.loadPrompts();
     }
     start() {
         let port = 16806;

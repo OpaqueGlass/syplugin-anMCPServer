@@ -29,5 +29,7 @@
   "setting_status_desp": "Displays the current status of the MCP server, including connection count and running state.",
   "setting_copyright": "About",
   "setting_copyright_desp": "Translator: GPT 4o-mini & OpaqueGlass;<br>Developer: <a target='_blank' href='https://github.com/OpaqueGlass'>OpaqueGlass</a>；<br/>Feedback & sponsor: <a target='_blank' href='https://github.com/OpaqueGlass/syplugin-anMCPServer'>github</a>;<br/>Released under <a target='_blank' href='https://www.gnu.org/licenses/agpl-3.0.html'>AGPLv3</a> license;<br/>Read 'README' file before using it.",
-  "tool_append_dailynote": "Append Markdown content to today's daily note in the specified notebook in SiYuan.\nThis tool is typically used to log information, thoughts, or summaries into the daily journal page automatically. \nOnly open notebooks (not in a closed state) are valid targets for appending."
+  "tool_append_dailynote": "Append Markdown content to today's daily note in the specified notebook in SiYuan.\nThis tool is typically used to log information, thoughts, or summaries into the daily journal page automatically. \nOnly open notebooks (not in a closed state) are valid targets for appending.",
+
+  "lang": "EN"
 }
