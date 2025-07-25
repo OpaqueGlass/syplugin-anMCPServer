@@ -2,7 +2,7 @@
   "name": "syplugin-anMCPServer",
   "author": "OpaqueGlass",
   "url": "https://github.com/OpaqueGlass/syplugin-anMCPServer",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "minAppVersion": "2.9.0",
   "backends": [
     "windows",
