@@ -28,6 +28,7 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
 
 async function blockReadHandler(params, extra) {
     const { id, offset = 0, limit = 10000 } = params;
+    debugPush("读取文档内容");
     // 检查输入
     const dbItem = await getBlockDBItem(id);
     if (dbItem == null) {
@@ -49,6 +50,7 @@ async function blockReadHandler(params, extra) {
     const content = markdown["content"] || "";
     const sliced = content.slice(offset, offset + limit);
     const hasMore = offset + limit < content.length;
+    debugPush("文档内容返回中")
     return createJsonResponse({
         content: sliced,
         offset,

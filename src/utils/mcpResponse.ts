@@ -1,3 +1,5 @@
+import { array } from "zod";
+
 /**
  * Success response helper
  */
@@ -15,6 +17,9 @@ export function createSuccessResponse(text: string, metadata?: Record<string, an
  * JSON response helper
  */
 export function createJsonResponse(data: any, otherData: any[]|null=null): McpResponse {
+  if (Array.isArray(data)) {
+    data = { result: data };
+  }
   const result: McpContent[] = [{
     type: "text",
     text: JSON.stringify(data, null, 2)
@@ -23,7 +28,8 @@ export function createJsonResponse(data: any, otherData: any[]|null=null): McpRe
     result.push(...otherData as McpContent[]);
   }
   return {
-    content: result
+    content: result,
+    structuredContent: data,
   };
 }
 
