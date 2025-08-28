@@ -11,7 +11,7 @@ export class SqlToolProvider extends McpToolsProvider<any> {
         return [
             {
                 name: "siyuan_query_sql",
-                description: 'Executes SQL queries to retrieve data from the SiYuan database. Provide a valid SQL SELECT statement to query the database. Use the "siyuan_database_schema" tool to understand the database schema, including table names, field names, and relationships, before writing your query.',
+                description: 'Execute SQL queries to retrieve data (including notes, documents, and their content) from the SiYuan database. This tool is also used when you need to search or fetch notes/notes content. Provide a valid SQL SELECT statement to query the database. Use the "siyuan_database_schema" tool to understand the database schema, including table names, field names, and relationships, before writing your query.',
                 schema: {
                     stmt: z.string().describe("A valid SQL SELECT statement to execute"),
                 },
@@ -22,7 +22,7 @@ export class SqlToolProvider extends McpToolsProvider<any> {
             },
             {
                 name: "siyuan_database_schema",
-                description: "Provides the SiYuan database schema, including table names, field names, and their relationships, to help construct valid SQL queries. Return the markdown content.",
+                description: "Provides the SiYuan database schema, including table names, field names, and their relationships, to help construct valid SQL queries for retrieving notes or note content. Returns the schema in markdown format.",
                 schema: {},
                 handler: schemaHandler,
                 annotations: {
@@ -30,6 +30,7 @@ export class SqlToolProvider extends McpToolsProvider<any> {
                 },
             },
         ];
+
     }
 }
 
@@ -39,7 +40,13 @@ async function sqlHandler(params, extra) {
     if (!isSelectQuery(stmt)) {
         return createErrorResponse("Not a SELECT statement");
     }
-    const sqlResult = await queryAPI(stmt);
+    let sqlResult;
+    try {
+        sqlResult = await queryAPI(stmt);
+    } catch (error) {
+        return createErrorResponse(error instanceof Error ? error.message : String(error));
+    }
+    debugPush("SQLAPI返回ing", sqlResult);
     return createJsonResponse(sqlResult);
 }
 
