@@ -21,6 +21,8 @@
   "setting_control_desp": "启动或停止MCP服务",
   "setting_control_start": "开启服务",
   "setting_control_stop": "关闭服务",
+  "setting_readOnly": "只读模式",
+  "setting_readOnly_desp": "开启后，将不会加载会修改笔记的工具；如果当前MCP服务已在运行，请先保存设置项，再进入设置重启MCP服务才能使得改动生效",
   "setting_status": "状态",
   "setting_status_connection": "连接数",
   "setting_status_open": "✅运行",

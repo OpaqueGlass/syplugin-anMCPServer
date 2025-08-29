@@ -22,6 +22,7 @@ let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 const DEFAULT_SETTING = {
     "port": "16806",
     "autoStart": false,
+    "readOnly": false,
     "authCode": CONSTANTS.CODE_UNSET,
     "ragBaseUrl": undefined,
 }
@@ -73,6 +74,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         const ragBaseUrlInputElem = document.createElement("input");
         const authInputElem = document.createElement("input");
         const autoStartSwitchElem = document.createElement("input");
+        const readOnlySwitchElem = document.createElement("input");
         
         this.setting = new Setting({
             confirmCallback: async () => {
@@ -95,6 +97,7 @@ export default class OGanMCPServerPlugin extends Plugin {
                     port: portInputElem.value,
                     authCode: myAuthCode,
                     ragBaseUrl: ragBaseUrlInputElem.value,
+                    readOnly: readOnlySwitchElem.checked,
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
             }
@@ -143,6 +146,18 @@ export default class OGanMCPServerPlugin extends Plugin {
                 //     this.saveData(STORAGE_NAME, { autoStart: autoStartSwitchElem.checked });
                 // });
                 return autoStartSwitchElem;
+            },
+        });
+
+        this.setting.addItem({
+            title: lang("setting_readOnly"),
+            direction: "column",
+            description: lang("setting_readOnly_desp"),
+            createActionElement: () => {
+                readOnlySwitchElem.className = "b3-switch fn__flex-center";
+                readOnlySwitchElem.type = "checkbox";
+                readOnlySwitchElem.checked = this.mySettings.readOnly || false;
+                return readOnlySwitchElem;
             },
         });
 

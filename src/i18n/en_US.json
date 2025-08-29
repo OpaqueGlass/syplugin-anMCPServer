@@ -19,6 +19,8 @@
   "setting_rag_baseurl_desp": "Experimental Feature. For more infomation, please refer to RAG_BETA.md(zh-CN)",
   "setting_control": "Control",
   "setting_control_desp": "Start or stop the MCP service",
+  "setting_readOnly": "Read-only mode",
+  "setting_readOnly_desp": "Once enabled, tools that modify notes will not be loaded; if the current MCP service is already running, please save the settings first, then go to Settings and restart the MCP service for the changes to take effect",
   "setting_control_start": "Start Service",
   "setting_control_stop": "Stop Service",
   "setting_status": "Status",

@@ -222,6 +222,9 @@ export default class MyMCPServer {
 
     }
     async loadTools() {
+        const plugin = getPluginInstance();
+        const readOnly = plugin?.mySettings["readOnly"] || false;
+
         // 工具提供者列表
         const toolProviders = [
             new DailyNoteToolProvider(),
@@ -238,12 +241,17 @@ export default class MyMCPServer {
         for (const provider of toolProviders) {
             const tools = await provider.getTools();
             for (const tool of tools) {
+                if (readOnly && (tool.annotations?.readOnlyHint === false || tool.annotations?.destructiveHint === true)) {
+                    logPush(`Skipping tool in read-only mode: ${tool.name}`);
+                    continue;
+                }
                 this.mcpServer.registerTool(
                     tool.name,
                     {
                         "title": tool.name,
                         "description": tool.description,
-                        "inputSchema": tool.schema
+                        "inputSchema": tool.schema,
+                        "annotations": tool.annotations,
                     }, tool.handler
                 );
                 // this.mcpServer.tool(
