@@ -9,6 +9,7 @@ import { showMessage } from "siyuan";
 
 export class SearchToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
+        return [];// # 16
         return [
             {
                 name: "siyuan_search",

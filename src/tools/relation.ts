@@ -16,7 +16,7 @@ export class RelationToolProvider extends McpToolsProvider<any> {
             handler: getDocBacklink,
             annotations: {
                 title: "Get Note Relationship",
-                readOnlyHint: false,
+                readOnlyHint: true,
                 destructiveHint: false,
                 idempotentHint: false,
             }
