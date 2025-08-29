@@ -33,6 +33,8 @@ export class FlashcardToolProvider extends McpToolsProvider<any> {
 }
 async function addFlashCardMarkdown(params, extra) {
     let { parentId, docTitle, type, deckId, markdownContent } = params;
+    let { sendNotification, _meta} = extra;
+    
     // 默认deck
     if (!isValidStr(deckId)) {
         deckId = QUICK_DECK_ID;
@@ -45,11 +47,42 @@ async function addFlashCardMarkdown(params, extra) {
     }
     const {result, newDocId} = await createNewDocWithParentId(parentId, docTitle, markdownContent);
     if (result) {
-        // 需要等待索引完成
-        const addCardsResult = await useWsIndexQueue()?.enqueue(async ()=>{
-            return await parseDocAddCards(newDocId, type, deckId);
-        });
-        return createSuccessResponse(`成功添加了 ${addCardsResult} 张闪卡`);
+        let progressInterval: any;
+        if (_meta?.progressToken) {
+            let currentProgress = 0;
+            const maxDuration = 120 * 1000; // 2 minutes in ms
+            const updateInterval = 200; // ms
+            const progressIncrement = updateInterval / maxDuration;
+
+            progressInterval = setInterval(() => {
+                currentProgress += progressIncrement;
+                if (currentProgress < 0.95) {
+                    sendNotification({
+                        method: "notifications/progress",
+                        params: { progress: currentProgress, progressToken: _meta.progressToken }
+                    });
+                }
+            }, updateInterval);
+        }
+
+        try {
+            // 需要等待索引完成
+            const addCardsResult = await useWsIndexQueue()?.enqueue(async ()=>{
+                return await parseDocAddCards(newDocId, type, deckId);
+            });
+            
+            if (_meta?.progressToken) {
+                await sendNotification({
+                    method: "notifications/progress",
+                    params: { progress: 1, progressToken: _meta.progressToken }
+                });
+            }
+            return createSuccessResponse(`成功添加了 ${addCardsResult} 张闪卡`);
+        } finally {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+        }
     } else {
         return createErrorResponse("制卡失败：创建闪卡文档时遇到未知问题");
     }
