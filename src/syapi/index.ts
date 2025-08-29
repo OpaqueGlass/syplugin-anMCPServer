@@ -498,6 +498,15 @@ export async function addRiffCards(ids, deckId, oldCardsNum = -1) {
     return null;
 }
 
+export async function getNotebookConf(notebookId: string) {
+    const url = "/api/notebook/getNotebookConf";
+    const response = await postRequest({ notebook: notebookId }, url);
+    if (response.code === 0 && response.data) {
+        return response.data;
+    }
+    return null;
+}
+
 /**
  * 批量移除闪卡
  * @param {*} ids 

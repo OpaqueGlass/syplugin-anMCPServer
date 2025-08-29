@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { appendBlockAPI, createDailyNote, getChildBlocks, prependBlockAPI, queryAPI, removeBlockAPI } from "@/syapi";
+import { appendBlockAPI, createDailyNote, getChildBlocks, getNotebookConf, prependBlockAPI, queryAPI, removeBlockAPI } from "@/syapi";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { isValidStr } from "@/utils/commonCheck";
 import { lang } from "@/utils/lang";
@@ -28,17 +28,33 @@ export class DailyNoteToolProvider extends McpToolsProvider<any> {
             name: "siyuan_list_notebook",
             description: `List all notebooks in SiYuan and return their metadata.
 
-        Each notebook is represented as an object with the following fields:
+Each notebook is represented as an object with the following fields:
 
-        - id (string): The unique identifier of the notebook.
-        - name (string): The display name of the notebook.
-        - icon (string): An emoji icon representing the notebook.
-        - sort (number): Manual sort value; lower values appear earlier.
-        - sortMode (number): The sorting mode used for this notebook.
-        - closed (boolean): Whether the notebook is currently closed.
-        - newFlashcardCount (number): Number of newly added flashcards in the notebook.
-        - dueFlashcardCount (number): Number of flashcards that are due for review.
-        - flashcardCount (number): Total number of flashcards in the notebook.`,
+* id (string): The unique identifier of the notebook.
+* name (string): The display name of the notebook.
+* icon (string): An emoji icon representing the notebook.
+* sort (number): Manual sort value; lower values appear earlier.
+* sortMode (number): The sorting mode used for this notebook.
+* closed (boolean): Whether the notebook is currently closed.
+* newFlashcardCount (number): Number of newly added flashcards in the notebook.
+* dueFlashcardCount (number): Number of flashcards that are due for review.
+* flashcardCount (number): Total number of flashcards in the notebook.
+* dailyNoteSavePath (string): The save location and filename rule for daily notes.
+  * Supports date-based templates, e.g. "/daily note/{{now | date \"2006/01\"}}/{{now | date \"2006-01-02\"}}".
+  * The directory and filename can be dynamically generated based on the current date.
+* dailyNoteTemplatePath (string): The template path for daily notes.
+  * If empty, no template is applied.
+  
+Additional creation-related fields:
+* refCreateSaveBox (string): Notebook ID where a newly created note for block reference will be saved.
+  * If empty, defaults to the current notebook.
+* refCreateSavePath (string): Path where a newly created note for block reference will be saved.
+  * If empty, defaults to the notebook root.
+* docCreateSaveBox (string): Notebook ID where new documents will be saved.
+  * If empty, defaults to the current notebook.
+* docCreateSavePath (string): Path where new documents will be saved.
+  * If empty, defaults to the notebook root.
+`,
             schema: {},
             handler: listNotebookHandler,
             annotations: {
@@ -84,6 +100,30 @@ async function appendToDailynoteHandler(params, extra) {
 }
 
 async function listNotebookHandler(params, extra) {
-    return createJsonResponse(window?.siyuan?.notebooks);
-}
+    const notebooks = window?.siyuan?.notebooks;
+    if (!notebooks) {
+        return createJsonResponse([]);
+    }
 
+    const augmentedNotebooks = await Promise.all(notebooks.map(async (notebook) => {
+        try {
+            const confData = await getNotebookConf(notebook.id);
+            if (confData && confData.conf) {
+                return {
+                    ...notebook,
+                    refCreateSaveBox: confData.conf.refCreateSaveBox,
+                    refCreateSavePath: confData.conf.refCreateSavePath,
+                    docCreateSaveBox: confData.conf.docCreateSaveBox,
+                    docCreateSavePath: confData.conf.docCreateSavePath,
+                    dailyNoteSavePath: confData.conf.dailyNoteSavePath,
+                    dailyNoteTemplatePath: confData.conf.dailyNoteTemplatePath,
+                };
+            }
+        } catch (error) {
+            warnPush(`Failed to get conf for notebook ${notebook.id}`, error);
+        }
+        return notebook;
+    }));
+
+    return createJsonResponse(augmentedNotebooks);
+}
