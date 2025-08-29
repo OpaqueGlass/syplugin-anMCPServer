@@ -528,6 +528,9 @@ export async function removeRiffCards(ids, deckId, oldCardsNum = -1) {
             return oldCardsNum - response.data.size;
         }
     }
+    if (response.code == 0) {
+        return ids.length;
+    }
     warnPush("移除闪卡出错", response);
     return null;
 }

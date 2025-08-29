@@ -1,5 +1,5 @@
-import { addRiffCards, getRiffDecks, queryAPI } from "@/syapi";
-import { isValidDeck, QUICK_DECK_ID } from "@/syapi/custom";
+import { addRiffCards, getRiffDecks, queryAPI, removeRiffCards } from "@/syapi";
+import { getBlockDBItem, isValidDeck, QUICK_DECK_ID } from "@/syapi/custom";
 import { isValidStr } from "@/utils/commonCheck";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "@/utils/mcpResponse";
 import { createNewDocWithParentId } from "./sharedFunction";
@@ -26,6 +26,36 @@ export class FlashcardToolProvider extends McpToolsProvider<any> {
                 title: "Create Flashcards with New Doc",
                 readOnlyHint: false,
                 destructiveHint: false,
+                idempotentHint: false,
+            }
+        },
+        {
+            name: "siyuan_create_flashcards",
+            description: "Create flashcards from one or more block IDs.",
+            schema: {
+                blockIds: z.array(z.string()).describe("The IDs of the blocks to be converted into flashcards."),
+                deckId: z.string().optional().describe("The ID of the deck to add the cards to. If not provided, a default deck will be used."),
+            },
+            handler: createFlashcardsHandler,
+            annotations: {
+                title: "Create Flashcards",
+                readOnlyHint: false,
+                destructiveHint: false,
+                idempotentHint: false,
+            }
+        },
+        {
+            name: "siyuan_delete_flashcards",
+            description: "Delete flashcards from a deck using their corresponding block IDs.",
+            schema: {
+                blockIds: z.array(z.string()).describe("The IDs of the blocks corresponding to the flashcards to be deleted."),
+                deckId: z.string().optional().describe("The ID of the deck to remove the cards from. If not provided, a default deck will be used."),
+            },
+            handler: deleteFlashcardsHandler,
+            annotations: {
+                title: "Delete Flashcards",
+                readOnlyHint: false,
+                destructiveHint: true,
                 idempotentHint: false,
             }
         }];
@@ -86,6 +116,55 @@ async function addFlashCardMarkdown(params, extra) {
     } else {
         return createErrorResponse("制卡失败：创建闪卡文档时遇到未知问题");
     }
+}
+
+async function createFlashcardsHandler(params, extra) {
+    let { blockIds, deckId } = params;
+    let { sendNotification, _meta} = extra;
+
+    if (!isValidStr(deckId)) {
+        deckId = QUICK_DECK_ID;
+    }
+    if (!await isValidDeck(deckId)) {
+        return createErrorResponse("Card creation failed: The DeckId does not exist. If the user has not specified a deck name or ID, set the deckId parameter to an empty string.");
+    }
+
+    for (let i = 0; i < blockIds.length; i++) {
+        const blockId = blockIds[i];
+        const dbItem = await getBlockDBItem(blockId);
+        if (dbItem == null) {
+            return createErrorResponse(`Invalid block ID: ${blockId}. Please check if the ID exists and is correct.`);
+        }
+        if (_meta?.progressToken) {
+            await sendNotification({
+                method: "notifications/progress",
+                params: { progress: (i + 1) / blockIds.length + 2, progressToken: _meta.progressToken }
+            });
+        }
+    }
+
+    const addCardsResult = await addRiffCards(blockIds, deckId);
+    if (addCardsResult === null) {
+        return createErrorResponse("Failed to create flashcards.");
+    }
+    return createSuccessResponse(`Successfully added ${blockIds.length} flashcards.`);
+}
+
+async function deleteFlashcardsHandler(params, extra) {
+    let { blockIds, deckId } = params;
+
+    if (!isValidStr(deckId)) {
+        deckId = "";
+    }
+    if (!await isValidDeck(deckId) && deckId !== "") {
+        return createErrorResponse("Card deletion failed: The DeckId does not exist. If the user has not specified a deck name or ID, set the deckId parameter to an empty string.");
+    }
+
+    const removeResult = await removeRiffCards(blockIds, deckId);
+    if (removeResult === null) {
+        return createErrorResponse("Failed to delete flashcards.");
+    }
+    return createSuccessResponse(`Successfully removed flashcards corresponding to ${blockIds.length} blocks.`);
 }
 
 async function parseDocAddCards(docId:string, addType: string, deckId: string) {
