@@ -66,7 +66,7 @@ async function addFlashCardMarkdown(params, extra) {
         }
 
         try {
-            // 需要等待索引完成
+            // 需要等待索引完成，自 https://github.com/siyuan-note/siyuan/issues/15390 更新后，此等待索引方式实际无效，变为sleep
             const addCardsResult = await useWsIndexQueue()?.enqueue(async ()=>{
                 return await parseDocAddCards(newDocId, type, deckId);
             });

@@ -20,6 +20,7 @@ import { DocVectorSearchProvider } from '@/tools/vectorSearch';
 import { FlashcardToolProvider } from '@/tools/flashCard';
 import promptCreateCardsSystemCN from '@/../static/prompt_create_cards_system_CN.md';
 import promptQuerySystemCN from '@/../static/prompt_dynamic_query_system_CN.md';
+import { AttributeToolProvider } from '@/tools/attributes';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -231,6 +232,7 @@ export default class MyMCPServer {
             new RelationToolProvider(),
             new DocVectorSearchProvider(),
             new FlashcardToolProvider(),
+            new AttributeToolProvider(),
         ];
 
         for (const provider of toolProviders) {
