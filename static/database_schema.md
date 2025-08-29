@@ -173,6 +173,19 @@
     select id from blocks where subtype = 't'
   )
   ```
+* 查询过去7天内创建的日记
+  ```sql
+  select distinct B.* 
+  from blocks as B 
+  join attributes as A 
+    on B.id = A.block_id
+  where A.name like 'custom-dailynote-%' 
+    and B.type = 'd'
+    and A.value >= strftime('%Y%m%d', datetime('now', '-7 day'))
+    and A.value <= strftime('%Y%m%d', 'now')
+  order by A.value desc;
+  ```
+
 * 查询某个块所有的反链块（引用了这个块的所有块）
 
   ```sql

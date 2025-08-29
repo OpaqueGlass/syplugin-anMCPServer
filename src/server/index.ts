@@ -19,6 +19,7 @@ import { RelationToolProvider } from '@/tools/relation';
 import { DocVectorSearchProvider } from '@/tools/vectorSearch';
 import { FlashcardToolProvider } from '@/tools/flashCard';
 import promptCreateCardsSystemCN from '@/../static/prompt_create_cards_system_CN.md';
+import promptQuerySystemCN from '@/../static/prompt_dynamic_query_system_CN.md';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -188,6 +189,35 @@ export default class MyMCPServer {
                 }]
            }
         });
+
+        // this.mcpServer.prompt("sql_query_prompt_cn", (args, extra)=>{
+        //    return {
+        //     messages: [{
+        //             role: "user",
+        //             content: {
+        //                 type: "text",
+        //                 text: promptQuerySystemCN
+        //             }
+        //         }]
+        //    }
+        // });
+
+        this.mcpServer.registerPrompt(
+            "sql_query_prompt_cn",
+            {
+                title: "Sql query prompt",
+                description: "Sql Query System Prompt",
+            },
+            ({  }) => ({
+                messages: [{
+                    role: "user",
+                    content: {
+                        type: "text",
+                        text: promptQuerySystemCN
+                    }
+                }]
+            })
+            );
 
     }
     async loadTools() {
