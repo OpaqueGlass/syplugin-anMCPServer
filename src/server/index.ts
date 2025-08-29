@@ -206,12 +206,20 @@ export default class MyMCPServer {
         for (const provider of toolProviders) {
             const tools = await provider.getTools();
             for (const tool of tools) {
-                this.mcpServer.tool(
+                this.mcpServer.registerTool(
                     tool.name,
-                    tool.description,
-                    tool.schema,
-                    tool.handler
+                    {
+                        "title": tool.name,
+                        "description": tool.description,
+                        "inputSchema": tool.schema
+                    }, tool.handler
                 );
+                // this.mcpServer.tool(
+                //     tool.name,
+                //     tool.description,
+                //     tool.schema,
+                //     tool.handler
+                // );
             }
         }
         await this.loadPrompts();

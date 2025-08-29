@@ -10,17 +10,6 @@ export class SqlToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
         return [
             {
-                name: "siyuan_query_sql",
-                description: 'Execute SQL queries to retrieve data (including notes, documents, and their content) from the SiYuan database. This tool is also used when you need to search or fetch notes/notes content. Provide a valid SQL SELECT statement to query the database. Use the "siyuan_database_schema" tool to understand the database schema, including table names, field names, and relationships, before writing your query.',
-                schema: {
-                    stmt: z.string().describe("A valid SQL SELECT statement to execute"),
-                },
-                handler: sqlHandler,
-                annotations: {
-                    readOnlyHint: true,
-                },
-            },
-            {
                 name: "siyuan_database_schema",
                 description: "Provides the SiYuan database schema, including table names, field names, and their relationships, to help construct valid SQL queries for retrieving notes or note content. Returns the schema in markdown format.",
                 schema: {},
@@ -29,6 +18,19 @@ export class SqlToolProvider extends McpToolsProvider<any> {
                     readOnlyHint: true,
                 },
             },
+            {
+                name: "siyuan_query_sql",
+                description: `Execute SQL queries to retrieve data (including notes, documents, and their content) from the SiYuan database. This tool is also used when you need to search notes content.
+Always use the 'siyuan_database_schema' tool to understand the database schema, including table names, field names, and relationships, before writing your query and use this tool.`,
+                schema: {
+                    stmt: z.string().describe("A valid SQL SELECT statement to execute"),
+                },
+                handler: sqlHandler,
+                annotations: {
+                    readOnlyHint: true,
+                },
+            },
+            
         ];
 
     }
