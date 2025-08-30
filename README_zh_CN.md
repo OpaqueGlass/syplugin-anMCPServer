@@ -2,9 +2,9 @@
 
 > 为[思源笔记](https://github.com/siyuan-note/siyuan)提供MCP服务的插件。
 
-> 当前版本: v0.3.1
+> 当前版本: v0.4.0
 >
-> 新增：（工具）通过传入Markdown文本制卡；
+> 新增：（工具）属性、闪卡基本操作；
 >
 > 其他详见[更新日志](./CHANGELOG.md)。
 
