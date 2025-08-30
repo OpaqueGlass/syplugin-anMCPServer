@@ -20,8 +20,8 @@ export class DailyNoteToolProvider extends McpToolsProvider<any> {
                 notebookId: z.string().describe("The ID of the target notebook where the daily note is located. The notebook must not be in a closed state."),
             },
             handler: appendToDailynoteHandler,
+            title: lang("tool_title_append_to_dailynote"),
             annotations: {
-                title: "Append To Dailynote",
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,
@@ -31,23 +31,25 @@ export class DailyNoteToolProvider extends McpToolsProvider<any> {
             description: `List all notebooks in SiYuan and return their metadata(such as id, open status, dailyNoteSavePath etc.).`,
             schema: {},
             handler: listNotebookHandler,
+            title: lang("tool_title_list_notebook"),
             annotations: {
-                title: "List notebook",
                 readOnlyHint: true,
             }
-        }, {
-            name: "siyuan_read_dailynote",
-            description: "Read the content of a daily note for a specific date.",
-            schema: {
-                date: z.string().optional().describe("The date of the daily note in 'yyyyMMdd' format. If not provided, today's date will be used."),
-                notebookId: z.string().optional().describe("The ID of the notebook to search for the daily note. If not provided, a random notebook will be chosen."),
-            },
-            handler: readDailynoteHandler,
-            annotations: {
-                title: "Read Daily Note",
-                readOnlyHint: true,
-            }
-        }]
+        }, 
+        // {
+        //     name: "siyuan_read_dailynote",
+        //     description: "Read the content of a daily note for a specific date.",
+        //     schema: {
+        //         date: z.string().optional().describe("The date of the daily note in 'yyyyMMdd' format. If not provided, today's date will be used."),
+        //         notebookId: z.string().optional().describe("The ID of the notebook to search for the daily note. If not provided, a random notebook will be chosen."),
+        //     },
+        //     handler: readDailynoteHandler,
+        //     title: lang("tool_title_read_dailynote"),
+        //     annotations: {
+        //         readOnlyHint: true,
+        //     }
+        // }
+        ]
     }
 }
 

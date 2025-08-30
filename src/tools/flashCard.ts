@@ -22,8 +22,8 @@ export class FlashcardToolProvider extends McpToolsProvider<any> {
                 markdownContent: z.string().describe("The Markdown-formatted content to append at the end of the new document."),
             },
             handler: addFlashCardMarkdown,
+            title: "Create Flashcards with New Doc",
             annotations: {
-                title: "Create Flashcards with New Doc",
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,
@@ -37,8 +37,8 @@ export class FlashcardToolProvider extends McpToolsProvider<any> {
                 deckId: z.string().optional().describe("The ID of the deck to add the cards to. If not provided, a default deck will be used."),
             },
             handler: createFlashcardsHandler,
+            title: "Create Flashcards",
             annotations: {
-                title: "Create Flashcards",
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,
@@ -52,8 +52,8 @@ export class FlashcardToolProvider extends McpToolsProvider<any> {
                 deckId: z.string().optional().describe("The ID of the deck to remove the cards from. If not provided, a default deck will be used."),
             },
             handler: deleteFlashcardsHandler,
+            title: "Delete Flashcards",
             annotations: {
-                title: "Delete Flashcards",
                 readOnlyHint: false,
                 destructiveHint: true,
                 idempotentHint: false,

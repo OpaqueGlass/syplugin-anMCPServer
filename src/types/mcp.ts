@@ -63,12 +63,13 @@ declare global {
          * The handler function for the tool
          */
         handler: (args: T, extra: any) => Promise<McpResponse>;
+        
+        title?: string;      // Human-readable title for the tool
 
         /**
          * The tool annotations
          */
         annotations?: {        // Optional hints about tool behavior
-            title?: string;      // Human-readable title for the tool
             readOnlyHint?: boolean;    // If true, the tool does not modify its environment
             destructiveHint?: boolean; // If true, the tool may perform destructive updates
             idempotentHint?: boolean;  // If true, repeated calls with same args have no additional effect

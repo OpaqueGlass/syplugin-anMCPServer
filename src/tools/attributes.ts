@@ -5,6 +5,8 @@ import { getBlockDBItem } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
 import { isValidStr } from "@/utils/commonCheck";
 
+import { lang } from "@/utils/lang";
+
 export class AttributeToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
         return [
@@ -16,8 +18,8 @@ export class AttributeToolProvider extends McpToolsProvider<any> {
                     attributes: z.record(z.string()).describe("An object of key-value pairs representing the attributes to set. Setting an attribute to an empty string ('') will delete it."),
                 },
                 handler: setBlockAttributesHandler,
+                title: lang("tool_title_set_block_attributes"),
                 annotations: {
-                    title: "Set Block Attributes",
                     readOnlyHint: false,
                     destructiveHint: true, // Can delete attributes
                     idempotentHint: false,
@@ -30,8 +32,8 @@ export class AttributeToolProvider extends McpToolsProvider<any> {
                     blockId: z.string().describe("The ID of the block to get attributes from."),
                 },
                 handler: getBlockAttributesHandler,
+                title: lang("tool_title_get_block_attributes"),
                 annotations: {
-                    title: "Get Block Attributes",
                     readOnlyHint: true,
                 }
             }

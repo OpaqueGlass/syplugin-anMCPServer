@@ -6,6 +6,8 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { formatSearchResult } from "@/utils/resultFilter";
 import { debugPush, errorPush, isDebugMode, logPush } from "@/logger";
 import { showMessage } from "siyuan";
+import { lang } from "@/utils/lang";
+import { FullTextSearchQuery } from "@/types/api";
 
 export class SearchToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -36,6 +38,7 @@ export class SearchToolProvider extends McpToolsProvider<any> {
                     `),
                 },
                 handler: searchHandler,
+                title: lang("tool_title_search"),
                 annotations: {
                     readOnlyHint: true,
                 },
@@ -45,6 +48,7 @@ export class SearchToolProvider extends McpToolsProvider<any> {
                 description: `Provides documentation about SiYuan's advanced query syntax for searching content blocks, including boolean operators (AND, OR, NOT).`,
                 schema: {},
                 handler: querySyntaxHandler,
+                title: lang("tool_title_query_syntax"),
                 annotations: {
                     readOnlyHint: true,
                 },

@@ -6,6 +6,8 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush } from "@/logger";
 import { createNewDocWithParentId } from "./sharedFunction";
 
+import { lang } from "@/utils/lang";
+
 export class DocWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
         return [{
@@ -16,8 +18,8 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
                 markdownContent: z.string().describe("The Markdown-formatted text to append to the end of the specified document."),
             },
             handler: appendBlockHandler,
+            title: lang("tool_title_append_markdown_to_doc"),
             annotations: {
-                title: "Append To Document",
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,
@@ -31,8 +33,8 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
                 markdownContent: z.string().describe("The Markdown content of the new note."),
             },
             handler: createNewNoteUnder,
+            title: lang("tool_title_create_new_note_with_markdown_content"),
             annotations: {
-                title: "Create New Note",
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,

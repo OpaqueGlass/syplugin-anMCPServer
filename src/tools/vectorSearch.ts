@@ -3,6 +3,7 @@ import { createErrorResponse, createJsonResponse, createSuccessResponse } from "
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush, errorPush, logPush } from "@/logger";
 import { useConsumer, useProvider } from "@/utils/indexerHelper";
+import { lang } from "@/utils/lang";
 
 export class DocVectorSearchProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -31,8 +32,8 @@ export class DocVectorSearchProvider extends McpToolsProvider<any> {
                 question: z.string().describe("Describe question about note here"),
             },
             handler: answerWithRAG,
+            title: lang("tool_title_generate_answer_with_doc"),
             annotations: {
-                title: "Answer Question with siyuan document",
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,

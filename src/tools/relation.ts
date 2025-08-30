@@ -14,8 +14,8 @@ export class RelationToolProvider extends McpToolsProvider<any> {
                 id: z.string().describe("The ID of the target document or block. The notebook where the target resides must be open."),
             },
             handler: getDocBacklink,
+            title: "Get Note Relationship",
             annotations: {
-                title: "Get Note Relationship",
                 readOnlyHint: true,
                 destructiveHint: false,
                 idempotentHint: false,
@@ -28,8 +28,8 @@ export class RelationToolProvider extends McpToolsProvider<any> {
                 "recursive": z.boolean().describe("Whether to recursively retrieve all sub-documents in nested hierarchies. If false, only direct children are returned.")
             },
             "handler": getChildrenDocIds,
+            "title": "Get Sub-Document IDs",
             "annotations": {
-                "title": "Get Sub-Document IDs",
                 "readOnlyHint": true,
                 "destructiveHint": false,
                 "idempotentHint": true

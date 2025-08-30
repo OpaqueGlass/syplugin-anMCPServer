@@ -243,7 +243,7 @@ export default class MyMCPServer {
                 this.mcpServer.registerTool(
                     tool.name,
                     {
-                        "title": tool.name,
+                        "title": tool.title,
                         "description": tool.description,
                         "inputSchema": tool.schema,
                         "annotations": tool.annotations,

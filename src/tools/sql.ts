@@ -5,6 +5,7 @@ import databaseSchema from "@/../static/database_schema.md";
 import { isSelectQuery } from "@/utils/commonCheck";
 import { commonPushCheck, debugPush, logPush } from "@/logger";
 import { McpToolsProvider } from "./baseToolProvider";
+import { lang } from "@/utils/lang";
 
 export class SqlToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -14,6 +15,7 @@ export class SqlToolProvider extends McpToolsProvider<any> {
                 description: "Provides the SiYuan database schema, including table names, field names, and their relationships, to help construct valid SQL queries for retrieving notes or note content. Returns the schema in markdown format.",
                 schema: {},
                 handler: schemaHandler,
+                title: lang("tool_title_database_schema"),
                 annotations: {
                     readOnlyHint: true,
                 },
@@ -26,6 +28,7 @@ Always use the 'siyuan_database_schema' tool to understand the database schema, 
                     stmt: z.string().describe("A valid SQL SELECT statement to execute"),
                 },
                 handler: sqlHandler,
+                title: lang("tool_title_query_sql"),
                 annotations: {
                     readOnlyHint: true,
                 },

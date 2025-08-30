@@ -6,6 +6,7 @@ import { getBlockAssets, getBlockDBItem } from "@/syapi/custom";
 import { blobToBase64Object } from "@/utils/common";
 import { debugPush, errorPush, logPush } from "@/logger";
 import { isValidStr } from "@/utils/commonCheck";
+import { lang } from "@/utils/lang";
 
 export class DocReadToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -18,8 +19,8 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
                 limit: z.number().default(10000).describe("The maximum number of characters to return in this request"),
             },
             handler: blockReadHandler,
+            title: lang("tool_title_read_doc_content_markdown"),
             annotations: {
-                title: "Read document",
                 readOnlyHint: true,
             }
         }];
