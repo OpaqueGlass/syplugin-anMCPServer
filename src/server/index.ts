@@ -211,7 +211,7 @@ export default class MyMCPServer {
             },
             ({  }) => ({
                 messages: [{
-                    role: "user",
+                    role: "assistant",
                     content: {
                         type: "text",
                         text: promptQuerySystemCN
@@ -223,7 +223,7 @@ export default class MyMCPServer {
     }
     async loadTools() {
         const plugin = getPluginInstance();
-        const readOnly = plugin?.mySettings["readOnly"] || false;
+        const readOnlyMode = plugin?.mySettings["readOnly"] || "allow_all";
 
         // 工具提供者列表
         const toolProviders = [
@@ -241,8 +241,12 @@ export default class MyMCPServer {
         for (const provider of toolProviders) {
             const tools = await provider.getTools();
             for (const tool of tools) {
-                if (readOnly && (tool.annotations?.readOnlyHint === false || tool.annotations?.destructiveHint === true)) {
-                    logPush(`Skipping tool in read-only mode: ${tool.name}`);
+                if (readOnlyMode === "deny_all" && (tool.annotations?.readOnlyHint === false || tool.annotations?.destructiveHint === true)) {
+                    logPush(`Skipping tool in read-only mode (deny_all): ${tool.name}`);
+                    continue;
+                }
+                if (readOnlyMode === "allow_non_destructive" && tool.annotations?.destructiveHint === true) {
+                    logPush(`Skipping destructive tool in non-destructive mode: ${tool.name}`);
                     continue;
                 }
                 this.mcpServer.registerTool(

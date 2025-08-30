@@ -22,7 +22,7 @@ let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 const DEFAULT_SETTING = {
     "port": "16806",
     "autoStart": false,
-    "readOnly": false,
+    "readOnly": "allow_all", // "allow_all", "allow_non_destructive", "deny_all"
     "authCode": CONSTANTS.CODE_UNSET,
     "ragBaseUrl": undefined,
 }
@@ -74,7 +74,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         const ragBaseUrlInputElem = document.createElement("input");
         const authInputElem = document.createElement("input");
         const autoStartSwitchElem = document.createElement("input");
-        const readOnlySwitchElem = document.createElement("input");
+        const readOnlySelectElem = document.createElement("select");
         
         this.setting = new Setting({
             confirmCallback: async () => {
@@ -97,7 +97,7 @@ export default class OGanMCPServerPlugin extends Plugin {
                     port: portInputElem.value,
                     authCode: myAuthCode,
                     ragBaseUrl: ragBaseUrlInputElem.value,
-                    readOnly: readOnlySwitchElem.checked,
+                    readOnly: readOnlySelectElem.value,
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
             }
@@ -154,10 +154,14 @@ export default class OGanMCPServerPlugin extends Plugin {
             direction: "column",
             description: lang("setting_readOnly_desp"),
             createActionElement: () => {
-                readOnlySwitchElem.className = "b3-switch fn__flex-center";
-                readOnlySwitchElem.type = "checkbox";
-                readOnlySwitchElem.checked = this.mySettings.readOnly || false;
-                return readOnlySwitchElem;
+                readOnlySelectElem.className = "b3-select fn__flex-center fn__size200";
+                readOnlySelectElem.innerHTML = `
+                    <option value="allow_all">${lang("setting_readOnly_allow_all")}</option>
+                    <option value="allow_non_destructive">${lang("setting_readOnly_allow_non_destructive")}</option>
+                    <option value="deny_all">${lang("setting_readOnly_deny_all")}</option>
+                `;
+                readOnlySelectElem.value = this.mySettings.readOnly || "allow_all";
+                return readOnlySelectElem;
             },
         });
 
