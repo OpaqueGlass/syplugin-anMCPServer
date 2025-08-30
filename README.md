@@ -138,3 +138,4 @@ Value: `Bearer abcdefg`
 | Developer/Project                                                         | Project Description           | Citation         |
 |---------------------------------------------------------------------|----------------|--------------|
 | [thuanpham582002/tabby-mcp-server](https://github.com/thuanpham582002/tabby-mcp-server) | Provides MCP service within the terminal software Tabby; MIT License | Implementation method of MCP service |
+| [wilsons](https://ld246.com/article/1756172573626/comment/1756384424179?r=wilsons#comments) / [Frostime](https://ld246.com/article/1739546865001#%E6%80%9D%E6%BA%90-SQL-%E6%9F%A5%E8%AF%A2-System-Prompt) | System Prompt CC BY-SA 4.0 | System Prompts etc. which locate at `static/` |
