@@ -36,5 +36,8 @@
   "setting_copyright_desp": "作者：<a target='_blank' href='https://github.com/OpaqueGlass'>OpaqueGlass</a>；<br/>问题反馈&赞助支持：<a target='_blank' href='https://github.com/OpaqueGlass/syplugin-anMCPServer'>github</a> 或 <a target='_blank' href='https://wj.qq.com/s2/12395364/b69f/'>填写问卷</a>；<br/>插件基于<a target='_blank' href='https://www.gnu.org/licenses/agpl-3.0.html'>AGPLv3</a>授权使用；<br/>使用前，请阅读“README.md”说明文档或集市下载页说明文档。",
   "tool_append_dailynote": "将Markdown内容追加到思源笔记中今天指定笔记本的每日笔记（也称为日记、今日笔记）里。\n此工具通常用于自动将信息、想法或总结记录到每日笔记（日记）页面中。\n只有打开状态的笔记本（不是关闭状态）才是有效的追加目标。",
 
+  "prompt_sql": "SQL查询与检索系统提示词",
+  "prompt_flashcards": "创建闪卡系统提示词",
+
   "lang": "CN"
 }

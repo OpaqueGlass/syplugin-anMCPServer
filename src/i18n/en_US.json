@@ -36,5 +36,9 @@
   "setting_readOnly_deny_all": "Deny all modifications (read-only)",
   "tool_append_dailynote": "Append Markdown content to today's daily note in the specified notebook in SiYuan.\nThis tool is typically used to log information, thoughts, or summaries into the daily journal page automatically. \nOnly open notebooks (not in a closed state) are valid targets for appending.",
 
+  "prompt_sql": "System prompt for sql query (zh-CN)",
+  "prompt_flashcards": "System prompt for creating flashcards (zh-CN)",
+
+
   "lang": "EN"
 }

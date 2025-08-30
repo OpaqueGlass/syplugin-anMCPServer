@@ -178,35 +178,26 @@ export default class MyMCPServer {
 
     }
     async loadPrompts() {
-        // this.mcpServer.("create_flashcards", );
-        this.mcpServer.prompt("create_flashcards_system_cn", (args, extra)=>{
-           return {
-            messages: [{
+        this.mcpServer.registerPrompt(
+            "create_flashcards_system_cn",
+            {
+                title: lang("prompt_flashcards"),
+                description: "create flash cards",
+            },
+            ({  }) => ({
+                messages: [{
                     role: "user",
                     content: {
                         type: "text",
                         text: promptCreateCardsSystemCN
                     }
                 }]
-           }
-        });
-
-        // this.mcpServer.prompt("sql_query_prompt_cn", (args, extra)=>{
-        //    return {
-        //     messages: [{
-        //             role: "user",
-        //             content: {
-        //                 type: "text",
-        //                 text: promptQuerySystemCN
-        //             }
-        //         }]
-        //    }
-        // });
-
+            })
+        );
         this.mcpServer.registerPrompt(
             "sql_query_prompt_cn",
             {
-                title: "Sql query prompt",
+                title: lang("prompt_sql"),
                 description: "Sql Query System Prompt",
             },
             ({  }) => ({
@@ -218,7 +209,7 @@ export default class MyMCPServer {
                     }
                 }]
             })
-            );
+        );
 
     }
     async loadTools() {
