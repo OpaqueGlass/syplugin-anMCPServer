@@ -20,17 +20,28 @@
 ## 🔧支持的工具
 
 - 【检索】
-  - 使用关键词搜索；
+  - ~~使用关键词搜索；~~  暂时移除，如有需要请反馈
   - 使用SQL搜索；
   - 笔记索引库问答（使用RAG后端服务，[功能测试中](./RAG_BETA.md)）；
 - 【获取】
   - 通过id获取文档kramdown；
   - 列出笔记本；
   - 通过id获取反向链接；
+  - 获取文档的子文档id；
+  - 读取属性；
+  - ~~读取指定日期日记；~~ 暂时移除，如有需要请反馈
 - 【写入】
-  - 向日记追加内容；
-  - 通过id向指定文档追加内容；
-  - 通过id在指定位置创建新文档；
+  - 文档类
+    - 向日记追加内容；
+    - 通过id向指定文档追加内容；
+    - 通过id在指定位置创建新文档；
+  - 闪卡类
+    - 通过Markdown内容创建闪卡；
+    - 通过块id创建闪卡；
+    - 通过块id删除闪卡；
+  - 属性
+    - 更改属性；
+
 
 ## ❓可能常见的问题
 
@@ -127,3 +138,4 @@ npx mcp-remote@next http://127.0.0.1:16806/mcp --header Authorization:${AUTH_HEA
 | 开发者/项目                                                         | 项目描述           | 引用方式         |
 |---------------------------------------------------------------------|----------------|--------------|
 | [thuanpham582002/tabby-mcp-server](https://github.com/thuanpham582002/tabby-mcp-server) | 在终端软件Tabby中提供MCP服务； MIT License | MCP服务实现方式 |
+| [wilsons](https://ld246.com/article/1756172573626/comment/1756384424179?r=wilsons#comments) / [Frostime](https://ld246.com/article/1739546865001#%E6%80%9D%E6%BA%90-SQL-%E6%9F%A5%E8%AF%A2-System-Prompt) | 提示词/系统提示词 CC BY-SA 4.0 | 系统提示词等，位于项目的`static/`目录 |

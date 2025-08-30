@@ -17,17 +17,37 @@
 
 ## 🔧 Supported Tools
 
-- [Search]
-  - Use keyword search;
-  - Use SQL search;
-- [Retrieve]
-  - Fetch document kramdown by ID;
-  - List notebooks;
-  - Get back links;
-- [Write]
-  - Append content to diary;
-  - Append content to a specific document by ID;
-  - Create new note by parent ID;
+* **\[Search]**
+
+  * ~~Keyword search;~~ Temporarily removed, please provide feedback if needed
+  * SQL search;
+  * Notebook index Q\&A (using RAG backend service, [feature in testing](./RAG_BETA.md));
+
+* **\[Retrieve]**
+
+  * Get document kramdown by ID;
+  * List notebooks;
+  * Get backlinks by ID;
+  * Get child document IDs;
+  * Read properties;
+  * ~~Read journal entries by date;~~ Temporarily removed, please provide feedback if needed
+
+* **\[Write]**
+
+  * **Document type**
+
+    * Append content to journal;
+    * Append content to a document by ID;
+    * Create a new document at a specified location by ID;
+  * **Flashcard type**
+
+    * Create flashcards from Markdown content;
+    * Create flashcards by block ID;
+    * Delete flashcards by block ID;
+  * **Properties**
+
+    * Modify properties;
+
 
 ## ❓ FAQ
 
