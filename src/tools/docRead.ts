@@ -23,6 +23,18 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
             annotations: {
                 readOnlyHint: true,
             }
+        },
+        {
+            name: "siyuan_get_block_kramdown",
+            description: '从思源笔记中根据文档或块 ID 获取其完整的 Kramdown 内容。与普通文本不同，此 Kramdown 格式将保留包括颜色、属性、ID 在内的所有丰富格式信息。此工具主要用于修改前读取块内容，确保更新后能完整地保留原有格式。',
+            schema: {
+                id: z.string().describe("The unique identifier of the block"),
+            },
+            handler: kramdownReadHandler,
+            title: lang("tool_title_get_block_kramdown"),
+            annotations: {
+                readOnlyHint: true,
+            }
         }];
     }
 }
@@ -51,13 +63,36 @@ async function blockReadHandler(params, extra) {
     const content = markdown["content"] || "";
     const sliced = content.slice(offset, offset + limit);
     const hasMore = offset + limit < content.length;
-    debugPush("文档内容返回中")
     return createJsonResponse({
         content: sliced,
         offset,
         limit,
         "hasMore": hasMore,
         "totalLength": content.length
+    }, otherImg);
+}
+
+async function kramdownReadHandler(params, extra) {
+    const { id } = params;
+    // 检查输入
+    const dbItem = await getBlockDBItem(id);
+    if (dbItem == null) {
+        return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
+    }
+    let otherImg = [];
+    if (dbItem.type != "d") {
+        try {
+            otherImg = await getAssets(id);
+        } catch (error) {
+            errorPush("转换Assets为图片时出错", error);
+        }
+    } else {
+        return createErrorResponse("这个工具目前仅接受读取非文档块的kramdown结构，不支持读取整篇文档");
+    }
+    const kramdown = await getKramdown(id);
+    const content = kramdown || "";
+    return createJsonResponse({
+        kramdown: content,
     }, otherImg);
 }
 
