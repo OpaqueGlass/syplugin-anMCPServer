@@ -55,7 +55,7 @@ async function appendBlockHandler(params, extra) {
     if (result == null) {
         return createErrorResponse("Failed to append to the document");
     }
-    taskManager.insert(id, markdownContent, "appendToDocEnd", {}, TASK_STATUS.APPROVED);
+    taskManager.insert(result.id, markdownContent, "appendToDocEnd", { docId: id}, TASK_STATUS.APPROVED);
     return createSuccessResponse("Successfully appended, the block ID for the new content is " + result.id);
 }
 

@@ -26,6 +26,9 @@ importers:
       ts-loader:
         specifier: ^9.5.4
         version: 9.5.4(typescript@5.9.2)(webpack@5.100.2)
+      v-code-diff:
+        specifier: ^1.13.1
+        version: 1.13.1(vue@3.5.21(typescript@5.9.2))
       vue:
         specifier: ^3.5.21
         version: 3.5.21(typescript@5.9.2)
@@ -949,6 +952,13 @@ packages:
     engines: {node: '>=0.10'}
     hasBin: true
 
+  diff-match-patch@1.0.5:
+    resolution: {integrity: sha512-IayShXAgj/QMXgB0IWmKx+rOPuGMhqm5w6jvFxmVenXKIzRqTAAsbBPT3kWQeGANj3jGgvcvv4yK6SxqYmikgw==}
+
+  diff@5.2.0:
+    resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
+    engines: {node: '>=0.3.1'}
+
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
@@ -1227,6 +1237,10 @@ packages:
   he@1.2.0:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
+
+  highlight.js@11.11.1:
+    resolution: {integrity: sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==}
+    engines: {node: '>=12.0.0'}
 
   http-errors@2.0.0:
     resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
@@ -1896,6 +1910,15 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+
+  v-code-diff@1.13.1:
+    resolution: {integrity: sha512-9LTV1dZhC1oYTntyB94vfumGgsfIX5u0fEDSI2Txx4vCE5sI5LkgeLJRRy2SsTVZmDcV+R73sBr0GpPn0TJxMw==}
+    peerDependencies:
+      '@vue/composition-api': ^1.4.9
+      vue: ^2.6.0 || >=3.0.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
 
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
@@ -2870,6 +2893,10 @@ snapshots:
   detect-libc@1.0.3:
     optional: true
 
+  diff-match-patch@1.0.5: {}
+
+  diff@5.2.0: {}
+
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
@@ -3218,6 +3245,8 @@ snapshots:
       function-bind: 1.1.2
 
   he@1.2.0: {}
+
+  highlight.js@11.11.1: {}
 
   http-errors@2.0.0:
     dependencies:
@@ -3796,6 +3825,14 @@ snapshots:
       punycode: 2.3.1
 
   util-deprecate@1.0.2: {}
+
+  v-code-diff@1.13.1(vue@3.5.21(typescript@5.9.2)):
+    dependencies:
+      diff: 5.2.0
+      diff-match-patch: 1.0.5
+      highlight.js: 11.11.1
+      vue: 3.5.21(typescript@5.9.2)
+      vue-demi: 0.14.10(vue@3.5.21(typescript@5.9.2))
 
   vary@1.1.2: {}
 

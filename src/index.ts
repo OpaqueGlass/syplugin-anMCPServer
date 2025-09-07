@@ -21,9 +21,7 @@ import { MyIndexProvider } from "./indexer/myProvider";
 import { generateUUID } from "./utils/common";
 import { createApp } from "vue";
 import historyVue from "./components/history.vue";
-import { title } from "process";
 import ElementPlus from 'element-plus';
-import elementStyle from "@/../static/element-plus.mycss";
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
@@ -52,7 +50,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
         this.eventHandler = new EventHandler();
-
+        this.addIcons(`<symbol id="iconMessageQ" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle-question-mark-icon lucide-message-circle-question-mark"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>`)
 //         const statusIconTemp = document.createElement("template");
 //         statusIconTemp.innerHTML = `<div class="toolbar__item ariaLabel" aria-label="Remove plugin-sample Data">
 //     <svg>
@@ -115,17 +113,7 @@ export default class OGanMCPServerPlugin extends Plugin {
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
             }
         });
-        this.setting.addItem({
-            title: lang("setting_autoApproveLocalChange") || "自动批准原地更改",
-            direction: "column",
-            description: lang("setting_autoApproveLocalChange_desp") || "开启后，原地更改操作将自动批准，无需人工审核。",
-            createActionElement: () => {
-                autoApproveLocalChangeSwitchElem.className = "b3-switch fn__flex-center";
-                autoApproveLocalChangeSwitchElem.type = "checkbox";
-                autoApproveLocalChangeSwitchElem.checked = this.mySettings.autoApproveLocalChange || false;
-                return autoApproveLocalChangeSwitchElem;
-            },
-        });
+        
         this.setting.addItem({
             title: lang("setting_port"),
             direction: "column",
@@ -189,6 +177,36 @@ export default class OGanMCPServerPlugin extends Plugin {
             },
         });
 
+        
+        this.setting.addItem({
+            title: lang("setting_autoApproveLocalChange"),
+            direction: "column",
+            description: lang("setting_autoApproveLocalChange_desp"),
+            createActionElement: () => {
+                autoApproveLocalChangeSwitchElem.className = "b3-switch fn__flex-center";
+                autoApproveLocalChangeSwitchElem.type = "checkbox";
+                autoApproveLocalChangeSwitchElem.checked = this.mySettings.autoApproveLocalChange || false;
+                return autoApproveLocalChangeSwitchElem;
+            },
+        });
+
+        this.setting.addItem({
+            title: lang("setting_rag_baseurl"),
+            direction: "column",
+            description: lang("setting_rag_baseurl_desp"),
+            createActionElement: () => {
+                ragBaseUrlInputElem.className = "b3-text-field fn__flex-center fn__size200";
+                ragBaseUrlInputElem.type = "text";
+                ragBaseUrlInputElem.placeholder = "http://127.0.0.1:26806";
+                ragBaseUrlInputElem.value = this.mySettings.ragBaseUrl ?? "";
+                ragBaseUrlInputElem.addEventListener("change", ()=>{
+                    this.mySettings['ragBaseUrl'] = ragBaseUrlInputElem.value;
+                });
+                return ragBaseUrlInputElem;
+            },
+        });
+
+
         this.setting.addItem({
             title: lang("setting_control"),
             direction: "column",
@@ -207,22 +225,6 @@ export default class OGanMCPServerPlugin extends Plugin {
                     }
                 });
                 return startStopBtnElem;
-            },
-        });
-
-        this.setting.addItem({
-            title: lang("setting_rag_baseurl"),
-            direction: "column",
-            description: lang("setting_rag_baseurl_desp"),
-            createActionElement: () => {
-                ragBaseUrlInputElem.className = "b3-text-field fn__flex-center fn__size200";
-                ragBaseUrlInputElem.type = "text";
-                ragBaseUrlInputElem.placeholder = "http://127.0.0.1:26806";
-                ragBaseUrlInputElem.value = this.mySettings.ragBaseUrl ?? "";
-                ragBaseUrlInputElem.addEventListener("change", ()=>{
-                    this.mySettings['ragBaseUrl'] = ragBaseUrlInputElem.value;
-                });
-                return ragBaseUrlInputElem;
             },
         });
 
@@ -334,7 +336,22 @@ export default class OGanMCPServerPlugin extends Plugin {
                     app: this.app,
                     custom: {
                         icon: "iconHistory",
-                        title: lang("tool_title_history"),
+                        title: lang("tab_title_history"),
+                        id: this.name + "og_history_page",
+                    },
+                });
+            }
+        });
+        this.addTopBar({
+            "icon": "iconMessageQ",
+            "title": lang("tab_title_history"),
+            "callback": async ()=>{
+                infoPush(this.name)
+                openTab({
+                    app: this.app,
+                    custom: {
+                        icon: "iconHistory",
+                        title: lang("tab_title_history"),
                         id: this.name + "og_history_page",
                     },
                 });

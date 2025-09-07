@@ -103,6 +103,19 @@ class TaskManager {
     }
 
     /**
+     * 批量拒绝所有待审阅任务
+     */
+    async rejectAll() {
+        this.tasks.forEach(task => {
+            if (task.status === TASK_STATUS.PENDING) {
+                task.status = TASK_STATUS.REJECTED;
+                task.updatedAt = new Date().toISOString();
+            }
+        });
+        await this.#save();
+    }
+
+    /**
      * 列出所有任务
      * @param {string} sortOrder - 排序方式, 'asc' 或 'desc'
      * @returns {Array<object>} 任务列表

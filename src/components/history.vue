@@ -1,30 +1,33 @@
 <template>
-  <div class="task-history">
-    <h2>新增/修改类任务历史记录</h2>
+  <div :class="{'task-history': true, 'dark': darkModeFlag}">
+    <h2>{{ lang("history_title") }}</h2>
     <div style="margin-bottom: 12px; display: flex; gap: 12px; align-items: center;">
-      <el-button size="small" type="primary" @click="toggleShowAll">{{ showAll ? '只看待审' : '显示全部' }}</el-button>
-      <span>排序：</span>
+      <el-button size="small" type="primary" @click="toggleShowAll">{{ showAll ? lang("history_btn_pending") : lang("history_btn_all") }}</el-button>
+      <el-button size="small" type="danger" @click="rejectAll">{{ lang("history_btn_reject_all") }}</el-button>
+      <el-button size="small" type="success" @click="approveAll">{{ lang("history_btn_approve_all") }}</el-button>
+      <el-button size="small" type="warning" @click="cleanTasks">{{ lang("history_btn_clean") }}</el-button>
+      <span>{{ lang("history_sort") }}：</span>
       <el-radio-group v-model="sortOrder" @change="refreshTasks">
-        <el-radio-button label="desc">最新优先</el-radio-button>
-        <el-radio-button label="asc">最早优先</el-radio-button>
+        <el-radio-button label="desc">{{ lang("history_sort_desc") }}</el-radio-button>
+        <el-radio-button label="asc">{{ lang("history_sort_asc") }}</el-radio-button>
       </el-radio-group>
     </div>
     <el-table :data="tasks" style="width: 100%" v-loading="loading">
-      <el-table-column prop="id" label="任务ID" width="80" />
-      <el-table-column prop="taskType" label="类型" width="120" />
-      <el-table-column label="新增/修改对象ID" width="180">
+      <el-table-column prop="id" :label="lang('history_col_id')" width="80" />
+      <el-table-column prop="taskType" :label="lang('history_col_type')" width="120" />
+      <el-table-column :label="lang('history_col_objid')" width="180">
         <template #default="{ row }">
           <div>
-            <span v-for="(id, idx) in limitedIds(row.modifiedIds)" :key="id" style="margin-right: 4px;">
+            <span v-for="id in limitedIds(row.modifiedIds)" :key="id" style="margin-right: 4px;">
               <el-tag size="small" @click.stop="openSingleDoc(id)" style="cursor:pointer;">{{ id }}</el-tag>
             </span>
             <span v-if="row.modifiedIds.length > 5">
-              <el-tag size="small" type="info" style="cursor:pointer;" @click.stop="showAllIds(row.modifiedIds)">+{{ row.modifiedIds.length - 5 }} 更多</el-tag>
+              <el-tag size="small" type="info" style="cursor:pointer;" @click.stop="showAllIds(row.modifiedIds)">+{{ row.modifiedIds.length - 5 }} {{ lang('history_more') }}</el-tag>
             </span>
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="状态" width="100">
+      <el-table-column :label="lang('history_col_status')" width="100">
         <template #default="{ row }">
           <el-tag
             :type="getStatusType(row.status)"
@@ -34,19 +37,20 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="180">
+      <el-table-column :label="lang('history_col_created')" width="180">
         <template #default="{ row }">
           {{ new Date(row.createdAt).toLocaleString() }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200">
+      <el-table-column :label="lang('history_col_action')" width="200">
         <template #default="{ row }">
           <el-button
             size="small"
             type="primary"
-            @click="openDocs(row.modifiedIds)"
+            v-if="row.status === 0"
+            @click="diffDocs(row.modifiedIds, row.id)"
           >
-            查看
+            {{ lang('history_btn_view') }}
           </el-button>
           <el-button
             v-if="row.status === 0"
@@ -54,7 +58,7 @@
             type="success"
             @click="handleAction(row.id, 'solve')"
           >
-            批准
+            {{ lang('history_btn_approve') }}
           </el-button>
           <el-button
             v-if="row.status === 0"
@@ -62,19 +66,50 @@
             type="danger"
             @click="handleAction(row.id, 'reject')"
           >
-            拒绝
+            {{ lang('history_btn_reject') }}
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column label="修改内容">
+      <el-table-column :label="lang('history_col_content')">
         <template #default="{ row }">
           <span>
             {{ getShortContent(row.content) }}
-            <el-link v-if="isContentLong(row.content)" type="primary" @click.stop="showFullContent(row.content)" style="margin-left:8px;">查看全部</el-link>
+            <el-link v-if="isContentLong(row.content)" type="primary" @click.stop="showFullContent(row.content)" style="margin-left:8px;">{{ lang('history_dialog_fullcontent') }}</el-link>
           </span>
         </template>
       </el-table-column>
     </el-table>
+    <el-dialog
+      v-model="dialogVisible"
+      :title="lang('history_dialog_allids')"
+      width="70vw"
+      higth="60vh"
+    >
+      <CodeDiff
+        :old-string="diffOldValue"
+        :new-string="diffNewValue"
+        output-format="side-by-side"
+        :theme="darkModeFlag ? 'dark' : 'light'"
+      />
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">{{ lang('history_dialog_close') }}</el-button>
+        </div>
+      </template>
+    </el-dialog>
+    <el-dialog
+      v-model="cleanDialogVisible"
+      :title="lang('history_msg_clean_title')"
+    >
+      <div>
+        <p>{{ lang('history_msg_clean_prompt') }}</p>
+        <el-input v-model="cleanDays" placeholder="{{ lang('history_msg_clean_placeholder') }}" />
+      </div>
+      <template #footer>
+        <el-button @click="cleanDialogVisible = false">{{ lang('history_msg_clean_cancel') }}</el-button>
+        <el-button type="primary" @click="confirmClean">{{ lang('history_msg_clean_confirm') }}</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -85,6 +120,9 @@ import { ElMessage } from 'element-plus';
 import { taskManager } from '../utils/historyTaskHelper'; // 请根据你的文件路径调整
 import { openTab } from 'siyuan';
 import { getPluginInstance } from '@/utils/pluginHelper';
+import { getKramdown, isDarkMode } from '@/syapi';
+import { CodeDiff } from 'v-code-diff';
+import { lang } from '@/utils/lang';
 import { auditRedo } from '@/audit/auditRedoer';
 
 const tasks = ref([]);
@@ -92,8 +130,14 @@ const loading = ref(true);
 const showAll = ref(false);
 const sortOrder = ref('desc');
 
+const darkModeFlag = ref(isDarkMode())
+
+const dialogVisible = ref(false);
+
+const diffOldValue = ref("")
+const diffNewValue = ref("")
+
 const MAX_CONTENT_LENGTH = 60;
-const fullContentDialog = ref(false);
 const fullContent = ref('');
 
 const TASK_STATUS = {
@@ -142,13 +186,13 @@ const getStatusType = (status) => {
 const getStatusText = (status) => {
   switch (status) {
     case TASK_STATUS.PENDING:
-      return '待审阅';
+      return lang('history_status_pending');
     case TASK_STATUS.APPROVED:
-      return '已批准';
+      return lang('history_status_approved');
     case TASK_STATUS.REJECTED:
-      return '已拒绝';
+      return lang('history_status_rejected');
     default:
-      return '未知';
+      return lang('history_status_unknown');
   }
 };
 
@@ -156,15 +200,18 @@ const getStatusText = (status) => {
  * 处理打开文档的逻辑
  * @param {string[]} docIds - 文档的唯一ID数组
  */
-const openDocs = (docIds: string[]) => {
-  if (!Array.isArray(docIds)) return;
-  openTab({
-      app: getPluginInstance().app,
-      doc: { id: docIds[0] }
-  });
-};
+// const openDocs = (docIds: string[]) => {
+//   if (!Array.isArray(docIds)) return;
+//   openTab({
+//       app: getPluginInstance().app,
+//       doc: { id: docIds[0] }
+//   });
+// };
 
-// 单个ID点击打开文档
+/**
+ * 单个ID点击打开文档
+ * @param {string} docId - 文档的唯一ID
+ */
 const openSingleDoc = (docId: string) => {
   openTab({
     app: getPluginInstance().app,
@@ -225,13 +272,74 @@ const isContentLong = (content: string) => {
 const showFullContent = (content: string) => {
   fullContent.value = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
   ElMessageBox({
-    title: '完整内容',
+    title: lang('history_dialog_fullcontent'),
     message: `<pre style='white-space:pre-wrap;word-break:break-all;'>${fullContent.value.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`,
     dangerouslyUseHTMLString: true,
     showCancelButton: false,
     confirmButtonText: '关闭',
     callback: () => {}
   });
+};
+
+const diffDocs = async (modifiedIds, taskId) => {
+  const blockId = modifiedIds[0];
+  const oriContent = await getKramdown(blockId);
+  const newContent = taskManager.getTask(taskId);
+  diffOldValue.value = oriContent;
+  diffNewValue.value = newContent["content"];
+  dialogVisible.value = true;
+}
+
+const rejectAll = async () => {
+  try {
+    for (let task of tasks.value) {
+      if (task.status !== TASK_STATUS.PENDING) continue;
+      await handleAction(task.id, 'reject');
+    }
+    ElMessage.success(lang("history_msg_reject_all_success"));
+    fetchTasks();
+  } catch (error) {
+    ElMessage.error(lang("history_msg_reject_all_error"));
+    console.error(error);
+  }
+};
+
+const approveAll = async () => {
+  try {
+    for (let task of tasks.value) {
+      if (task.status !== TASK_STATUS.PENDING) continue;
+      await handleAction(task.id, 'solve');
+    }
+    ElMessage.success(lang("history_msg_approve_all_success"));
+    fetchTasks();
+  } catch (error) {
+    ElMessage.error(lang("history_msg_approve_all_error"));
+    console.error(error);
+  }
+};
+
+const cleanDialogVisible = ref(false);
+const cleanDays = ref('');
+
+const confirmClean = async () => {
+  try {
+    const days = parseInt(cleanDays.value);
+    if (isNaN(days) || days <= 0) {
+      ElMessage.error(lang('history_msg_clean_invalid'));
+      return;
+    }
+    await taskManager.clean(days, true);
+    ElMessage.success(lang('history_msg_clean_success'));
+    cleanDialogVisible.value = false;
+    fetchTasks();
+  } catch (error) {
+    ElMessage.error(lang('history_msg_clean_error'));
+    console.error(error);
+  }
+};
+
+const cleanTasks = () => {
+  cleanDialogVisible.value = true;
 };
 
 // 组件挂载时加载数据
