@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { getBackLink2T, getNodebookList, listDocsByPathT, listDocTree } from "@/syapi";
+import { getBackLink2T, getChildBlocks, getNodebookList, listDocsByPathT, listDocTree } from "@/syapi";
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush, logPush, warnPush } from "@/logger";
 import { getBlockDBItem, getChildDocumentIds, getDocDBitem, getSubDocIds } from "@/syapi/custom";
@@ -27,7 +27,20 @@ export class RelationToolProvider extends McpToolsProvider<any> {
                 "id": z.string().describe("The ID of the parent document or notebook. The notebook containing this document must be open."),
             },
             "handler": getChildrenDocs,
-            "title": "Get Sub-Document IDs",
+            "title": "Get Sub-Document Information",
+            "annotations": {
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+            }
+        },{
+            "name": "siyuan_get_children_blocks",
+            "description": "根据父块的 ID，获取其下方的所有子块列表。这包括直接嵌套的块以及标题下方的块。过长的块内容将被省略、仅提供预览。有助于理解块的层级结构和内容组织。",
+            "schema": {
+                "id": z.string().describe("父块的唯一标识符（ID）。")
+            },
+            "handler": getChildBlocksTool,
+            "title": "获取子块列表",
             "annotations": {
                 "readOnlyHint": true,
                 "destructiveHint": false,
@@ -79,3 +92,12 @@ async function getChildrenDocs(params, extra) {
     }
     return createJsonResponse(result);
 } 
+
+async function getChildBlocksTool(params, extra) {
+    const { id } = params;
+    const sqlResult = await getBlockDBItem(id);
+    if (sqlResult == null) {
+        return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
+    }
+    return createJsonResponse(await getChildBlocks(id));
+}

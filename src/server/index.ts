@@ -21,6 +21,7 @@ import { FlashcardToolProvider } from '@/tools/flashCard';
 import promptCreateCardsSystemCN from '@/../static/prompt_create_cards_system_CN.md';
 import promptQuerySystemCN from '@/../static/prompt_dynamic_query_system_CN.md';
 import { AttributeToolProvider } from '@/tools/attributes';
+import { BlockWriteToolProvider } from '@/tools/blockWrite';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -227,6 +228,7 @@ export default class MyMCPServer {
             new DocVectorSearchProvider(),
             new FlashcardToolProvider(),
             new AttributeToolProvider(),
+            new BlockWriteToolProvider(),
         ];
 
         for (const provider of toolProviders) {

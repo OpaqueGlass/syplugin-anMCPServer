@@ -165,7 +165,7 @@ export async function updateBlockAPI(text, blockid, textType = "markdown"){
  * @param {string} addType 插入到哪里？默认插入为指定块之后，NEXT 为插入到指定块之前， PARENT 为插入为指定块的子块
  * @return 对象，为response.data[0].doOperations[0]的值，返回码为-1时也返回null
  */
-export async function insertBlockAPI(text, blockid, addType = "previousID", textType = "markdown", ){
+export async function insertBlockAPI(text, blockid, addType = "previousID", textType = "markdown"){
     let url = "/api/block/insertBlock";
     let data = {dataType: textType, data: text};
     switch (addType) {
@@ -204,6 +204,55 @@ export async function insertBlockAPI(text, blockid, addType = "previousID", text
     }
     return null;
 
+}
+
+
+/**
+ * 插入块 API
+ * @param {Object} params
+ * @param {"markdown"|"dom"} params.dataType - 数据类型
+ * @param {string} params.data - 待插入的数据
+ * @param {string} params.nextID - 后一个块的ID
+ * @param {string} params.previousID - 前一个块的ID
+ * @param {string} params.parentID - 父块ID
+ * @returns {Promise<Object>} 插入结果
+ */
+export async function insertBlockOriginAPI({ dataType, data, nextID, previousID, parentID }) {
+    // 参数校验
+    if (!isValidStr(dataType) || !["markdown", "dom"].includes(dataType)) {
+        throw new Error("Invalid dataType");
+    }
+    if (!isValidStr(data)) {
+        throw new Error("Data cannot be empty");
+    }
+    // 定位插入点，优先级 nextID > previousID > parentID
+    let anchorType = "";
+    let anchorID = "";
+    if (isValidStr(nextID)) {
+        anchorType = "nextID";
+        anchorID = nextID;
+    } else if (isValidStr(previousID)) {
+        anchorType = "previousID";
+        anchorID = previousID;
+    } else if (isValidStr(parentID)) {
+        anchorType = "parentID";
+        anchorID = parentID;
+    } else {
+        throw new Error("At least one anchor ID(nextID, previousId or parentId) must be provided");
+    }
+
+    const payload = {
+        dataType,
+        data,
+        nextID,
+        previousID,
+        parentID
+    };
+    let response = await postRequest(payload, "/api/block/insertBlock");
+    if (response.data == null || response.data.length == 0 || response.data[0].doOperations == null || response.data[0].doOperations.length === 0 || response.data[0].doOperations[0] == null || !isValidStr(response.data[0].doOperations[0].id)) {
+        throw new Error("Insert block failed: No operations returned");
+    }
+    return response.data;
 }
 
 /**
@@ -248,6 +297,7 @@ export async function prependBlockAPI(text, parentId, textType = "markdown"){
     return null;
 
 }
+
 /**
  * 插入为前置子块
  * @param {*} text 子块文本

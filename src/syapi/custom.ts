@@ -222,7 +222,7 @@ export function removeCurrentTabF(docId?:string) {
 }
 
 export function isValidIdFormat(id: string): boolean {
-    const idRegex = /^\d{14}-[a-zA-Z0-9]{7}$/;
+    const idRegex = /^\d{14}-[a-zA-Z0-9]{7}$/gm;
     return idRegex.test(id);
 }
 

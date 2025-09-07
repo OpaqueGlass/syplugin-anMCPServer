@@ -73,3 +73,8 @@ export function isValidNotebookId(id: string) {
     const result = notebooks.find(item=>item.id === id);
     return result != null;
 }
+
+export function isNonContainerBlockType(type: string) {
+    const nonContainerTypes = ["audio", "av", "c", "html", "iframe", "m", "p", "t", "tb", "video", "widget", "h", "query_embed"];
+    return nonContainerTypes.includes(type);
+}

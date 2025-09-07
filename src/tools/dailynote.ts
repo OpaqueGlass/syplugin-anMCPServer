@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { appendBlockAPI, createDailyNote, getChildBlocks, getNotebookConf, prependBlockAPI, queryAPI, removeBlockAPI, exportMdContent, getFileAPIv2 } from "@/syapi";
+import { appendBlockAPI, createDailyNote, getChildBlocks, getNotebookConf, queryAPI, removeBlockAPI, exportMdContent, getFileAPIv2 } from "@/syapi";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { isValidStr } from "@/utils/commonCheck";
 import { lang } from "@/utils/lang";
