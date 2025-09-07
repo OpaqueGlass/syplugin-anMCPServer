@@ -35,7 +35,7 @@ export default class MyMCPServer {
     constructor() {
         this.mcpServer = new McpServer({
             "name": "siyuan",
-            "version": "0.4.0"
+            "version": "0.5.0"
         }, {
             "capabilities": {
                 "tools": {},
