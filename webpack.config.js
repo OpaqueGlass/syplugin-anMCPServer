@@ -44,6 +44,7 @@ module.exports = (env, argv) => {
                 {from: "LICENSE", to: "./dist/"},
                 {from: "CHANGELOG.md", to: "./dist/"},
                 {from: "src/i18n/", to: "./dist/i18n/"},
+                {from: "static", to: "./dist/static/"},
             ],
         }));
         plugins.push(new ZipPlugin({
@@ -58,7 +59,8 @@ module.exports = (env, argv) => {
         plugins.push(new CopyPlugin({
             patterns: [
                 {from: "src/i18n/", to: "./i18n/"},
-                {from: "preview.png", to: ".x"},
+                {from: "static/", to: "./static/"},
+                {from: "preview.png", to: "."},
                 {from: "icon.png", to: "."},
                 {from: "README*.md", to: "."},
                 {from: "plugin.json", to: ""},

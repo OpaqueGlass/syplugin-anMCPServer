@@ -1,9 +1,9 @@
 import { getJSONFile, putJSONFile } from "@/syapi";
 
-const TASKS_FILE_PATH = '/data/storage/petal/syplugin-anMCPServer';
+const TASKS_FILE_PATH = '/data/storage/petal/syplugin-anMCPServer/tasks.json';
 
 // 任务状态常量
-const TASK_STATUS = {
+export const TASK_STATUS = {
     PENDING: 0, // 待审阅
     APPROVED: 1, // 已批准
     REJECTED: -1 // 已拒绝
@@ -42,18 +42,18 @@ class TaskManager {
 
     /**
      * 插入一个新任务
-     * @param {string} id - 任务修改内容的唯一ID
+     * @param {string[]} ids - 任务修改内容的唯一ID数组
      * @param {object} content - 修改后的内容
      * @param {string} taskType - 任务类型的唯一名称
      * @param {object} args - 任务的其他参数
      * @param {number} status - 任务状态
      * @returns {number} 新任务的唯一ID
      */
-    async insert(id, content, taskType, args, status = TASK_STATUS.PENDING) {
+    async insert(ids, content, taskType, args, status = TASK_STATUS.PENDING) {
         const taskId = this.nextId++;
         const newTask = {
             id: taskId,
-            modifiedId: id,
+            modifiedIds: Array.isArray(ids) ? ids : [ids],
             content: content,
             taskType: taskType,
             args: args,
@@ -82,6 +82,7 @@ class TaskManager {
     async solve(taskId) {
         const task = this.#getTaskById(taskId);
         if (task) {
+            // RedoTask
             task.status = TASK_STATUS.APPROVED;
             task.updatedAt = new Date().toISOString();
             await this.#save();
@@ -108,8 +109,8 @@ class TaskManager {
      */
     listAll(sortOrder = 'desc') {
         const sortedTasks = [...this.tasks].sort((a, b) => {
-            const dateA = new Date(a.createdAt);
-            const dateB = new Date(b.createdAt);
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
             return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
         });
         return sortedTasks;
@@ -123,8 +124,8 @@ class TaskManager {
     list(sortOrder = 'desc') {
         const pendingTasks = this.tasks.filter(task => task.status === TASK_STATUS.PENDING);
         const sortedPendingTasks = pendingTasks.sort((a, b) => {
-            const dateA = new Date(a.createdAt);
-            const dateB = new Date(b.createdAt);
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
             return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
         });
         return sortedPendingTasks;
@@ -166,3 +167,4 @@ class TaskManager {
 }
 
 export const taskManager = new TaskManager();
+taskManager.init();

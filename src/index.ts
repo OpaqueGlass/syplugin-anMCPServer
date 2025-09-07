@@ -22,17 +22,18 @@ import { generateUUID } from "./utils/common";
 import { createApp } from "vue";
 import historyVue from "./components/history.vue";
 import { title } from "process";
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
+import ElementPlus from 'element-plus';
+import elementStyle from "@/../static/element-plus.mycss";
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
 const DEFAULT_SETTING = {
-    "port": "16806",
-    "autoStart": false,
-    "readOnly": "allow_all", // "allow_all", "allow_non_destructive", "deny_all"
-    "authCode": CONSTANTS.CODE_UNSET,
-    "ragBaseUrl": undefined,
+    port: "16806",
+    autoStart: false,
+    readOnly: "allow_all", // "allow_all", "allow_non_destructive", "deny_all"
+    authCode: CONSTANTS.CODE_UNSET,
+    ragBaseUrl: undefined,
+    autoApproveLocalChange: false, // 是否自动批准原地更改
 }
 
 export default class OGanMCPServerPlugin extends Plugin {
@@ -85,6 +86,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         const authInputElem = document.createElement("input");
         const autoStartSwitchElem = document.createElement("input");
         const readOnlySelectElem = document.createElement("select");
+        const autoApproveLocalChangeSwitchElem = document.createElement("input");
         
         this.setting = new Setting({
             confirmCallback: async () => {
@@ -108,9 +110,21 @@ export default class OGanMCPServerPlugin extends Plugin {
                     authCode: myAuthCode,
                     ragBaseUrl: ragBaseUrlInputElem.value,
                     readOnly: readOnlySelectElem.value,
+                    autoApproveLocalChange: autoApproveLocalChangeSwitchElem.checked,
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
             }
+        });
+        this.setting.addItem({
+            title: lang("setting_autoApproveLocalChange") || "自动批准原地更改",
+            direction: "column",
+            description: lang("setting_autoApproveLocalChange_desp") || "开启后，原地更改操作将自动批准，无需人工审核。",
+            createActionElement: () => {
+                autoApproveLocalChangeSwitchElem.className = "b3-switch fn__flex-center";
+                autoApproveLocalChangeSwitchElem.type = "checkbox";
+                autoApproveLocalChangeSwitchElem.checked = this.mySettings.autoApproveLocalChange || false;
+                return autoApproveLocalChangeSwitchElem;
+            },
         });
         this.setting.addItem({
             title: lang("setting_port"),
@@ -281,9 +295,24 @@ export default class OGanMCPServerPlugin extends Plugin {
         this.historyPage = this.addTab({
             type: "og_history_page",
             init() {
-                infoPush("Loading")
+                infoPush("Loading");
+                // 创建 shadowRoot
+                const shadowHost = document.createElement("div");
+                shadowHost.style.height = "100%";
+                shadowHost.style.margin = "30px 30px";
+                this.element.appendChild(shadowHost);
+                const shadowRoot = shadowHost.attachShadow({ mode: "open" });
+                // 创建挂载点
                 const container = document.createElement("div");
-                this.element.appendChild(container);
+                container.id = "og-history-vue-root";
+                shadowRoot.appendChild(container);
+                // 注入 element-plus 样式
+                const styleElem = document.createElement("style");
+                fetch("/plugins/syplugin-anMCPServer/static/element-plus.css")
+                  .then(res => res.text())
+                  .then(css => { styleElem.textContent = css.replace(":root", ":host"); });
+                shadowRoot.prepend(styleElem);
+                // 挂载 Vue
                 that._historyVueApp = createApp(historyVue);
                 that._historyVueApp.use(ElementPlus);
                 that._historyVueApp.mount(container);
@@ -316,7 +345,7 @@ export default class OGanMCPServerPlugin extends Plugin {
     onLayoutReady() {
         const name = CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36);
         this.loadData(name).then(()=>{
-            this.mySettings = Object.assign(this.mySettings, this.data[name]);
+            this.mySettings = Object.assign({}, DEFAULT_SETTING, this.data[name]);
             logPush("this.data", this.mySettings);
             this.myMCPServer.initialize();
             this.eventHandler.bindHandler();

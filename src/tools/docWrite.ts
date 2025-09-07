@@ -7,6 +7,7 @@ import { debugPush } from "@/logger";
 import { createNewDocWithParentId } from "./sharedFunction";
 
 import { lang } from "@/utils/lang";
+import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 
 export class DocWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -54,7 +55,7 @@ async function appendBlockHandler(params, extra) {
     if (result == null) {
         return createErrorResponse("Failed to append to the document");
     }
-
+    taskManager.insert(id, markdownContent, "appendToDocEnd", {}, TASK_STATUS.APPROVED);
     return createSuccessResponse("Successfully appended, the block ID for the new content is " + result.id);
 }
 
@@ -62,5 +63,8 @@ async function createNewNoteUnder(params, extra) {
     const { parentId, title, markdownContent } = params;
     debugPush("添加新笔记被调用");
     const {result, newDocId} = await createNewDocWithParentId(parentId, title, markdownContent);
+    if (result) {
+        taskManager.insert(newDocId, markdownContent, "createNewNoteUnder", {}, TASK_STATUS.APPROVED);
+    }
     return result ? createSuccessResponse(`成功创建文档，文档id为：${newDocId}`) : createErrorResponse("An Error Occured");
 }

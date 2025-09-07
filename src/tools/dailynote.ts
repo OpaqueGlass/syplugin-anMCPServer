@@ -8,6 +8,7 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush, logPush, warnPush, errorPush } from "@/logger";
 import { getBlockAssets } from "@/syapi/custom";
 import { blobToBase64Object } from "@/utils/common";
+import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 
 export class DailyNoteToolProvider extends McpToolsProvider<any> {
     
@@ -182,6 +183,7 @@ async function appendToDailynoteHandler(params, extra) {
     } else {
         return createErrorResponse("Internal Error: failed to create dailynote");
     }
+    taskManager.insert(id, markdownContent, "appendToDailyNote", {}, TASK_STATUS.APPROVED);
     return createSuccessResponse("Successfully created the dailynote, the block ID for the new content is " + newBlockId);
 }
 

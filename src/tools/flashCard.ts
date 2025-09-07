@@ -6,6 +6,7 @@ import { createNewDocWithParentId } from "./sharedFunction";
 import { McpToolsProvider } from "./baseToolProvider";
 import { z } from "zod";
 import { useWsIndexQueue } from "@/utils/wsMainHelper";
+import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 
 const TYPE_VALID_LIST = ["h1", "h2", "h3", "h4", "h5", "highlight", "superBlock"] as const;
 
@@ -76,6 +77,9 @@ async function addFlashCardMarkdown(params, extra) {
         return createErrorResponse("制卡失败：高亮内容制卡需要用户启用Markdown标记语法，请提醒用户开启此功能（设置-编辑器-Markdown行级标记语法）");
     }
     const {result, newDocId} = await createNewDocWithParentId(parentId, docTitle, markdownContent);
+    if (result) {
+        taskManager.insert(newDocId, markdownContent, "createNewNoteWithFlashCard", {}, TASK_STATUS.APPROVED);
+    }
     if (result) {
         let progressInterval: any;
         if (_meta?.progressToken) {

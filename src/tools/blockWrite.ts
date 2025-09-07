@@ -7,6 +7,8 @@ import { debugPush } from "@/logger";
 
 import { lang } from "@/utils/lang";
 import { isNonContainerBlockType, isValidNotebookId, isValidStr } from "@/utils/commonCheck";
+import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
+import { getPluginInstance } from "@/utils/pluginHelper";
 
 export class BlockWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -91,6 +93,7 @@ async function insertBlockHandler(params, extra) {
     if (response == null) {
         return createErrorResponse("Failed to insert the block");
     }
+    taskManager.insert(response[0].doOperations[0].id, data, "insertBlock", { parentID }, TASK_STATUS.APPROVED);
     return createSuccessResponse("Successfully inserted. The first block ID is " + response[0].doOperations[0].id + ". Multiple blocks may have been created depending on the content.");
 }
 
@@ -114,7 +117,8 @@ async function prependBlockHandler(params, extra) {
     if (response == null) {
         return createErrorResponse("Failed to prepend the block");
     }
-    return createSuccessResponse(`"Successfully prepended. The first block ID is " + result.id + ". Multiple blocks may have been created depending on the content."`);
+    taskManager.insert(response.id, data, "prependBlock", { parentID }, TASK_STATUS.APPROVED);
+    return createSuccessResponse("Successfully prepended. The first block ID is " + response.id + ". Multiple blocks may have been created depending on the content.");
 }
 
 async function appendBlockHandler(params, extra) {
@@ -137,6 +141,7 @@ async function appendBlockHandler(params, extra) {
     if (result == null) {
         return createErrorResponse("Failed to append to the block");
     }
+    taskManager.insert(result.id, data, "appendBlock", { parentID }, TASK_STATUS.APPROVED);
     return createSuccessResponse("Successfully appended. The first block ID is " + result.id + ". Multiple blocks may have been created depending on the content.");
 }
 
@@ -149,10 +154,21 @@ async function updateBlockHandler(params, extra) {
     if (blockDbItem == null) {
         return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
     }
-    // 执行
-    const response = await updateBlockAPI(data, id);
-    if (response == null) {
-        return createErrorResponse("Failed to update the block");
+    if (blockDbItem.type === "av") {
+        return createErrorResponse("Cannot update attribute view (i.e. Database) blocks.");
     }
-    return createSuccessResponse("Block updated successfully.");
+    // 执行
+    const plugin = getPluginInstance();
+    const autoApproveLocalChange = plugin?.mySettings["autoApproveLocalChange"];
+    if (autoApproveLocalChange) {
+        const response = await updateBlockAPI(data, id);
+        if (response == null) {
+            return createErrorResponse("Failed to update the block");
+        }
+        taskManager.insert(id, data, "updateBlock", {}, TASK_STATUS.APPROVED);
+        return createSuccessResponse("Block updated successfully.");
+    } else {
+        taskManager.insert(id, data, "updateBlock", {}, TASK_STATUS.PENDING);
+        return createSuccessResponse("Changes have entered the waiting queue, please remind users to review ");
+    }
 }
