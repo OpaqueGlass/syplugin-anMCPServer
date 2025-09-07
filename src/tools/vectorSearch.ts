@@ -46,13 +46,64 @@ async function answerWithRAG(params, extra) {
     const { question } = params;
     debugPush("API被调用：RAG");
     const provider = useProvider();
+    let progressInterval;
+    let timeoutId;
+    let finished = false;
+    const progressToken = extra?._meta?.progressToken;
+    let currentProgress = 0;
+    const maxDuration = 120 * 1000; // 120秒
+    const updateInterval = 3000; // 3秒
+    const progressIncrement = updateInterval / maxDuration;
+
+    if (progressToken) {
+        progressInterval = setInterval(() => {
+            currentProgress += progressIncrement;
+            if (currentProgress < 0.95) {
+                extra.sendNotification && extra.sendNotification({
+                    method: "notifications/progress",
+                    params: { progress: currentProgress, progressToken }
+                });
+            }
+        }, updateInterval);
+        timeoutId = setTimeout(() => {
+            if (!finished) {
+                finished = true;
+                clearInterval(progressInterval);
+                extra.sendNotification && extra.sendNotification({
+                    method: "notifications/progress",
+                    params: { progress: 1, progressToken }
+                });
+            }
+        }, maxDuration);
+    }
     try {
-        const result = await provider.query(question);
+        const resultPromise = provider.query(question);
+        const result = await Promise.race([
+            resultPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error("RAG query timeout (120s)")), maxDuration))
+        ]);
+        finished = true;
+        if (progressInterval) clearInterval(progressInterval);
+        if (timeoutId) clearTimeout(timeoutId);
+        if (progressToken) {
+            extra.sendNotification && extra.sendNotification({
+                method: "notifications/progress",
+                params: { progress: 1, progressToken }
+            });
+        }
         logPush("RAG result", result);
         return createJsonResponse(result);
     } catch (err) {
+        finished = true;
+        if (progressInterval) clearInterval(progressInterval);
+        if (timeoutId) clearTimeout(timeoutId);
+        if (progressToken) {
+            extra.sendNotification && extra.sendNotification({
+                method: "notifications/progress",
+                params: { progress: 1, progressToken }
+            });
+        }
         errorPush("RAG API error", err);
-        return createErrorResponse("The tool call failed. There was a problem with the connection to the RAG service. Please remind the user to troubleshoot the problem.");
+        return createErrorResponse("The tool call failed. " + (err?.message || "There was a problem with the connection to the RAG service. Please remind the user to troubleshoot the problem."));
     }
-    
 }

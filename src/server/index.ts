@@ -242,6 +242,7 @@ export default class MyMCPServer {
                     logPush(`Skipping destructive tool in non-destructive mode: ${tool.name}`);
                     continue;
                 }
+                logPush("启用工具中", tool.name, tool.title);
                 this.mcpServer.registerTool(
                     tool.name,
                     {
@@ -251,12 +252,6 @@ export default class MyMCPServer {
                         "annotations": tool.annotations,
                     }, tool.handler
                 );
-                // this.mcpServer.tool(
-                //     tool.name,
-                //     tool.description,
-                //     tool.schema,
-                //     tool.handler
-                // );
             }
         }
         await this.loadPrompts();

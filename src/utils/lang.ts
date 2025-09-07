@@ -8,8 +8,7 @@ export function setLanguage(lang:any) {
 export function lang(key: string) {
     if (language != null && language[key] != null) {
         return language[key];
-    }
-    if (language == null) {
+    } else {
         emptyLanguageKey.push(key);
         console.error("语言文件未定义该Key", JSON.stringify(emptyLanguageKey));
     }
