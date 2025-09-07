@@ -5,6 +5,7 @@ const {EsbuildPlugin} = require("esbuild-loader");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
 const ZipPlugin = require("zip-webpack-plugin");
+const {VueLoaderPlugin} = require('vue-loader')
 
 // 使用change-dir命令更改dev的目录
 const devDistDirInfo = "./scripts/devInfo.json";
@@ -17,6 +18,7 @@ const distDir = devDistDir
 module.exports = (env, argv) => {
     const isPro = argv.mode === "production";
     const plugins = [
+        new VueLoaderPlugin(),
         new MiniCssExtractPlugin({
             filename: isPro ? "dist/index.css" : "index.css",
         })
@@ -68,7 +70,7 @@ module.exports = (env, argv) => {
         mode: argv.mode || "development",
         watch: !isPro,
         devtool: isPro ? false : "eval",
-        target: "node",
+        target: "electron-renderer",
         output: {
             filename: "[name].js",
             path: isPro ? path.resolve(__dirname) : distDir,//path.resolve(__dirname, 'dist'),
@@ -88,13 +90,18 @@ module.exports = (env, argv) => {
             ],
         },
         resolve: {
-            extensions: [".ts", ".scss", ".js", ".json"],
+            extensions: [".ts", ".scss", ".js", ".json", ".vue"],
             alias: {
                 "@": path.resolve(__dirname, "src"),
+                // 'vue$': 'vue/dist/vue.esm-bundler.js'
             },
         },
         module: {
             rules: [
+                {
+                    test: /\.vue$/,
+                    use: 'vue-loader'
+                },
                 {
                     test: /\.ts(x?)$/,
                     include: [path.resolve(__dirname, "src")],
@@ -103,10 +110,18 @@ module.exports = (env, argv) => {
                             loader: "esbuild-loader",
                             options: {
                                 target: "es6",
+                                loader: 'ts'
                             }
                         },
                     ],
                 },
+                // {
+                //     test: /\.ts$/,
+                //     loader: 'ts-loader',
+                //     options: {
+                //         appendTsSuffixTo: [/\.vue$/]
+                //     }
+                // },
                 {
                     test: /\.scss$/,
                     include: [path.resolve(__dirname, "src")],
@@ -119,6 +134,10 @@ module.exports = (env, argv) => {
                             loader: "sass-loader", // compiles Sass to CSS
                         },
                     ],
+                },
+                {
+                    test: /\.css$/,
+                    use: ['style-loader', 'css-loader']
                 },
                 {
                     test: /\.md$/,

@@ -19,13 +19,15 @@
     "types": [
       "zod",
       "siyuan",
+      "vue"
     ],
     "typeRoots": ["./src/types"]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
-    "static/*.md"
+    "static/*.md",
+    "src/**/*.vue"
   ],
   "references": [
     {

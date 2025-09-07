@@ -3,12 +3,14 @@ import {
     getFrontend,
     Custom,
     Setting,
-    showMessage
+    showMessage,
+    Dialog,
+    openTab
 } from "siyuan";
 import "./index.scss";
 import MyMCPServer from "./server";
 import { setPluginInstance } from "./utils/pluginHelper";
-import { logPush } from "./logger";
+import { infoPush, logPush } from "./logger";
 import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
 import { isAuthCodeSetted, isValidAuthCode, isValidStr } from "./utils/commonCheck";
@@ -16,6 +18,12 @@ import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
 import EventHandler from "./utils/eventHandler";
 import { setIndexProvider } from "./utils/indexerHelper";
 import { MyIndexProvider } from "./indexer/myProvider";
+import { generateUUID } from "./utils/common";
+import { createApp } from "vue";
+import historyVue from "./components/history.vue";
+import { title } from "process";
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
@@ -34,6 +42,8 @@ export default class OGanMCPServerPlugin extends Plugin {
     private myMCPServer: MyMCPServer = null;
     public mySettings = DEFAULT_SETTING;
     private eventHandler = null;
+    private historyPage = null;
+    private _historyVueApp = null;
     onload() {
         setLanguage(this.i18n);
         setPluginInstance(this);
@@ -265,6 +275,41 @@ export default class OGanMCPServerPlugin extends Plugin {
                 copyrightElem.textContent = "";
                 return copyrightElem;
             },
+        });
+
+        let that = this;
+        this.historyPage = this.addTab({
+            type: "og_history_page",
+            init() {
+                infoPush("Loading")
+                const container = document.createElement("div");
+                this.element.appendChild(container);
+                that._historyVueApp = createApp(historyVue);
+                that._historyVueApp.use(ElementPlus);
+                that._historyVueApp.mount(container);
+            },
+            destroy() {
+                if (that._historyVueApp) {
+                    that._historyVueApp.unmount();
+                    that._historyVueApp = null;
+                }
+            }
+        });
+
+        this.addCommand({
+            langKey: "shortcut_history",
+            hotkey: "",
+            callback: () => {
+                infoPush(this.name)
+                openTab({
+                    app: this.app,
+                    custom: {
+                        icon: "iconHistory",
+                        title: lang("tool_title_history"),
+                        id: this.name + "og_history_page",
+                    },
+                });
+            }
         });
     }
 

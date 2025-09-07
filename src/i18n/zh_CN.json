@@ -62,6 +62,7 @@
   "tool_title_update_block": "更新块",
   "prompt_sql": "SQL查询与检索系统提示词",
   "prompt_flashcards": "创建闪卡系统提示词",
+  "shortcut_history": "history",
 
   "lang": "CN"
 }
