@@ -6,7 +6,7 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush } from "@/logger";
 
 import { lang } from "@/utils/lang";
-import { isNonContainerBlockType, isValidNotebookId, isValidStr } from "@/utils/commonCheck";
+import { isCurrentVersionLessThan, isNonContainerBlockType, isValidNotebookId, isValidStr } from "@/utils/commonCheck";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { getPluginInstance } from "@/utils/pluginHelper";
 
@@ -85,7 +85,7 @@ async function insertBlockHandler(params, extra) {
         if (dbItem == null) {
             return createErrorResponse("Invalid parentID: The specified parent block does not exist.");
         }
-        if (isNonContainerBlockType(dbItem.type)) {
+        if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
             return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
         }
     }
@@ -109,7 +109,7 @@ async function prependBlockHandler(params, extra) {
     if (dbItem == null) {
         return createErrorResponse("Invalid parentID: The specified parent block does not exist.");
     }
-    if (isNonContainerBlockType(dbItem.type)) {
+    if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
         return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
     }
     // 执行
@@ -133,7 +133,7 @@ async function appendBlockHandler(params, extra) {
     if (dbItem == null) {
         return createErrorResponse("Invalid parentID: The specified parent block does not exist.");
     }
-    if (isNonContainerBlockType(dbItem.type)) {
+    if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
         return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
     }
     //执行

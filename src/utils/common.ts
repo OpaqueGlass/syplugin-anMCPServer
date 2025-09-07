@@ -1,12 +1,25 @@
-import { getBackend, IProtyle, openMobileFileById, openTab } from "siyuan";
+import { getBackend, IProtyle, openMobileFileById, openTab, showMessage } from "siyuan";
 import { isEventCtrlKey, isValidStr } from "./commonCheck";
 import { debugPush, logPush, warnPush } from "@/logger";
 import { getPluginInstance } from "./pluginHelper";
 import { getCurrentDocIdF, isMobile } from "@/syapi";
 import { removeCurrentTabF } from "@/syapi/custom";
+import { lang } from "./lang";
 
 export function getToken(): string {
     return "";
+}
+
+/**
+ * 封装的 showMessage API，自动在消息后添加插件名称
+ * @param message 要显示的消息内容
+ * @param timeout 显示时长（毫秒），默认 6000
+ * @param type 消息类型，默认 "info"
+ */
+export function showPluginMessage(message: string, timeout?: number, type?: "info" | "error"): void {
+    const pluginName = lang("dialog_panel_plugin_name");
+    const prefixedMessage = `${message} —— ${pluginName}`;
+    showMessage(prefixedMessage, timeout, type);
 }
 
 /**

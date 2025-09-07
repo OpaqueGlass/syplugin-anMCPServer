@@ -102,8 +102,12 @@
   "history_msg_clean_invalid": "Please enter a valid number of days.",
   "history_msg_clean_success": "History records cleaned successfully.",
   "history_msg_clean_error": "An error occurred while cleaning history records. Please try again.",
+  "history_msg_approve_success": "Task approved successfully.",
+  "history_msg_reject_success": "Task rejected successfully.",
+  "history_msg_action_error": "An error occurred while processing the task. Please try again.",
 
   "tab_title_history": "MCP Update Operation History",
+  "dialog_panel_plugin_name": "plugin: anMCPServer",
 
   "lang": "EN"
 }

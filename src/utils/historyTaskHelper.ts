@@ -37,7 +37,7 @@ class TaskManager {
      * 持久化任务数据到文件
      */
     async #save() {
-        await putJSONFile(this.filePath, { tasks: this.tasks }, true);
+        await putJSONFile(this.filePath, { tasks: this.tasks }, false);
     }
 
     /**

@@ -103,7 +103,7 @@
     >
       <div>
         <p>{{ lang('history_msg_clean_prompt') }}</p>
-        <el-input v-model="cleanDays" placeholder="{{ lang('history_msg_clean_placeholder') }}" />
+        <el-input v-model="cleanDays" :placeholder="lang('history_msg_clean_placeholder')" />
       </div>
       <template #footer>
         <el-button @click="cleanDialogVisible = false">{{ lang('history_msg_clean_cancel') }}</el-button>
@@ -114,9 +114,7 @@
 </template>
 
 <script setup lang="ts" >
-import { ElMessageBox, ElDialog } from 'element-plus';
 import { ref, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
 import { taskManager } from '../utils/historyTaskHelper'; // 请根据你的文件路径调整
 import { openTab } from 'siyuan';
 import { getPluginInstance } from '@/utils/pluginHelper';
@@ -124,6 +122,8 @@ import { getKramdown, isDarkMode } from '@/syapi';
 import { CodeDiff } from 'v-code-diff';
 import { lang } from '@/utils/lang';
 import { auditRedo } from '@/audit/auditRedoer';
+import { showPluginMessage } from '@/utils/common';
+import { ElMessageBox } from 'element-plus';
 
 const tasks = ref([]);
 const loading = ref(true);
@@ -220,14 +220,10 @@ const openSingleDoc = (docId: string) => {
 };
 // 展示全部ID弹窗
 const showAllIds = (ids: string[]) => {
-  ElMessageBox({
-    title: '全部修改内容ID',
-    message: ids.map(id => `<span style='margin-right:8px;cursor:pointer;color:#409EFF;' onclick='window.og_mcp_openIdFromDialog && window.og_mcp_openIdFromDialog("${id}")'>${id}</span>`).join(''),
-    dangerouslyUseHTMLString: true,
-    showCancelButton: false,
-    confirmButtonText: '关闭',
-    callback: () => {}
-  });
+  showPluginMessage(
+    ids.map(id => `<span style='margin-right:8px;cursor:pointer;color:#409EFF;' onclick='window.og_mcp_openIdFromDialog && window.og_mcp_openIdFromDialog("${id}")'>${id}</span>`).join(''),
+    6000
+  );
   // @ts-ignore
   window.og_mcp_openIdFromDialog = (id: string) => {
     openSingleDoc(id);
@@ -244,16 +240,15 @@ const handleAction = async (taskId, action) => {
     if (action === 'solve') {
       await auditRedo(taskManager.getTask(taskId));
       await taskManager.solve(taskId);
-      ElMessage.success('任务已批准');
+      showPluginMessage(lang('history_msg_approve_success'), 6000);
     } else if (action === 'reject') {
       await taskManager.reject(taskId);
-      ElMessage.info('任务已拒绝');
+      showPluginMessage(lang('history_msg_reject_success'), 6000);
     }
-    // 操作成功后刷新列表
     fetchTasks();
   } catch (error) {
-    ElMessage.error('操作失败，请重试');
-    console.error('任务操作失败:', error);
+    showPluginMessage(lang('history_msg_action_error'), 6000);
+    console.error(lang('history_msg_action_error'), error);
   }
 };
 
@@ -296,10 +291,10 @@ const rejectAll = async () => {
       if (task.status !== TASK_STATUS.PENDING) continue;
       await handleAction(task.id, 'reject');
     }
-    ElMessage.success(lang("history_msg_reject_all_success"));
+    showPluginMessage(lang("history_msg_reject_all_success"));
     fetchTasks();
   } catch (error) {
-    ElMessage.error(lang("history_msg_reject_all_error"));
+    showPluginMessage(lang("history_msg_reject_all_error"), 6000, 'error');
     console.error(error);
   }
 };
@@ -310,10 +305,10 @@ const approveAll = async () => {
       if (task.status !== TASK_STATUS.PENDING) continue;
       await handleAction(task.id, 'solve');
     }
-    ElMessage.success(lang("history_msg_approve_all_success"));
+    showPluginMessage(lang("history_msg_approve_all_success"));
     fetchTasks();
   } catch (error) {
-    ElMessage.error(lang("history_msg_approve_all_error"));
+    showPluginMessage(lang("history_msg_approve_all_error"), 6000, 'error');
     console.error(error);
   }
 };
@@ -325,15 +320,15 @@ const confirmClean = async () => {
   try {
     const days = parseInt(cleanDays.value);
     if (isNaN(days) || days <= 0) {
-      ElMessage.error(lang('history_msg_clean_invalid'));
+      showPluginMessage(lang('history_msg_clean_invalid'));
       return;
     }
-    await taskManager.clean(days, true);
-    ElMessage.success(lang('history_msg_clean_success'));
     cleanDialogVisible.value = false;
+    await taskManager.clean(days, true);
+    showPluginMessage(lang('history_msg_clean_success'));
     fetchTasks();
   } catch (error) {
-    ElMessage.error(lang('history_msg_clean_error'));
+    showPluginMessage(lang('history_msg_clean_error'));
     console.error(error);
   }
 };
