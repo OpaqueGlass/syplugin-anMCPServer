@@ -81,14 +81,14 @@
     </el-table>
     <el-dialog
       v-model="dialogVisible"
-      :title="lang('history_dialog_allids')"
+      :title="lang('history_dialog_diff')"
       width="70vw"
       higth="60vh"
     >
       <CodeDiff
         :old-string="diffOldValue"
         :new-string="diffNewValue"
-        output-format="side-by-side"
+        :output-format="diffFormat"
         :theme="darkModeFlag ? 'dark' : 'light'"
       />
       <template #footer>
@@ -116,14 +116,15 @@
 <script setup lang="ts" >
 import { ref, onMounted } from 'vue';
 import { taskManager } from '../utils/historyTaskHelper'; // 请根据你的文件路径调整
-import { openTab } from 'siyuan';
+import { Constants, Dialog, openTab } from 'siyuan';
 import { getPluginInstance } from '@/utils/pluginHelper';
 import { getKramdown, isDarkMode } from '@/syapi';
 import { CodeDiff } from 'v-code-diff';
 import { lang } from '@/utils/lang';
 import { auditRedo } from '@/audit/auditRedoer';
 import { showPluginMessage } from '@/utils/common';
-import { ElMessageBox } from 'element-plus';
+import { getBlockDBItem } from '@/syapi/custom';
+import { CONSTANTS } from '@/constants';
 
 const tasks = ref([]);
 const loading = ref(true);
@@ -133,6 +134,7 @@ const sortOrder = ref('desc');
 const darkModeFlag = ref(isDarkMode())
 
 const dialogVisible = ref(false);
+const diffFormat = ref("side-by-side")
 
 const diffOldValue = ref("")
 const diffNewValue = ref("")
@@ -197,36 +199,33 @@ const getStatusText = (status) => {
 };
 
 /**
- * 处理打开文档的逻辑
- * @param {string[]} docIds - 文档的唯一ID数组
- */
-// const openDocs = (docIds: string[]) => {
-//   if (!Array.isArray(docIds)) return;
-//   openTab({
-//       app: getPluginInstance().app,
-//       doc: { id: docIds[0] }
-//   });
-// };
-
-/**
  * 单个ID点击打开文档
  * @param {string} docId - 文档的唯一ID
  */
-const openSingleDoc = (docId: string) => {
+const openSingleDoc = async (docId: string) => {
+  if (!await getBlockDBItem(docId)) {
+    showPluginMessage(lang("message_id_not_exist"));
+    return;
+  }
   openTab({
     app: getPluginInstance().app,
-    doc: { id: docId }
+    doc: { 
+      id: docId,
+      action: [Constants.CB_GET_HL, Constants.CB_GET_CONTEXT, Constants.CB_GET_ROOTSCROLL]
+     }
   });
 };
 // 展示全部ID弹窗
 const showAllIds = (ids: string[]) => {
-  showPluginMessage(
-    ids.map(id => `<span style='margin-right:8px;cursor:pointer;color:#409EFF;' onclick='window.og_mcp_openIdFromDialog && window.og_mcp_openIdFromDialog("${id}")'>${id}</span>`).join(''),
-    6000
-  );
+  const syDialog = new Dialog({
+    height: "40vh",
+    title: lang("history_dialog_allids"),
+    content: `<ul style='margin: 2em 3em; max-height: 100%; overflow-y: auto;'>${ids.map(id => `<li style='margin-bottom: 8px;'><span style='cursor:pointer;color:#409EFF;' onclick='window.og_mcp_openIdFromDialog && window.og_mcp_openIdFromDialog("${id}")'>${id}</span></li>`).join('')}</ul>`
+  });
   // @ts-ignore
   window.og_mcp_openIdFromDialog = (id: string) => {
     openSingleDoc(id);
+    syDialog.destroy();
   };
 };
 
@@ -266,14 +265,10 @@ const isContentLong = (content: string) => {
 
 const showFullContent = (content: string) => {
   fullContent.value = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
-  ElMessageBox({
-    title: lang('history_dialog_fullcontent'),
-    message: `<pre style='white-space:pre-wrap;word-break:break-all;'>${fullContent.value.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`,
-    dangerouslyUseHTMLString: true,
-    showCancelButton: false,
-    confirmButtonText: '关闭',
-    callback: () => {}
-  });
+  diffOldValue.value = "";
+  diffNewValue.value = content;
+  diffFormat.value = "line-by-line";
+  dialogVisible.value = true;
 };
 
 const diffDocs = async (modifiedIds, taskId) => {
@@ -282,6 +277,7 @@ const diffDocs = async (modifiedIds, taskId) => {
   const newContent = taskManager.getTask(taskId);
   diffOldValue.value = oriContent;
   diffNewValue.value = newContent["content"];
+  diffFormat.value = "side-by-side";
   dialogVisible.value = true;
 }
 

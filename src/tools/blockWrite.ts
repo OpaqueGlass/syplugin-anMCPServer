@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createErrorResponse, createSuccessResponse } from "../utils/mcpResponse";
+import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
 import { appendBlockAPI, insertBlockOriginAPI, prependBlockAPI, updateBlockAPI } from "@/syapi";
 import { checkIdValid, getBlockDBItem } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
@@ -9,6 +9,7 @@ import { lang } from "@/utils/lang";
 import { isCurrentVersionLessThan, isNonContainerBlockType, isValidNotebookId, isValidStr } from "@/utils/commonCheck";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { getPluginInstance } from "@/utils/pluginHelper";
+import { extractNodeParagraphIds } from "@/utils/common";
 
 export class BlockWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -94,7 +95,7 @@ async function insertBlockHandler(params, extra) {
         return createErrorResponse("Failed to insert the block");
     }
     taskManager.insert(response[0].doOperations[0].id, data, "insertBlock", { parentID }, TASK_STATUS.APPROVED);
-    return createSuccessResponse("Successfully inserted. The first block ID is " + response[0].doOperations[0].id + ". Multiple blocks may have been created depending on the content.");
+    return createJsonResponse(response[0].doOperations[0]);
 }
 
 async function prependBlockHandler(params, extra) {
@@ -118,7 +119,7 @@ async function prependBlockHandler(params, extra) {
         return createErrorResponse("Failed to prepend the block");
     }
     taskManager.insert(response.id, data, "prependBlock", { parentID }, TASK_STATUS.APPROVED);
-    return createSuccessResponse("Successfully prepended. The first block ID is " + response.id + ". Multiple blocks may have been created depending on the content.");
+    return createJsonResponse(response);
 }
 
 async function appendBlockHandler(params, extra) {
@@ -141,8 +142,20 @@ async function appendBlockHandler(params, extra) {
     if (result == null) {
         return createErrorResponse("Failed to append to the block");
     }
-    taskManager.insert(result.id, data, "appendBlock", { parentID }, TASK_STATUS.APPROVED);
-    return createSuccessResponse("Successfully appended. The first block ID is " + result.id + ". Multiple blocks may have been created depending on the content.");
+    // 对于在列表后append列表，会导致返回的id是不存在的，还是需要解析dom，这里只提取段落块
+    const paragraphIds = [];
+    if (dbItem.type === "l") {
+        const listItems = extractNodeParagraphIds(result.data);
+        if (listItems.length > 0) {
+            paragraphIds.push(...listItems);
+        } else {
+            paragraphIds.push(result.id);
+        }
+    } else {
+        paragraphIds.push(result.id);
+    }
+    taskManager.insert(paragraphIds, data, "appendBlock", { parentID }, TASK_STATUS.APPROVED);
+    return createJsonResponse(result);
 }
 
 

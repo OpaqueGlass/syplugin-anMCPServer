@@ -84,6 +84,7 @@
   "history_btn_reject": "拒绝",
   "history_more": "更多",
   "history_dialog_allids": "全部修改内容ID",
+  "history_dialog_diff": "差异对比",
   "history_dialog_close": "关闭",
   "history_dialog_fullcontent": "完整内容",
   "history_status_pending": "待审阅",
@@ -109,5 +110,6 @@
   "history_msg_approve_success": "任务已批准。",
   "history_msg_reject_success": "任务已拒绝。",
   "history_msg_action_error": "处理任务时发生错误，请重试。",
+  "message_id_not_exist": "要打开的块不存在，可能已被删除",
   "dialog_panel_plugin_name": "plugin: anMCPServer"
 }

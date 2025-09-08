@@ -86,8 +86,6 @@ async function kramdownReadHandler(params, extra) {
         } catch (error) {
             errorPush("转换Assets为图片时出错", error);
         }
-    } else {
-        return createErrorResponse("这个工具目前仅接受读取非文档块的kramdown结构，不支持读取整篇文档");
     }
     const kramdown = await getKramdown(id);
     const content = kramdown || "";

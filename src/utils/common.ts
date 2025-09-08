@@ -310,3 +310,19 @@ export async function blobToBase64Object(blob) {
         reader.readAsDataURL(blob);
     });
 }
+
+/**
+ * 解析HTML字符串，并提取其中所有 NodeParagraph的 data-node-id
+ *
+ * @param htmlString HTML字符串
+ * @returns 数组
+ */
+export function extractNodeParagraphIds(htmlString: string): string[] {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+  const paragraphElements = doc.querySelectorAll('[data-type="NodeParagraph"]');
+  const ids = Array.from(paragraphElements)
+    .map(element => element.getAttribute('data-node-id'))
+    .filter((id): id is string => id !== null);
+  return ids;
+}

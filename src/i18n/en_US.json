@@ -65,8 +65,9 @@
   "tool_title_append_block": "Append Block",
   "tool_title_update_block": "Update Block",
   "shortcut_history": "history",
+  "message_id_not_exist": "The corresponding block does not exist and may have been deleted.",
 
-
+  "history_dialog_diff": "Difference",
   "history_title": "History of Add/Modify Tasks",
   "history_btn_pending": "Pending Only",
   "history_btn_all": "Show All",
