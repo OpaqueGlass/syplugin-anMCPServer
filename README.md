@@ -60,10 +60,6 @@
 - Q: Does the plugin support authentication?  
   - Version v0.2.0 now supports authentication. After setting the authentication token in the plugin settings, the MCP client needs to configure the `authorization` request header with the value `Bearer YourToken`;  
 
-- Q: What is the connection count?  
-  - In SSE mode, this represents an active SSE connection. Due to clients not disconnecting properly or unknown software connections, the count may fluctuate;  
-  - In Streamable HTTP mode and the current plugin implementation, the connection count is always 0;  
-
 - Q: Can it be used in Docker?  
   - No, the plugin relies on a Node.js environment and does not support running on mobile devices or Docker.  
 

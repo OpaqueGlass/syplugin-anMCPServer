@@ -6,6 +6,8 @@ import { isSelectQuery } from "@/utils/commonCheck";
 import { commonPushCheck, debugPush, logPush } from "@/logger";
 import { McpToolsProvider } from "./baseToolProvider";
 import { lang } from "@/utils/lang";
+import { getBlockDBItem } from "@/syapi/custom";
+import { filterBlock } from "@/utils/filterCheck";
 
 export class SqlToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -52,6 +54,18 @@ async function sqlHandler(params, extra) {
         return createErrorResponse(error instanceof Error ? error.message : String(error));
     }
     debugPush("SQLAPI返回ing", sqlResult);
+    // 如果sql返回字段包括id， 需要筛选id，将被过滤掉的id去除
+    if (sqlResult.length > 0 && sqlResult.length < 300 && 'id' in sqlResult[0]) {
+        const filteredResult = [];
+        for (const row of sqlResult) {
+            const id = row['id'];
+            const dbItem = await getBlockDBItem(id);
+            if (dbItem && await filterBlock(id, dbItem) === false) {
+                filteredResult.push(dbItem);
+            }
+        }
+        sqlResult = filteredResult;
+    }
     return createJsonResponse(sqlResult);
 }
 
