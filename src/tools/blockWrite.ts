@@ -10,6 +10,7 @@ import { isCurrentVersionLessThan, isNonContainerBlockType, isValidNotebookId, i
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { extractNodeParagraphIds } from "@/utils/common";
+import { filterBlock } from "@/utils/filterCheck";
 
 export class BlockWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -81,14 +82,37 @@ async function insertBlockHandler(params, extra) {
     if (isValidNotebookId(nextID) || isValidNotebookId(previousID) || isValidNotebookId(parentID)) {
         return createErrorResponse("nextID, previousID, and parentID must be block IDs, not notebook IDs.");
     }
-    if (isValidStr(parentID)) {
-        const dbItem = await getBlockDBItem(parentID);
-        if (dbItem == null) {
-            return createErrorResponse("Invalid parentID: The specified parent block does not exist.");
-        }
-        if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
-            return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
-        }
+    // 选择优先级：nextID > previousID > parentID，取第一个有效的进行校验
+    let anchorID: string | undefined;
+    let anchorType: "nextID" | "previousID" | "parentID" | undefined;
+    if (isValidStr(nextID)) {
+        anchorID = nextID;
+        anchorType = "nextID";
+    } else if (isValidStr(previousID)) {
+        anchorID = previousID;
+        anchorType = "previousID";
+    } else if (isValidStr(parentID)) {
+        anchorID = parentID;
+        anchorType = "parentID";
+    }
+
+    if (!anchorID) {
+        return createErrorResponse("Please provide one of nextID, previousID or parentID to anchor the insertion.");
+    }
+
+    // 校验格式并确认块存在
+    checkIdValid(anchorID);
+    const dbItem = await getBlockDBItem(anchorID);
+    if (dbItem == null) {
+        return createErrorResponse(`Invalid ${anchorType}: The specified block does not exist.`);
+    }
+    if (await filterBlock(anchorID, dbItem)) {
+        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
+    }
+
+    // 仅当选中的锚点是 parentID 时，校验其是否为容器块（仅在旧版本需要此限制）
+    if (anchorType === "parentID" && isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
+        return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
     }
     const response = await insertBlockOriginAPI({data, dataType: "markdown", nextID, previousID, parentID});
     if (response == null) {
@@ -109,6 +133,9 @@ async function prependBlockHandler(params, extra) {
     const dbItem = await getBlockDBItem(parentID);
     if (dbItem == null) {
         return createErrorResponse("Invalid parentID: The specified parent block does not exist.");
+    }
+    if (await filterBlock(parentID, dbItem)) {
+        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
     if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
         return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
@@ -133,6 +160,9 @@ async function appendBlockHandler(params, extra) {
     const dbItem = await getBlockDBItem(parentID);
     if (dbItem == null) {
         return createErrorResponse("Invalid parentID: The specified parent block does not exist.");
+    }
+    if (await filterBlock(parentID, dbItem)) {
+        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
     if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
         return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
@@ -166,6 +196,9 @@ async function updateBlockHandler(params, extra) {
     const blockDbItem = await getBlockDBItem(id);
     if (blockDbItem == null) {
         return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
+    }
+    if (await filterBlock(id, blockDbItem)) {
+        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
     if (blockDbItem.type === "av") {
         return createErrorResponse("Cannot update attribute view (i.e. Database) blocks.");

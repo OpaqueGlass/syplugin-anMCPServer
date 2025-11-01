@@ -9,6 +9,7 @@ import { debugPush, logPush, warnPush, errorPush } from "@/logger";
 import { getBlockAssets } from "@/syapi/custom";
 import { blobToBase64Object } from "@/utils/common";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
+import { filterNotebook } from "@/utils/filterCheck";
 
 export class DailyNoteToolProvider extends McpToolsProvider<any> {
     
@@ -68,6 +69,10 @@ async function readDailynoteHandler(params, extra) {
     }
     if (!/^\d{8}$/.test(date)) {
         return createErrorResponse("Invalid date format. Expected 'yyyyMMdd'.");
+    }
+
+    if (filterNotebook(notebookId)) {
+        return createErrorResponse("The specified notebook is excluded by the user settings.");
     }
 
     const boxCondition = notebookId ? `AND B.box = '${notebookId}'` : "";
@@ -155,6 +160,10 @@ function isSupportedImageOrAudio(path) {
 async function appendToDailynoteHandler(params, extra) {
     const {notebookId, markdownContent} = params;
     debugPush("插入日记API被调用", params);
+    // notebook
+    if (filterNotebook(notebookId)) {
+        return createErrorResponse("The specified notebook is excluded by the user settings.");
+    }
     // 确认dailynote id
     const id = await createDailyNote(notebookId, getPluginInstance().app.appId);
     // 追加写入

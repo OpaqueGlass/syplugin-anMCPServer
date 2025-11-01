@@ -8,6 +8,7 @@ import { createNewDocWithParentId } from "./sharedFunction";
 
 import { lang } from "@/utils/lang";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
+import { filterBlock } from "@/utils/filterCheck";
 
 export class DocWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -51,6 +52,9 @@ async function appendBlockHandler(params, extra) {
     if (!await isADocId(id)) {
         return createErrorResponse("Failed to append to document: The provided ID is not the document's ID.");
     }
+    if (await filterBlock(id, null)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
+    }
     const result = await appendBlockAPI(markdownContent, id);
     if (result == null) {
         return createErrorResponse("Failed to append to the document");
@@ -61,6 +65,9 @@ async function appendBlockHandler(params, extra) {
 
 async function createNewNoteUnder(params, extra) {
     const { parentId, title, markdownContent } = params;
+    if (await filterBlock(parentId, null)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings, so cannot create a new note under it.");
+    }
     debugPush("添加新笔记被调用");
     const {result, newDocId} = await createNewDocWithParentId(parentId, title, markdownContent);
     if (result) {

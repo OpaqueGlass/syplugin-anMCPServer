@@ -7,6 +7,7 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { z } from "zod";
 import { useWsIndexQueue } from "@/utils/wsMainHelper";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
+import { filterBlock } from "@/utils/filterCheck";
 
 const TYPE_VALID_LIST = ["h1", "h2", "h3", "h4", "h5", "highlight", "superBlock"] as const;
 
@@ -66,6 +67,9 @@ async function addFlashCardMarkdown(params, extra) {
     let { parentId, docTitle, type, deckId, markdownContent } = params;
     let { sendNotification, _meta} = extra;
     
+    if (await filterBlock(parentId, null)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings, so cannot create a new note under it.");
+    }
     // 默认deck
     if (!isValidStr(deckId)) {
         deckId = QUICK_DECK_ID;
@@ -132,13 +136,17 @@ async function createFlashcardsHandler(params, extra) {
     if (!await isValidDeck(deckId)) {
         return createErrorResponse("Card creation failed: The DeckId does not exist. If the user has not specified a deck name or ID, set the deckId parameter to an empty string.");
     }
-
+    const filteredIds = [];
     for (let i = 0; i < blockIds.length; i++) {
         const blockId = blockIds[i];
         const dbItem = await getBlockDBItem(blockId);
         if (dbItem == null) {
             return createErrorResponse(`Invalid block ID: ${blockId}. Please check if the ID exists and is correct.`);
         }
+        if (await filterBlock(blockId, dbItem)) {
+            continue;
+        }
+        filteredIds.push(blockId);
         if (_meta?.progressToken) {
             await sendNotification({
                 method: "notifications/progress",
@@ -147,11 +155,11 @@ async function createFlashcardsHandler(params, extra) {
         }
     }
 
-    const addCardsResult = await addRiffCards(blockIds, deckId);
+    const addCardsResult = await addRiffCards(filteredIds, deckId);
     if (addCardsResult === null) {
         return createErrorResponse("Failed to create flashcards.");
     }
-    return createSuccessResponse(`Successfully added ${blockIds.length} flashcards.`);
+    return createSuccessResponse(`Successfully added ${filteredIds.length} flashcards.`);
 }
 
 async function deleteFlashcardsHandler(params, extra) {

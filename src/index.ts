@@ -32,6 +32,8 @@ const DEFAULT_SETTING = {
     authCode: CONSTANTS.CODE_UNSET,
     ragBaseUrl: undefined,
     autoApproveLocalChange: false, // 是否自动批准原地更改
+    filterDocuments: "",   // 多行文本，每行一个文档 id
+    filterNotebooks: "",   // 多行文本，每行一个笔记本 id
 }
 
 export default class OGanMCPServerPlugin extends Plugin {
@@ -85,6 +87,8 @@ export default class OGanMCPServerPlugin extends Plugin {
         const autoStartSwitchElem = document.createElement("input");
         const readOnlySelectElem = document.createElement("select");
         const autoApproveLocalChangeSwitchElem = document.createElement("input");
+        const filterDocTextareaElem = document.createElement("textarea");
+        const filterNotebookTextareaElem = document.createElement("textarea");
         
         this.setting = new Setting({
             confirmCallback: async () => {
@@ -102,6 +106,9 @@ export default class OGanMCPServerPlugin extends Plugin {
                         myAuthCode = CONSTANTS.CODE_UNSET;
                     }
                 }
+                const filterDocumentsValue = filterDocTextareaElem.value ? filterDocTextareaElem.value.trim() : "";
+                const filterNotebooksValue = filterNotebookTextareaElem.value ? filterNotebookTextareaElem.value.trim() : "";
+
                 this.mySettings = {
                     autoStart: autoStartSwitchElem.checked,
                     port: portInputElem.value,
@@ -109,6 +116,8 @@ export default class OGanMCPServerPlugin extends Plugin {
                     ragBaseUrl: ragBaseUrlInputElem.value,
                     readOnly: readOnlySelectElem.value,
                     autoApproveLocalChange: autoApproveLocalChangeSwitchElem.checked,
+                    filterDocuments: filterDocumentsValue,
+                    filterNotebooks: filterNotebooksValue,
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
             }
@@ -279,6 +288,41 @@ export default class OGanMCPServerPlugin extends Plugin {
                 container.appendChild(refreshBtnElem);
 
                 return container;
+            },
+        });
+        
+
+        // 新增：过滤文档（每行一个文档 id）
+        this.setting.addItem({
+            title: lang("setting_filterDocId"),
+            direction: "row",
+            description: lang("setting_filterDocId_desp"),
+            createActionElement: () => {
+                filterDocTextareaElem.className = "b3-text-field fn__block";
+                filterDocTextareaElem.placeholder = "每行一个文档 id";
+                filterDocTextareaElem.rows = 6;
+                filterDocTextareaElem.value = this.mySettings.filterDocuments ?? "";
+                filterDocTextareaElem.addEventListener("change", ()=>{
+                    this.mySettings['filterDocuments'] = filterDocTextareaElem.value;
+                });
+                return filterDocTextareaElem;
+            },
+        });
+
+        // 新增：过滤笔记本 id（每行一个笔记本 id）
+        this.setting.addItem({
+            title: lang("setting_filterNotebookId"),
+            direction: "row",
+            description: lang("setting_filterNotebookId_desp"),
+            createActionElement: () => {
+                filterNotebookTextareaElem.className = "b3-text-field fn__block";
+                filterNotebookTextareaElem.placeholder = "每行一个笔记本 id";
+                filterNotebookTextareaElem.rows = 6;
+                filterNotebookTextareaElem.value = this.mySettings.filterNotebooks ?? "";
+                filterNotebookTextareaElem.addEventListener("change", ()=>{
+                    this.mySettings['filterNotebooks'] = filterNotebookTextareaElem.value;
+                });
+                return filterNotebookTextareaElem;
             },
         });
         this.setting.addItem({

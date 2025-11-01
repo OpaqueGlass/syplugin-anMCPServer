@@ -7,6 +7,7 @@ import { blobToBase64Object } from "@/utils/common";
 import { debugPush, errorPush, logPush } from "@/logger";
 import { isValidStr } from "@/utils/commonCheck";
 import { lang } from "@/utils/lang";
+import { filterBlock } from "@/utils/filterCheck";
 
 export class DocReadToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -47,6 +48,9 @@ async function blockReadHandler(params, extra) {
     if (dbItem == null) {
         return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
     }
+    if (await filterBlock(id, dbItem)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
+    }
     let otherImg = [];
     if (dbItem.type != "d") {
         try {
@@ -78,6 +82,9 @@ async function kramdownReadHandler(params, extra) {
     const dbItem = await getBlockDBItem(id);
     if (dbItem == null) {
         return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
+    }
+    if (await filterBlock(id, dbItem)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
     }
     let otherImg = [];
     if (dbItem.type != "d") {

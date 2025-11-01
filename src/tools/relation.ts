@@ -4,6 +4,7 @@ import { getBackLink2T, getChildBlocks, getNodebookList, listDocsByPathT, listDo
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush, logPush, warnPush } from "@/logger";
 import { getBlockDBItem, getChildDocumentIds, getDocDBitem, getSubDocIds } from "@/syapi/custom";
+import { filterBlock } from "@/utils/filterCheck";
 
 export class RelationToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -56,6 +57,9 @@ async function getDocBacklink(params, extra) {
     if (dbItem == null) {
         return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
     }
+    if (await filterBlock(id, dbItem)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
+    }
     const backlinkResponse = await getBackLink2T(id, "3");
     debugPush("backlinkResponse", backlinkResponse);
     if (backlinkResponse.backlinks.length == 0) {
@@ -83,6 +87,9 @@ async function getChildrenDocs(params, extra) {
     const notebookIds = notebookList.map(item=>item.id);
     const sqlResult = await getDocDBitem(id);
     let result = null;
+    if (await filterBlock(id, sqlResult)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
+    }
     if (sqlResult == null && !notebookIds.includes(id)) {
         return createErrorResponse("所查询的id不存在，或不对应笔记文档与笔记本，请检查输入的id是否正确有效");
     } else if (sqlResult == null) {
@@ -98,6 +105,9 @@ async function getChildBlocksTool(params, extra) {
     const sqlResult = await getBlockDBItem(id);
     if (sqlResult == null) {
         return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
+    }
+    if (await filterBlock(id, sqlResult)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
     }
     return createJsonResponse(await getChildBlocks(id));
 }

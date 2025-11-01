@@ -234,6 +234,10 @@ export function checkIdValid(id: string): void {
 
 
 export async function isADocId(id:string): Promise<boolean> {
+    if (!isValidStr(id)) return false;
+    if (!isValidIdFormat(id)) {
+        return false;
+    }
     const queryResponse = await queryAPI(`SELECT type FROM blocks WHERE id = '${id}'`);
     if (queryResponse == null || queryResponse.length == 0) {
         return false;
@@ -245,7 +249,10 @@ export async function isADocId(id:string): Promise<boolean> {
 }
 
 export async function getDocDBitem(id:string) {
-    const queryResponse = await queryAPI(`SELECT * FROM blocks WHERE id = '${id}' and type = 'd'`);
+    if (!isValidStr(id)) return null;
+    checkIdValid(id);
+    const safeId = id.replace(/'/g, "''");
+    const queryResponse = await queryAPI(`SELECT * FROM blocks WHERE id = '${safeId}' and type = 'd'`);
     if (queryResponse == null || queryResponse.length == 0) {
         return null;
     }
@@ -257,7 +264,10 @@ export async function getDocDBitem(id:string) {
  * @returns DB item
  */
 export async function getBlockDBItem(id:string) {
-    const queryResponse = await queryAPI(`SELECT * FROM blocks WHERE id = '${id}'`);
+    if (!isValidStr(id)) return null;
+    checkIdValid(id);
+    const safeId = id.replace(/'/g, "''");
+    const queryResponse = await queryAPI(`SELECT * FROM blocks WHERE id = '${safeId}'`);
     if (queryResponse == null || queryResponse.length == 0) {
         return null;
     }

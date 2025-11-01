@@ -6,6 +6,7 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { isValidStr } from "@/utils/commonCheck";
 
 import { lang } from "@/utils/lang";
+import { filterBlock } from "@/utils/filterCheck";
 
 export class AttributeToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -53,6 +54,10 @@ async function setBlockAttributesHandler(params, extra) {
         return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
     }
 
+    if (await filterBlock(blockId, dbItem)) {
+        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
+    }
+
     if (typeof attributes !== 'object' || attributes === null) {
         return createErrorResponse("attributes must be an object.");
     }
@@ -96,6 +101,9 @@ async function getBlockAttributesHandler(params, extra) {
     const dbItem = await getBlockDBItem(blockId);
     if (dbItem == null) {
         return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
+    }
+    if (await filterBlock(blockId, dbItem)) {
+        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
 
     try {
