@@ -2,8 +2,9 @@
   "name": "syplugin-anMCPServer",
   "author": "OpaqueGlass",
   "url": "https://github.com/OpaqueGlass/syplugin-anMCPServer",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "minAppVersion": "2.9.0",
+  "disabledInPublish": true,
   "backends": [
     "windows",
     "linux",
@@ -33,7 +34,6 @@
     ]
   },
   "keywords": [
-    "MCP",
     "model context protocol"
   ]
 }
