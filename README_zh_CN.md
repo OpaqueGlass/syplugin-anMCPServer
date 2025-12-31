@@ -2,9 +2,9 @@
 
 > 为[思源笔记](https://github.com/siyuan-note/siyuan)提供MCP服务的插件。
 
-> 当前版本: v0.6.0
+> 当前版本: v0.7.0
 >
-> 新增：设置排除笔记本ID或文档ID，在部分工具避免返回敏感内容；（请注意此功能并非严格排除：由于实现方式的问题，对部分工具或部分情况并不过滤）
+> 新增：Cloudflare Access 认证支持，支持通过 Cloudflare Tunnel 安全暴露 MCP 服务；
 >
 > 其他详见[更新日志](./CHANGELOG.md)。
 
@@ -58,6 +58,7 @@
   - 请参考：https://github.com/punkpeye/awesome-mcp-clients 或 https://modelcontextprotocol.io/clients ；
 - Q：插件支持鉴权吗？
   - v0.2.0版本已支持鉴权，在插件设置处设置鉴权token后，在MCP客户端，需要设置`authorization`请求头，其值为 `Bearer 你的Token`；
+  - v0.7.0版本新增 Cloudflare Access 认证支持，详见下文 [Cloudflare Access 认证](#cloudflare-access-认证) 章节；
 - Q: 可以在docker使用吗？
   - 不可以，插件依赖nodejs环境，不支持在移动端、docker运行；
   
@@ -134,6 +135,46 @@ npx mcp-remote@next http://127.0.0.1:16806/mcp --header Authorization:${AUTH_HEA
 值：`Bearer abcdefg`
 
 > 这里假设：插件设置的端口号为 `16806`，授权码为 `abcdefg`，请以实际填写的插件设置为准。
+
+## Cloudflare Access 认证
+
+v0.7.0 版本新增对 [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/) 认证的支持。这允许您通过 Cloudflare Tunnel 安全地将 MCP 服务暴露到互联网，同时使用 Cloudflare Zero Trust 进行身份验证。
+
+### 使用场景
+
+1. **自托管公开应用**：通过 Cloudflare Tunnel 暴露 MCP 服务，使用 Cloudflare Access 进行用户认证
+2. **AI 代理链接应用**：允许 AI 代理使用 [Cloudflare Linked Apps OAuth](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/linked-apps/) 访问您的 MCP 服务
+
+### 配置步骤
+
+1. 在 [Cloudflare Zero Trust 控制台](https://one.dash.cloudflare.com/) 设置自托管应用
+2. 创建 Cloudflare Tunnel 暴露您的 MCP 服务
+3. 在插件设置中，启用 **Cloudflare Access 认证**
+4. 输入您的 **团队域名**（例如：`https://myteam.cloudflareaccess.com`）
+5. 输入您的 **应用 AUD 标签**（在 Access > Applications > [您的应用] > Overview 中找到）
+6. 保存设置并重启 MCP 服务
+
+### 工作原理
+
+插件使用多种认证方式验证传入请求：
+
+| 方式 | 头/令牌 | 使用场景 |
+|------|---------|----------|
+| Cloudflare Access | `Cf-Access-Jwt-Assertion` 头 | 通过 Cloudflare Tunnel 访问的用户 |
+| Cloudflare Linked Apps | `Authorization: Bearer <JWT>` | 具有 OAuth 委托的 AI 代理 |
+| 本地 Bearer Token | `Authorization: Bearer <hash>` | 直接本地访问 |
+
+启用 Cloudflare Access 后：
+- 带有 `Cf-Access-Jwt-Assertion` 头的请求将根据 Cloudflare 的 JWKS 进行验证
+- 看起来像 JWT 的 Bearer 令牌也会作为 Cloudflare OAuth 令牌进行验证
+- 如果同时配置了 Cloudflare Access 和本地认证，系统会先尝试 Cloudflare，然后回退到本地认证
+
+### 性能优化
+
+插件包含 JWT 验证优化：
+- 每个团队域名缓存 JWKS 实例
+- 已验证的令牌在过期前 30 秒内被缓存
+- 使用相同令牌的重复请求跳过加密验证
 
 ## 🙏参考&感谢
 

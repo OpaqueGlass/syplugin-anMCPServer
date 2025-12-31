@@ -1,5 +1,27 @@
 ## 更新日志 | CHANGELOG
 
+### v0.7.0 (2025-12-31)
+
+- 新增：Cloudflare Access 认证支持；
+  - 支持通过 Cloudflare Tunnel 暴露 MCP 服务时使用 Cloudflare Access 进行身份验证；
+  - 支持 Cloudflare Linked Apps OAuth（用于 AI 代理访问）；
+  - 验证 `Cf-Access-Jwt-Assertion` 头和 `CF_Authorization` cookie；
+  - 配置项：团队域名 URL、应用 AUD 标签；
+- 性能优化：JWT 验证优化；
+  - 缓存 JWKS 实例，避免重复创建；
+  - 缓存已验证的令牌，避免重复验证；
+
+---
+
+- New: Cloudflare Access authentication support;
+  - Support authentication via Cloudflare Access when exposing MCP service through Cloudflare Tunnel;
+  - Support Cloudflare Linked Apps OAuth (for AI agent access);
+  - Validates `Cf-Access-Jwt-Assertion` header and `CF_Authorization` cookie;
+  - Configuration: Team domain URL, Application AUD tag;
+- Performance: JWT validation optimization;
+  - Cache JWKS instance to avoid recreation;
+  - Cache validated tokens to avoid re-validation;
+
 ### v0.6.0 (2025-11-01)
 
 - 新增：设置排除笔记本ID或文档ID，在部分工具避免返回敏感内容；

@@ -57,8 +57,9 @@
 - Q: What are some common MCP clients?  
   - Refer to: https://github.com/punkpeye/awesome-mcp-clients or https://modelcontextprotocol.io/clients;  
 
-- Q: Does the plugin support authentication?  
-  - Version v0.2.0 now supports authentication. After setting the authentication token in the plugin settings, the MCP client needs to configure the `authorization` request header with the value `Bearer YourToken`;  
+- Q: Does the plugin support authentication?
+  - Version v0.2.0 now supports authentication. After setting the authentication token in the plugin settings, the MCP client needs to configure the `authorization` request header with the value `Bearer YourToken`;
+  - Version v0.7.0 adds Cloudflare Access authentication support. See [Cloudflare Access Authentication](#cloudflare-access-authentication) section below;
 
 - Q: Can it be used in Docker?  
   - No, the plugin relies on a Node.js environment and does not support running on mobile devices or Docker.  
@@ -126,6 +127,46 @@ Environment Variable:
 
 Name: `AUTH_HEADER`  
 Value: `Bearer abcdefg`
+
+## Cloudflare Access Authentication
+
+Version v0.7.0 adds support for [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/) authentication. This allows you to securely expose your MCP server to the internet through Cloudflare Tunnel while using Cloudflare Zero Trust for authentication.
+
+### Use Cases
+
+1. **Self-hosted Public App**: Expose your MCP server via Cloudflare Tunnel and use Cloudflare Access for user authentication
+2. **Linked Apps for AI**: Allow AI agents to access your MCP server using [Cloudflare Linked Apps OAuth](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/linked-apps/)
+
+### Configuration
+
+1. Set up a self-hosted application in the [Cloudflare Zero Trust dashboard](https://one.dash.cloudflare.com/)
+2. Create a Cloudflare Tunnel to expose your MCP server
+3. In the plugin settings, enable **Cloudflare Access Authentication**
+4. Enter your **Team Domain** (e.g., `https://myteam.cloudflareaccess.com`)
+5. Enter your **Application AUD** tag (found in Access > Applications > [Your App] > Overview)
+6. Save settings and restart the MCP service
+
+### How It Works
+
+The plugin validates incoming requests using multiple authentication methods:
+
+| Method | Header/Token | Use Case |
+|--------|--------------|----------|
+| Cloudflare Access | `Cf-Access-Jwt-Assertion` header | Users accessing via Cloudflare Tunnel |
+| Cloudflare Linked Apps | `Authorization: Bearer <JWT>` | AI agents with OAuth delegation |
+| Local Bearer Token | `Authorization: Bearer <hash>` | Direct local access |
+
+When Cloudflare Access is enabled:
+- Requests with `Cf-Access-Jwt-Assertion` header are validated against Cloudflare's JWKS
+- Bearer tokens that look like JWTs are also validated as Cloudflare OAuth tokens
+- If both Cloudflare Access and local auth are configured, the system tries Cloudflare first, then falls back to local auth
+
+### Performance
+
+The plugin includes optimizations for JWT validation:
+- JWKS instances are cached per team domain
+- Validated tokens are cached until 30 seconds before expiry
+- Repeated requests with the same token skip cryptographic verification
 
 ## 🙏 References & Acknowledgements
 
