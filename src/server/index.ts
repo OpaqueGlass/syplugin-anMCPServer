@@ -174,7 +174,10 @@ export default class MyMCPServer {
         this.expressApp.post("/mcp", async (req: Request, res: Response) => {
             const authResult = await validateAuthentication(req);
             if (!authResult.authenticated) {
-                res.status(403).send(authResult.error || "Authentication required. 鉴权失败");
+                // Return 401 with OAuth metadata URL for MCP clients
+                const baseUrl = `${req.protocol}://${req.get('host')}`;
+                res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${baseUrl}/.well-known/oauth-authorization-server"`);
+                res.status(401).send(authResult.error || "Authentication required. 鉴权失败");
                 return;
             }
             try {
