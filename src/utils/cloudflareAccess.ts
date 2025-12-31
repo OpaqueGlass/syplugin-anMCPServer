@@ -114,10 +114,10 @@ export async function validateCloudflareAccessToken(token: string): Promise<Clou
 
 /**
  * Extract the Cloudflare Access token from request headers
- * Checks both Cf-Access-Jwt-Assertion header and CF_Authorization cookie
+ * Checks Cf-Access-Jwt-Assertion header, CF_Authorization cookie, and Authorization Bearer
  */
 export function extractCloudflareAccessToken(headers: Record<string, string | string[] | undefined>): string | null {
-    // Primary: Cf-Access-Jwt-Assertion header
+    // Primary: Cf-Access-Jwt-Assertion header (standard Cloudflare Access)
     const headerToken = headers["cf-access-jwt-assertion"];
     if (headerToken) {
         return Array.isArray(headerToken) ? headerToken[0] : headerToken;
@@ -134,6 +134,32 @@ export function extractCloudflareAccessToken(headers: Record<string, string | st
     }
 
     return null;
+}
+
+/**
+ * Extract Bearer token from Authorization header
+ * Used for linked apps OAuth tokens
+ */
+export function extractBearerToken(headers: Record<string, string | string[] | undefined>): string | null {
+    const authHeader = headers["authorization"];
+    if (authHeader) {
+        const header = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+        if (header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+    }
+    return null;
+}
+
+/**
+ * Check if a token looks like a JWT (has 3 base64 parts separated by dots)
+ */
+export function looksLikeJWT(token: string): boolean {
+    if (!token) return false;
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    // Check if parts look like base64
+    return parts.every(part => /^[A-Za-z0-9_-]+$/.test(part));
 }
 
 /**

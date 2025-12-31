@@ -25,6 +25,8 @@ import { BlockWriteToolProvider } from '@/tools/blockWrite';
 import {
     isCloudflareAccessConfigured,
     extractCloudflareAccessToken,
+    extractBearerToken,
+    looksLikeJWT,
     validateCloudflareAccessToken
 } from '@/utils/cloudflareAccess';
 
@@ -32,8 +34,11 @@ const http = require("http");
 
 /**
  * Validates authentication for incoming requests.
- * Supports both Bearer token and Cloudflare Access JWT authentication.
- * @returns true if authenticated, false otherwise
+ * Supports multiple authentication methods:
+ * 1. Cloudflare Access JWT (Cf-Access-Jwt-Assertion header or CF_Authorization cookie)
+ * 2. Cloudflare Linked Apps OAuth (Authorization: Bearer with JWT)
+ * 3. Local Bearer token authentication
+ * @returns authentication result with method used
  */
 async function validateAuthentication(req: Request): Promise<{ authenticated: boolean; method?: string; error?: string }> {
     const plugin = getPluginInstance();
@@ -46,29 +51,46 @@ async function validateAuthentication(req: Request): Promise<{ authenticated: bo
         return { authenticated: true, method: "none" };
     }
 
-    // Try Cloudflare Access authentication first (if configured)
+    const headers = req.headers as Record<string, string | string[] | undefined>;
+
+    // 1. Try Cloudflare Access authentication (Cf-Access-Jwt-Assertion header or cookie)
     if (hasCfAccessAuth) {
-        const cfToken = extractCloudflareAccessToken(req.headers as Record<string, string | string[] | undefined>);
+        const cfToken = extractCloudflareAccessToken(headers);
         if (cfToken) {
             const payload = await validateCloudflareAccessToken(cfToken);
             if (payload) {
                 logPush("Authenticated via Cloudflare Access:", payload.email || payload.sub);
                 return { authenticated: true, method: "cloudflare-access" };
             }
-            // If CF token present but invalid, don't fall back to bearer token
+            // If CF token present but invalid, don't fall back to other methods
             return { authenticated: false, error: "Invalid Cloudflare Access token" };
         }
     }
 
-    // Try Bearer token authentication (if configured)
-    if (hasBearerAuth) {
-        const authHeader = req.headers["authorization"];
-        const token = authHeader?.replace("Bearer ", "");
-        logPush("auth", authHeader);
-        if (await isAuthTokenValid(token)) {
-            return { authenticated: true, method: "bearer-token" };
+    // 2. Try Bearer token authentication
+    const bearerToken = extractBearerToken(headers);
+    if (bearerToken) {
+        // 2a. If Cloudflare Access is configured and token looks like JWT,
+        //     try to validate it as a Cloudflare Linked App OAuth token
+        if (hasCfAccessAuth && looksLikeJWT(bearerToken)) {
+            const payload = await validateCloudflareAccessToken(bearerToken);
+            if (payload) {
+                logPush("Authenticated via Cloudflare Linked App OAuth:", payload.email || payload.sub);
+                return { authenticated: true, method: "cloudflare-linked-app" };
+            }
+            // JWT validation failed - if local auth is also configured, try that
+            if (!hasBearerAuth) {
+                return { authenticated: false, error: "Invalid Cloudflare OAuth token" };
+            }
+            logPush("Cloudflare JWT validation failed, trying local auth");
         }
-        if (authHeader) {
+
+        // 2b. Try local Bearer token authentication
+        if (hasBearerAuth) {
+            logPush("auth", req.headers["authorization"]);
+            if (await isAuthTokenValid(bearerToken)) {
+                return { authenticated: true, method: "bearer-token" };
+            }
             return { authenticated: false, error: "Invalid Bearer token" };
         }
     }
