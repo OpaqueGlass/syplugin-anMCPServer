@@ -80,7 +80,12 @@ function getJWKS(teamDomain: string): jose.JWTVerifyGetKey {
         return jwksCache;
     }
 
-    const certsUrl = `${teamDomain}/cdn-cgi/access/certs`;
+    // Support both OIDC SaaS apps and standard Access apps
+    // OIDC: https://team.cloudflareaccess.com/cdn-cgi/access/sso/oidc/{client_id}
+    // Standard: https://team.cloudflareaccess.com
+    const certsUrl = teamDomain.includes('/cdn-cgi/access/sso/oidc/')
+        ? `${teamDomain}/jwks`
+        : `${teamDomain}/cdn-cgi/access/certs`;
     logPush("Creating JWKS instance for:", certsUrl);
 
     jwksCache = jose.createRemoteJWKSet(new URL(certsUrl));
