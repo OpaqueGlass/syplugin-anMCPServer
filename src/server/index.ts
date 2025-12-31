@@ -22,8 +22,61 @@ import promptCreateCardsSystemCN from '@/../static/prompt_create_cards_system_CN
 import promptQuerySystemCN from '@/../static/prompt_dynamic_query_system_CN.md';
 import { AttributeToolProvider } from '@/tools/attributes';
 import { BlockWriteToolProvider } from '@/tools/blockWrite';
+import {
+    isCloudflareAccessConfigured,
+    extractCloudflareAccessToken,
+    validateCloudflareAccessToken
+} from '@/utils/cloudflareAccess';
 
 const http = require("http");
+
+/**
+ * Validates authentication for incoming requests.
+ * Supports both Bearer token and Cloudflare Access JWT authentication.
+ * @returns true if authenticated, false otherwise
+ */
+async function validateAuthentication(req: Request): Promise<{ authenticated: boolean; method?: string; error?: string }> {
+    const plugin = getPluginInstance();
+    const authToken = plugin?.mySettings["authCode"];
+    const hasBearerAuth = isValidStr(authToken) && authToken !== CONSTANTS.CODE_UNSET;
+    const hasCfAccessAuth = isCloudflareAccessConfigured();
+
+    // If no authentication is configured, allow access
+    if (!hasBearerAuth && !hasCfAccessAuth) {
+        return { authenticated: true, method: "none" };
+    }
+
+    // Try Cloudflare Access authentication first (if configured)
+    if (hasCfAccessAuth) {
+        const cfToken = extractCloudflareAccessToken(req.headers as Record<string, string | string[] | undefined>);
+        if (cfToken) {
+            const payload = await validateCloudflareAccessToken(cfToken);
+            if (payload) {
+                logPush("Authenticated via Cloudflare Access:", payload.email || payload.sub);
+                return { authenticated: true, method: "cloudflare-access" };
+            }
+            // If CF token present but invalid, don't fall back to bearer token
+            return { authenticated: false, error: "Invalid Cloudflare Access token" };
+        }
+    }
+
+    // Try Bearer token authentication (if configured)
+    if (hasBearerAuth) {
+        const authHeader = req.headers["authorization"];
+        const token = authHeader?.replace("Bearer ", "");
+        logPush("auth", authHeader);
+        if (await isAuthTokenValid(token)) {
+            return { authenticated: true, method: "bearer-token" };
+        }
+        if (authHeader) {
+            return { authenticated: false, error: "Invalid Bearer token" };
+        }
+    }
+
+    // No valid authentication provided
+    return { authenticated: false, error: "Authentication required" };
+}
+
 export default class MyMCPServer {
     runningFlag: boolean = false;
     httpServer: any = null;
@@ -60,20 +113,10 @@ export default class MyMCPServer {
         
         /* SSE Deprecated */
         this.expressApp.get("/sse", async (req: Request, res: Response) => {
-            const plugin = getPluginInstance();
-            const authToken = plugin?.mySettings["authCode"];
-            if (isValidStr(authToken) && authToken !== CONSTANTS.CODE_UNSET) {
-                const authHeader = req.headers["authorization"];
-                const token = authHeader?.replace("Bearer ", "");
-                logPush("auth", authHeader, authToken);
-                if (!await isAuthTokenValid(token)) {
-                    if (authHeader) {
-                        res.status(403).send("Invalid Token. Authentication is requied. 鉴权失败");
-                    }else {
-                        res.status(403).send("Authentication is requied. 鉴权失败");
-                    }
-                    return
-                }
+            const authResult = await validateAuthentication(req);
+            if (!authResult.authenticated) {
+                res.status(403).send(authResult.error || "Authentication required. 鉴权失败");
+                return;
             }
             showMessage(lang("sse_warning"), 7000);
             const transport = new SSEServerTransport(
@@ -107,20 +150,10 @@ export default class MyMCPServer {
         });
         /* New Way */
         this.expressApp.post("/mcp", async (req: Request, res: Response) => {
-            const plugin = getPluginInstance();
-            const authToken = plugin?.mySettings["authCode"];
-            if (isValidStr(authToken) && authToken !== CONSTANTS.CODE_UNSET) {
-                const authHeader = req.headers["authorization"];
-                const token = authHeader?.replace("Bearer ", "");
-                logPush("auth", authHeader);
-                if (!await isAuthTokenValid(token)) {
-                    if (authHeader) {
-                        res.status(403).send("Invalid Token. Authentication is requied. 鉴权失败");
-                    }else {
-                        res.status(403).send("Authentication is requied. 鉴权失败");
-                    }
-                    return
-                }
+            const authResult = await validateAuthentication(req);
+            if (!authResult.authenticated) {
+                res.status(403).send(authResult.error || "Authentication required. 鉴权失败");
+                return;
             }
             try {
                 const transport = new StreamableHTTPServerTransport({

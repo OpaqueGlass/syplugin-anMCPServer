@@ -15,6 +15,7 @@ import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
 import { isAuthCodeSetted, isValidAuthCode, isValidStr } from "./utils/commonCheck";
 import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
+import { clearJWKSCache } from "./utils/cloudflareAccess";
 import EventHandler from "./utils/eventHandler";
 import { setIndexProvider } from "./utils/indexerHelper";
 import { MyIndexProvider } from "./indexer/myProvider";
@@ -34,6 +35,10 @@ const DEFAULT_SETTING = {
     autoApproveLocalChange: false, // 是否自动批准原地更改
     filterDocuments: "",   // 多行文本，每行一个文档 id
     filterNotebooks: "",   // 多行文本，每行一个笔记本 id
+    // Cloudflare Access settings
+    cfAccessEnabled: false,
+    cfAccessTeamDomain: "",  // e.g., "https://myteam.cloudflareaccess.com"
+    cfAccessPolicyAud: "",   // Application Audience (AUD) tag
 }
 
 export default class OGanMCPServerPlugin extends Plugin {
@@ -89,6 +94,10 @@ export default class OGanMCPServerPlugin extends Plugin {
         const autoApproveLocalChangeSwitchElem = document.createElement("input");
         const filterDocTextareaElem = document.createElement("textarea");
         const filterNotebookTextareaElem = document.createElement("textarea");
+        // Cloudflare Access elements
+        const cfAccessEnabledSwitchElem = document.createElement("input");
+        const cfAccessTeamDomainInputElem = document.createElement("input");
+        const cfAccessPolicyAudInputElem = document.createElement("input");
         
         this.setting = new Setting({
             confirmCallback: async () => {
@@ -109,6 +118,17 @@ export default class OGanMCPServerPlugin extends Plugin {
                 const filterDocumentsValue = filterDocTextareaElem.value ? filterDocTextareaElem.value.trim() : "";
                 const filterNotebooksValue = filterNotebookTextareaElem.value ? filterNotebookTextareaElem.value.trim() : "";
 
+                // Get Cloudflare Access values
+                const cfAccessEnabledValue = cfAccessEnabledSwitchElem.checked;
+                const cfAccessTeamDomainValue = cfAccessTeamDomainInputElem.value.trim();
+                const cfAccessPolicyAudValue = cfAccessPolicyAudInputElem.value.trim();
+
+                // Clear JWKS cache if Cloudflare Access settings changed
+                if (this.mySettings.cfAccessTeamDomain !== cfAccessTeamDomainValue ||
+                    this.mySettings.cfAccessPolicyAud !== cfAccessPolicyAudValue) {
+                    clearJWKSCache();
+                }
+
                 this.mySettings = {
                     autoStart: autoStartSwitchElem.checked,
                     port: portInputElem.value,
@@ -118,6 +138,9 @@ export default class OGanMCPServerPlugin extends Plugin {
                     autoApproveLocalChange: autoApproveLocalChangeSwitchElem.checked,
                     filterDocuments: filterDocumentsValue,
                     filterNotebooks: filterNotebooksValue,
+                    cfAccessEnabled: cfAccessEnabledValue,
+                    cfAccessTeamDomain: cfAccessTeamDomainValue,
+                    cfAccessPolicyAud: cfAccessPolicyAudValue,
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
             }
@@ -153,7 +176,46 @@ export default class OGanMCPServerPlugin extends Plugin {
                 return authInputElem;
             },
         });
-        
+
+        // Cloudflare Access Settings
+        this.setting.addItem({
+            title: lang("setting_cfAccess_enabled"),
+            direction: "column",
+            description: lang("setting_cfAccess_enabled_desp"),
+            createActionElement: () => {
+                cfAccessEnabledSwitchElem.className = "b3-switch fn__flex-center";
+                cfAccessEnabledSwitchElem.type = "checkbox";
+                cfAccessEnabledSwitchElem.checked = this.mySettings.cfAccessEnabled || false;
+                return cfAccessEnabledSwitchElem;
+            },
+        });
+
+        this.setting.addItem({
+            title: lang("setting_cfAccess_teamDomain"),
+            direction: "column",
+            description: lang("setting_cfAccess_teamDomain_desp"),
+            createActionElement: () => {
+                cfAccessTeamDomainInputElem.className = "b3-text-field fn__flex-center fn__size200";
+                cfAccessTeamDomainInputElem.type = "text";
+                cfAccessTeamDomainInputElem.placeholder = "https://myteam.cloudflareaccess.com";
+                cfAccessTeamDomainInputElem.value = this.mySettings.cfAccessTeamDomain || "";
+                return cfAccessTeamDomainInputElem;
+            },
+        });
+
+        this.setting.addItem({
+            title: lang("setting_cfAccess_policyAud"),
+            direction: "column",
+            description: lang("setting_cfAccess_policyAud_desp"),
+            createActionElement: () => {
+                cfAccessPolicyAudInputElem.className = "b3-text-field fn__flex-center fn__size200";
+                cfAccessPolicyAudInputElem.type = "text";
+                cfAccessPolicyAudInputElem.placeholder = "aud-tag-from-cloudflare-dashboard";
+                cfAccessPolicyAudInputElem.value = this.mySettings.cfAccessPolicyAud || "";
+                return cfAccessPolicyAudInputElem;
+            },
+        });
+
 
         this.setting.addItem({
             title: lang("setting_autoStart"),
