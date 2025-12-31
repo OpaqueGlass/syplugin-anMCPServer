@@ -2,10 +2,9 @@ import { logPush, errorPush } from "@/logger";
 import { getPluginInstance } from "./pluginHelper";
 import * as jose from "jose";
 
-// Cache for JWKS to avoid fetching on every request
-let jwksCache: jose.JSONWebKeySet | null = null;
-let jwksCacheTime: number = 0;
-const JWKS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface CloudflareAccessConfig {
     enabled: boolean;
@@ -23,6 +22,28 @@ export interface CloudflareAccessPayload {
     country?: string;
     [key: string]: unknown;
 }
+
+interface CachedToken {
+    payload: CloudflareAccessPayload;
+    expiresAt: number;
+}
+
+// ============================================================================
+// Caches
+// ============================================================================
+
+// Cache for JWKS KeyLike function - reused across validations
+let jwksCache: jose.JWTVerifyGetKey | null = null;
+let jwksCachedDomain: string = "";
+
+// Cache for validated tokens - avoid re-validating the same token
+const tokenCache = new Map<string, CachedToken>();
+const TOKEN_CACHE_BUFFER = 30 * 1000; // Expire tokens 30s before actual expiry
+const MAX_TOKEN_CACHE_SIZE = 100;
+
+// ============================================================================
+// Configuration
+// ============================================================================
 
 /**
  * Get Cloudflare Access configuration from plugin settings
@@ -46,35 +67,95 @@ export function isCloudflareAccessConfigured(): boolean {
            config.policyAud.length > 0;
 }
 
-/**
- * Fetch JWKS (JSON Web Key Set) from Cloudflare Access
- */
-async function fetchJWKS(teamDomain: string): Promise<jose.JSONWebKeySet> {
-    const now = Date.now();
+// ============================================================================
+// JWKS Management
+// ============================================================================
 
-    // Return cached JWKS if still valid
-    if (jwksCache && (now - jwksCacheTime) < JWKS_CACHE_DURATION) {
+/**
+ * Get or create JWKS instance for the given team domain
+ * Reuses cached instance if domain matches
+ */
+function getJWKS(teamDomain: string): jose.JWTVerifyGetKey {
+    if (jwksCache && jwksCachedDomain === teamDomain) {
         return jwksCache;
     }
 
     const certsUrl = `${teamDomain}/cdn-cgi/access/certs`;
-    logPush("Fetching Cloudflare Access JWKS from:", certsUrl);
+    logPush("Creating JWKS instance for:", certsUrl);
 
-    const response = await fetch(certsUrl);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch JWKS: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    jwksCache = data as jose.JSONWebKeySet;
-    jwksCacheTime = now;
+    jwksCache = jose.createRemoteJWKSet(new URL(certsUrl));
+    jwksCachedDomain = teamDomain;
 
     return jwksCache;
 }
 
 /**
+ * Clear all caches (useful when configuration changes)
+ */
+export function clearJWKSCache(): void {
+    jwksCache = null;
+    jwksCachedDomain = "";
+    tokenCache.clear();
+    logPush("Cloudflare Access caches cleared");
+}
+
+// ============================================================================
+// Token Caching
+// ============================================================================
+
+/**
+ * Generate a simple hash for token cache key
+ * Uses first and last 16 chars + length to create a unique-enough key
+ */
+function getTokenCacheKey(token: string): string {
+    if (token.length < 40) return token;
+    return `${token.slice(0, 16)}...${token.slice(-16)}:${token.length}`;
+}
+
+/**
+ * Get cached token payload if still valid
+ */
+function getCachedToken(token: string): CloudflareAccessPayload | null {
+    const key = getTokenCacheKey(token);
+    const cached = tokenCache.get(key);
+
+    if (!cached) return null;
+
+    // Check if token is still valid (with buffer)
+    if (Date.now() >= cached.expiresAt) {
+        tokenCache.delete(key);
+        return null;
+    }
+
+    return cached.payload;
+}
+
+/**
+ * Cache a validated token
+ */
+function cacheToken(token: string, payload: CloudflareAccessPayload): void {
+    // Evict oldest entries if cache is full
+    if (tokenCache.size >= MAX_TOKEN_CACHE_SIZE) {
+        const firstKey = tokenCache.keys().next().value;
+        if (firstKey) tokenCache.delete(firstKey);
+    }
+
+    const key = getTokenCacheKey(token);
+    const exp = payload.exp || 0;
+    const expiresAt = exp * 1000 - TOKEN_CACHE_BUFFER;
+
+    tokenCache.set(key, { payload, expiresAt });
+}
+
+// ============================================================================
+// Token Validation
+// ============================================================================
+
+/**
  * Validate a Cloudflare Access JWT token
- * @param token The JWT token from Cf-Access-Jwt-Assertion header
+ * Uses cached results when possible for performance
+ *
+ * @param token The JWT token from Cf-Access-Jwt-Assertion header or Bearer
  * @returns The decoded payload if valid, null if invalid
  */
 export async function validateCloudflareAccessToken(token: string): Promise<CloudflareAccessPayload | null> {
@@ -90,13 +171,19 @@ export async function validateCloudflareAccessToken(token: string): Promise<Clou
         return null;
     }
 
+    // Check cache first
+    const cached = getCachedToken(token);
+    if (cached) {
+        logPush("Using cached Cloudflare Access token for:", cached.email || cached.sub);
+        return cached;
+    }
+
     try {
         // Normalize team domain (remove trailing slash)
         const teamDomain = config.teamDomain.replace(/\/$/, "");
 
-        // Create remote JWKS
-        const certsUrl = `${teamDomain}/cdn-cgi/access/certs`;
-        const JWKS = jose.createRemoteJWKSet(new URL(certsUrl));
+        // Get or create JWKS instance (cached)
+        const JWKS = getJWKS(teamDomain);
 
         // Verify the token
         const { payload } = await jose.jwtVerify(token, JWKS, {
@@ -104,17 +191,26 @@ export async function validateCloudflareAccessToken(token: string): Promise<Clou
             audience: config.policyAud,
         });
 
-        logPush("Cloudflare Access token validated successfully for:", payload.email || payload.sub);
-        return payload as CloudflareAccessPayload;
+        const cfPayload = payload as CloudflareAccessPayload;
+
+        // Cache the validated token
+        cacheToken(token, cfPayload);
+
+        logPush("Cloudflare Access token validated for:", cfPayload.email || cfPayload.sub);
+        return cfPayload;
     } catch (err) {
         errorPush("Cloudflare Access token validation failed:", err);
         return null;
     }
 }
 
+// ============================================================================
+// Token Extraction
+// ============================================================================
+
 /**
  * Extract the Cloudflare Access token from request headers
- * Checks Cf-Access-Jwt-Assertion header, CF_Authorization cookie, and Authorization Bearer
+ * Checks Cf-Access-Jwt-Assertion header and CF_Authorization cookie
  */
 export function extractCloudflareAccessToken(headers: Record<string, string | string[] | undefined>): string | null {
     // Primary: Cf-Access-Jwt-Assertion header (standard Cloudflare Access)
@@ -152,21 +248,12 @@ export function extractBearerToken(headers: Record<string, string | string[] | u
 }
 
 /**
- * Check if a token looks like a JWT (has 3 base64 parts separated by dots)
+ * Check if a token looks like a JWT (has 3 base64url parts separated by dots)
  */
 export function looksLikeJWT(token: string): boolean {
-    if (!token) return false;
+    if (!token || token.length < 20) return false;
     const parts = token.split(".");
     if (parts.length !== 3) return false;
-    // Check if parts look like base64
-    return parts.every(part => /^[A-Za-z0-9_-]+$/.test(part));
-}
-
-/**
- * Clear the JWKS cache (useful when configuration changes)
- */
-export function clearJWKSCache(): void {
-    jwksCache = null;
-    jwksCacheTime = 0;
-    logPush("Cloudflare Access JWKS cache cleared");
+    // Check if parts look like base64url (quick check on first part is enough)
+    return /^[A-Za-z0-9_-]+$/.test(parts[0]);
 }
