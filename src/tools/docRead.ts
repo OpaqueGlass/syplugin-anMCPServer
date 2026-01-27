@@ -12,7 +12,7 @@ import { filterBlock } from "@/utils/filterCheck";
 export class DocReadToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
         return [{
-            name: "siyuan_read_doc_content_markdown",
+            name: "siyuan_read_doc_content",
             description: 'Retrieve the content of a document or block by its ID',
             schema: {
                 id: z.string().describe("The unique identifier of the document or block"),

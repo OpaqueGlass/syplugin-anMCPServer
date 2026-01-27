@@ -27,7 +27,7 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
                 idempotentHint: false,
             }
         }, {
-            name: "siyuan_create_new_note_with_markdown_content",
+            name: "siyuan_create_note_with_md",
             description: "Create a new note under a parent document in SiYuan with a specified title and Markdown content.",
             schema: {
                 parentId: z.string().describe("The unique identifier (ID) of the parent document or notebook where the new note will be created."),
