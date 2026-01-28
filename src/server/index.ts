@@ -22,6 +22,7 @@ import promptCreateCardsSystemCN from '@/../static/prompt_create_cards_system_CN
 import promptQuerySystemCN from '@/../static/prompt_dynamic_query_system_CN.md';
 import { AttributeToolProvider } from '@/tools/attributes';
 import { BlockWriteToolProvider } from '@/tools/blockWrite';
+import { MoveBlockToolProvider } from '@/tools/move';
 
 const http = require("http");
 export default class MyMCPServer {
@@ -35,7 +36,7 @@ export default class MyMCPServer {
     constructor() {
         this.mcpServer = new McpServer({
             "name": "siyuan",
-            "version": "0.6.0"
+            "version": "0.7.0"
         }, {
             "capabilities": {
                 "tools": {},
@@ -229,6 +230,7 @@ export default class MyMCPServer {
             new FlashcardToolProvider(),
             new AttributeToolProvider(),
             new BlockWriteToolProvider(),
+            new MoveBlockToolProvider(),
         ];
 
         for (const provider of toolProviders) {

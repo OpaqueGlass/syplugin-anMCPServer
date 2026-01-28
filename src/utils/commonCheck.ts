@@ -84,6 +84,11 @@ export function isNonParentBlockType(type: string) {
     return nonContainerTypes.includes(type);
 }
 
+export function isContainerBlockType(type: string) {
+    const containerTypes = ["d", "l", "i", "callout", "b", "s"];
+    return containerTypes.includes(type);
+}
+
 /**
  * 解析版本号字符串，移除除数字和点之外的所有字符，并将其分割成数字数组。
  * 例如 "v3.1.2-beta" -> [3, 1, 2]

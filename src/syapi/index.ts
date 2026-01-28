@@ -444,6 +444,88 @@ export async function removeBlockAPI(blockid){
 }
 
 /**
+ * 移动文档
+ * @param fromPaths 文档路径（由id+.sy结尾） 示例：["/20210917220056-yxtyl7i.sy"]
+ * @param toPath 
+ * @param toNotebook 
+ * @returns 
+ */
+export async function moveDocs(fromPaths: string[], toPath: string, toNotebook: string): Promise<boolean> {
+    let url = "/api/filetree/moveDocs";
+    let response = await postRequest({
+        fromPaths: fromPaths,
+        toPath: toPath,
+        toNotebook: toNotebook
+    }, url);
+    if (response.code == 0) {
+        return true;
+    }
+    warnPush("移动文档失败", response);
+    return false;
+}
+
+/**
+ * 移动文档
+ * @param fromIds 源文档id
+ * @param toID 目标父文档id或笔记本id
+ * @returns 
+ */
+export async function moveDocsByID(fromIds: string[], toID: string): Promise<boolean> {
+    let url = "/api/filetree/moveDocsByID";
+    let response = await postRequest({
+        fromIDs: fromIds,
+        toID: toID
+    }, url);
+    if (response.code == 0) {
+        return true;
+    }
+    warnPush("移动文档失败", response);
+    throw new Error(`Move documents failed: ${response.msg}`);
+}
+
+/**
+ * 移动块
+ * @param id 块id
+ * @param previousID 移动到该块之后，优先
+ * @param parentID 指定移动到的父块
+ * @returns 
+ */
+export async function moveBlock(id: string, previousID?: string, parentID?: string): Promise<boolean> {
+    if (previousID == undefined && parentID == undefined) {
+        throw new Error("Either previousID or parentID must be provided");
+    }
+    let url = "/api/block/moveBlock";
+    let response = await postRequest({
+        id,
+        previousID,
+        parentID,
+    }, url);
+    if (response.code == 0) {
+        return true;
+    }
+    throw new Error(`Move block failed: ${response.msg}`);
+}
+
+export async function foldBlock(id:string) {
+    let url = "/api/block/foldBlock";
+    let response = await postRequest({id}, url);
+    if (response.code == 0) {
+        return true;
+    }
+    throw new Error(`Fold block failed: ${response.msg}`);
+}
+
+
+export async function unfoldBlock(id:string) {
+    let url = "/api/block/unfoldBlock";
+    let response = await postRequest({id}, url);
+    if (response.code == 0) {
+        return true;
+    }
+    throw new Error(`Unfold block failed: ${response.msg}`);
+}
+
+/**
  * 获取块kramdown源码
  * @param {*} blockid 
  * @returns kramdown文本

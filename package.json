@@ -1,7 +1,7 @@
 {
-  "name": "syplugin-a-mcp-server",
+  "name": "syplugin-an-mcp-server",
   "version": "0.1.0",
-  "description": "A mcp server for Siyuan note",
+  "description": "An mcp server for Siyuan note",
   "main": ".src/index.js",
   "scripts": {
     "lint": "eslint . --fix --cache",
@@ -34,7 +34,7 @@
     "zip-webpack-plugin": "^4.0.1"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.4",
+    "@modelcontextprotocol/sdk": "^1.25.3",
     "@vue/tsconfig": "^0.8.1",
     "async-mutex": "^0.5.0",
     "element-plus": "^2.11.2",
