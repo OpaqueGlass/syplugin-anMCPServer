@@ -17,37 +17,32 @@
 
 ## 🔧 Supported Tools
 
-* **\[Search]**
-
-  * ~~Keyword search;~~ Temporarily removed, please provide feedback if needed
-  * SQL search;
-  * Notebook index Q\&A (using RAG backend service, [feature in testing](./RAG_BETA.md));
-
-* **\[Retrieve]**
-
-  * Get document kramdown by ID;
-  * List notebooks;
-  * Get backlinks by ID;
-  * Get child document IDs;
-  * Read properties;
-  * ~~Read journal entries by date;~~ Temporarily removed, please provide feedback if needed
-
-* **\[Write]**
-
-  * **Document type**
-
-    * Append content to journal;
-    * Append content to a document by ID;
-    * Create a new document at a specified location by ID;
-  * **Flashcard type**
-
-    * Create flashcards from Markdown content;
-    * Create flashcards by block ID;
-    * Delete flashcards by block ID;
-  * **Properties**
-
-    * Modify properties;
-
+| Category | Function Item | Doc Exclusion | Status / Description |
+| --- | --- | --- | --- |
+| Search | Keyword Search | N/A | ⚠️ Temporarily removed; feedback is welcome if needed |
+| Search | SQL Search | ⚠️ | Checks exclusion only if: result contains ID AND count < 300 |
+| Search | RAG Q&A (Note Index) | - | 🚫 To be removed; new solution coming soon |
+| Fetch | Get Doc Markdown via ID | ✅ | — |
+| Fetch | Get Block Kramdown via ID | ✅ | — |
+| Fetch | List Notebooks | ❌ | — |
+| Fetch | Get Backlinks via ID | ✅ | — |
+| Fetch | Get List of Sub-documents | ✅ | — |
+| Fetch | Get List of Sub-blocks | ✅ | — |
+| Fetch | Read Attributes | ✅ | — |
+| Fetch | Read Daily Note of Specific Date | - | 🚫 Temporarily removed; feedback welcome |
+| Fetch | SiYuan Database Format | - | — |
+| Write / Doc | Append to Daily Note | ✅ | — |
+| Write / Doc | Append to Doc via ID | ✅ | — |
+| Write / Doc | Create New Doc at Position via ID | ✅ | — |
+| Write / Doc | Insert Sub-block (Prepend/Append) | ✅ | — |
+| Write / Doc | Insert Block (Specific Position) | ✅ | — |
+| Write / Doc | Update Block | ✅ | — |
+| Write / Card | Create Flashcard via Markdown | ✅ | — |
+| Write / Card | Create Flashcard via Block ID | ✅ | — |
+| Write / Card | Delete Flashcard via Block ID | ❌ | — |
+| Write / Attr | Change Attributes (Add/Del/Edit) | ✅ | — |
+| Write / Move | Move Document | ✅ | — |
+| Write / Move | Move Block | ✅ | ⚠️ Moving headings requires folding, which loses fold status |
 
 ## ❓ FAQ
 

@@ -789,6 +789,21 @@ export async function createDocWithPath(notebookid, path, title = "Untitled", co
     return false;
 }
 
+
+export async function createFolder(path:string) {
+    const url = "/api/file/putFile";
+    const data = new FormData();
+    data.append("path", path);
+    data.append("isDir", "true");
+    return fetch(url, {
+        body: data,
+        method: 'POST',
+    }).then((response) => {
+        return response.json();
+    });
+    
+}
+
 /**
  * 将对象保存为JSON文件
  * @param {*} path 
@@ -805,6 +820,36 @@ export async function putJSONFile(path, object, format = false) {
     } else {
         fileContent = JSON.stringify(object);
     }
+    // File的文件名实际上无关，但这里考虑到兼容，将上传文件按照路径进行了重命名
+    const file = new File([fileContent], pathSplited[pathSplited.length - 1], {type: "text/plain"});
+    const data = new FormData();
+    data.append("path", path);
+    data.append("isDir", "false");
+    data.append("modTime", new Date().valueOf().toString());
+    data.append("file", file);
+    return fetch(url, {
+        body: data,
+        method: 'POST',
+        headers: {
+            "Authorization": "Token "+ getToken()
+        }
+    }).then((response) => {
+        return response.json();
+    });
+}
+
+
+/**
+ * 将字符串保存为文件
+ * @param {*} path 
+ * @param {*} object 
+ * @param {boolean} format
+ * @returns 
+ */
+export async function putStringFile(path, object, format = false) {
+    const url = "/api/file/putFile";
+    const pathSplited = path.split("/");
+    let fileContent = object;
     // File的文件名实际上无关，但这里考虑到兼容，将上传文件按照路径进行了重命名
     const file = new File([fileContent], pathSplited[pathSplited.length - 1], {type: "text/plain"});
     const data = new FormData();

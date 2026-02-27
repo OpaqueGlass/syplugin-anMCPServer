@@ -10,7 +10,7 @@ import {
 import "./index.scss";
 import MyMCPServer from "./server";
 import { setPluginInstance } from "./utils/pluginHelper";
-import { infoPush, logPush } from "./logger";
+import { infoPush, isDebugMode, logPush } from "./logger";
 import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
 import { isAuthCodeSetted, isValidAuthCode, isValidStr } from "./utils/commonCheck";
@@ -18,10 +18,11 @@ import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
 import EventHandler from "./utils/eventHandler";
 import { setIndexProvider } from "./utils/indexerHelper";
 import { MyIndexProvider } from "./indexer/myProvider";
-import { generateUUID } from "./utils/common";
+import { generateUUID, getFormattedTimestr } from "./utils/common";
 import { createApp } from "vue";
 import historyVue from "./components/history.vue";
 import ElementPlus from 'element-plus';
+import { ConnectionLogger } from "./logger/connectionLogger";
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
@@ -45,9 +46,11 @@ export default class OGanMCPServerPlugin extends Plugin {
     private eventHandler = null;
     private historyPage = null;
     private _historyVueApp = null;
+    public connectionLogger: ConnectionLogger = null;
     onload() {
         setLanguage(this.i18n);
         setPluginInstance(this);
+        this.connectionLogger = new ConnectionLogger(getFormattedTimestr());
         this.myMCPServer = new MyMCPServer();
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
@@ -283,7 +286,9 @@ export default class OGanMCPServerPlugin extends Plugin {
                 });
                 // Append elements to container
                 container.appendChild(statusTextElem);
-                // container.appendChild(connectionCountElem);
+                if (isDebugMode()) {
+                    container.appendChild(connectionCountElem);
+                }
                 container.appendChild(portElem);
                 container.appendChild(refreshBtnElem);
 
