@@ -416,7 +416,7 @@ export default class OGanMCPServerPlugin extends Plugin {
             this.myMCPServer.initialize();
             this.eventHandler.bindHandler();
             setIndexProvider(new MyIndexProvider(this.data["ragBaseUrl"], this.data["ragAuthKey"]));
-            this.myMCPServer.loadTools().then(()=>{
+            this.myMCPServer.loadToolsAndPrompts().then(()=>{
                 if (this.mySettings["autoStart"]) {
                     this.myMCPServer.start();
                 }

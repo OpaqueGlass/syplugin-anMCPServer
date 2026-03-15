@@ -1,6 +1,11 @@
 ## 更新日志 | CHANGELOG
 
-### v1.0.0-alpha1
+### v1.0.0-alpha2 （2026-03-15）
+
+- 新增：依赖[OpaqueGlass/syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)的RAG检索工具；
+- 修复：（alpha1）自动清理已有时卡死的问题；
+
+### v1.0.0-alpha1 （2026-02-27）
 
 - 新增：MCP连接、工具调用日志；
   - 日志保存于`工作空间/temp/petal/syplugin-anMCPServer/logs`，单条目中`H`表示请求头中给出的代理ip，`S`表示连接接口ip；
