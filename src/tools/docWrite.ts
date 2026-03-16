@@ -20,7 +20,7 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
                 markdownContent: z.string().describe("The Markdown-formatted text to append to the end of the specified document."),
             },
             handler: appendBlockHandler,
-            title: lang("tool_title_append_markdown_to_doc"),
+            // title: lang("tool_title_append_markdown_to_doc"),
             annotations: {
                 readOnlyHint: false,
                 destructiveHint: false,
@@ -35,7 +35,7 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
                 markdownContent: z.string().describe("The Markdown content of the new note."),
             },
             handler: createNewNoteUnder,
-            title: lang("tool_title_create_new_note_with_markdown_content"),
+            // title: lang("tool_title_create_new_note_with_markdown_content"),
             annotations: {
                 readOnlyHint: false,
                 destructiveHint: false,

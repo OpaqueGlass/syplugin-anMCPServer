@@ -19,7 +19,7 @@ export class AttributeToolProvider extends McpToolsProvider<any> {
                     attributes: z.record(z.string()).describe("An object of key-value pairs representing the attributes to set. Setting an attribute to an empty string ('') will delete it."),
                 },
                 handler: setBlockAttributesHandler,
-                title: lang("tool_title_set_block_attributes"),
+                // title: lang("tool_title_set_block_attributes"),
                 annotations: {
                     readOnlyHint: false,
                     destructiveHint: true, // Can delete attributes
@@ -33,7 +33,7 @@ export class AttributeToolProvider extends McpToolsProvider<any> {
                     blockId: z.string().describe("The ID of the block to get attributes from."),
                 },
                 handler: getBlockAttributesHandler,
-                title: lang("tool_title_get_block_attributes"),
+                // title: lang("tool_title_get_block_attributes"),
                 annotations: {
                     readOnlyHint: true,
                 }

@@ -10,7 +10,7 @@ export class TimeToolProvider extends McpToolsProvider<any> {
             description: lang("tool_get_current_time"),
             schema: {},
             handler: getCurrentTimeHandler,
-            title: lang("tool_title_get_current_time"),
+            // title: lang("tool_title_get_current_time"),
             annotations: {
                 readOnlyHint: true,
             }

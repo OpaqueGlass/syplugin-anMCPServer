@@ -20,7 +20,7 @@ export class MoveBlockToolProvider extends McpToolsProvider<any> {
                 toId: z.string().describe("目标位置 ID。如果该 ID 是文档，则所选文档将移动为它的子文档；如果该 ID 是笔记本 ID，则所选文档将移动到该笔记本的根目录。"),
             },
             handler: moveDocsByIds, // 记得对应修改 handler 以处理数组
-            title: lang("tool_title_move_docs"),
+            // title: lang("tool_title_move_docs"),
             annotations: {
                 destructiveHint: true, // 涉及大规模结构变更，保留此提示是合理的
             }
@@ -35,7 +35,7 @@ export class MoveBlockToolProvider extends McpToolsProvider<any> {
                 moveWithSubBlocks: z.boolean().default(false).describe("移动标题块子块。若设为 true 且 id对应标题块时，则该标题及其下属的所有子块（包括低级别标题和段落）将作为一个整体进行移动。使用此项，将丢失原有的折叠状态，移动后标题块将被展开。"),
             },
             handler: moveBlockById,
-            title: lang("tool_title_move_block_by_id"),
+            // title: lang("tool_title_move_block_by_id"),
             annotations: {
                 destructiveHint: true,
             }

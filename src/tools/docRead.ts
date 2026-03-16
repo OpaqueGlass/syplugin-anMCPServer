@@ -32,7 +32,7 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
                 id: z.string().describe("The unique identifier of the block"),
             },
             handler: kramdownReadHandler,
-            title: lang("tool_title_get_block_kramdown"),
+            // title: lang("tool_title_get_block_kramdown"),
             annotations: {
                 readOnlyHint: true,
             }

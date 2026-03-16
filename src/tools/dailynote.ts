@@ -22,7 +22,7 @@ export class DailyNoteToolProvider extends McpToolsProvider<any> {
                 notebookId: z.string().describe("The ID of the target notebook where the daily note is located. The notebook must not be in a closed state."),
             },
             handler: appendToDailynoteHandler,
-            title: lang("tool_title_append_to_dailynote"),
+            // title: lang("tool_title_append_to_dailynote"),
             annotations: {
                 readOnlyHint: false,
                 destructiveHint: false,
@@ -33,7 +33,7 @@ export class DailyNoteToolProvider extends McpToolsProvider<any> {
             description: `List all notebooks in SiYuan and return their metadata(such as id, open status, dailyNoteSavePath etc.).`,
             schema: {},
             handler: listNotebookHandler,
-            title: lang("tool_title_list_notebook"),
+            // title: lang("tool_title_list_notebook"),
             annotations: {
                 readOnlyHint: true,
             }

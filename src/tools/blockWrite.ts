@@ -38,7 +38,7 @@ export class BlockWriteToolProvider extends McpToolsProvider<any> {
                 parentID: z.string().describe("父块的ID，父块必须是容器块，例如引述块、文档块等")
             },
             handler: prependBlockHandler,
-            title: lang("tool_title_prepend_block"),
+            // title: lang("tool_title_prepend_block"),
             annotations: {
                 readOnlyHint: false,
                 destructiveHint: false,
@@ -52,7 +52,7 @@ export class BlockWriteToolProvider extends McpToolsProvider<any> {
                 parentID: z.string().describe("父块的ID，父块必须是容器块，例如引述块、文档块等")
             },
             handler: appendBlockHandler,
-            title: lang("tool_title_append_block"),
+            // title: lang("tool_title_append_block"),
             annotations: {
                 readOnlyHint: false,
                 destructiveHint: false,
@@ -66,7 +66,7 @@ export class BlockWriteToolProvider extends McpToolsProvider<any> {
                 id: z.string().describe("待更新块的ID")
             },
             handler: updateBlockHandler,
-            title: lang("tool_title_update_block"),
+            // title: lang("tool_title_update_block"),
             annotations: {
                 readOnlyHint: false,
                 destructiveHint: true,
