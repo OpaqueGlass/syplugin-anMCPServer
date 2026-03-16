@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { getBackLink2T, getChildBlocks, getFileAPIv2, getNodebookList, listDocsByPathT, listDocTree, putStringFile, removeFileAPI, renderSprig, renderTemplate, searchTemplate } from "@/syapi";
+import { getBackLink2T, getChildBlocks, getFileAPIv2, getNodebookList, insertBlockAPI, insertBlockOriginAPI, listDocsByPathT, listDocTree, putStringFile, removeFileAPI, renderSprig, renderTemplate, searchTemplate } from "@/syapi";
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush, logPush, warnPush } from "@/logger";
 import { getBlockDBItem, getChildDocumentIds, getDocDBitem, getSubDocIds } from "@/syapi/custom";
 import { filterBlock } from "@/utils/filterCheck";
-import { validatePath } from "@/utils/commonCheck";
+import { isValidHTML, validatePath } from "@/utils/commonCheck";
 import { wrapTemplateFilePath } from "@/utils/common";
 import item from "element-plus/lib/components/space/src/item.js";
 
@@ -44,17 +44,32 @@ export class TemplateToolProvider extends McpToolsProvider<any> {
             },
             {
                 name: "siyuan_render_template",
-                description: "Render a specific template using the specified document as the execution context. This processes template variables (like title, properties) based on the given ID and returns the resulting string without modifying the target.",
+                title: "Apply Template to Document",
+                description: "Renders a template and INSERTS the result directly into the specified document. Use this when you want to modify the document by prepending template-generated content.",
                 schema: {
-                    id: z.string().describe("The ID of the document to be used as the data context for template rendering."),
-                    name: z.string().describe("The exact name of the template file to be rendered.")
+                    id: z.string().describe("The ID of the target document where the template content will be inserted."),
+                    name: z.string().describe("The name of the template file to execute.")
                 },
-                handler: renderTemplateTool,
-                title: "Render Template with Context",
+                handler: renderTemplateToDocTool,
+                annotations: {
+                    readOnlyHint: false,
+                    destructiveHint: false,
+                    idempotentHint: false
+                }
+            },
+            {
+                name: "siyuan_preview_rendered_template",
+                title: "Preview Template Result",
+                description: "Generates the rendered Markdown string of a template without modifying the document. Use this to check the output or get the content for further processing before any insertion.",
+                schema: {
+                    id: z.string().describe("The ID of the document to provide data context for rendering."),
+                    name: z.string().describe("The name of the template file to preview.")
+                },
+                handler: previewRenderedTemplateTool,
                 annotations: {
                     readOnlyHint: true,
                     destructiveHint: false,
-                    idempotentHint: true
+                    idempotentHint: false
                 }
             },
             {
@@ -130,7 +145,7 @@ async function searchTemplateTool(params, extra) {
 }
 
 
-async function renderTemplateTool(params, extra) {
+async function previewRenderedTemplateTool(params, extra) {
     const { id, name } = params;
     const doc = await getDocDBitem(id);
     if (doc == null) {
@@ -144,15 +159,37 @@ async function renderTemplateTool(params, extra) {
     if (!validateResult.isValid) {
         return createErrorResponse("Invalid template name: " + validateResult.reason);
     }
-    const response = await searchTemplate(name.replaceAll("/", " "));
-    if (!response.length) {
-        return createErrorResponse("Template not found: " + name);
+    const templateItem = await getTemplateItemByName(name);
+    if (templateItem) {
+        const template = await renderTemplate(id, templateItem.path);
+        const testLute = window.Lute.New();
+        const test = testLute.BlockDOM2Md(template);
+        return createJsonResponse({
+            "renderedMarkdown": test,
+        });
     }
-    for (const item of response) {
-        const cleanedName = item.content.replaceAll("<mark>", "").replaceAll("</mark>", "");
-        if (cleanedName === name || (cleanedName.indexOf("/") === 0 && cleanedName.substring(1) === name)) {
-            return createSuccessResponse(await renderTemplate(id, item.path));
-        }
+    return createErrorResponse("Template not found: " + name);
+}
+
+async function renderTemplateToDocTool(params, extra) {
+    const { id, name } = params;
+    const doc = await getDocDBitem(id);
+    if (doc == null) {
+        return createErrorResponse("Document not found with id: " + id);
+    }
+    const filterResult = await filterBlock(id, doc);
+    if (filterResult) {
+        return createErrorResponse("The specified document is filtered and cannot be used as template context.");
+    }
+    const validateResult = validateTemplateName(name);
+    if (!validateResult.isValid) {
+        return createErrorResponse("Invalid template name: " + validateResult.reason);
+    }
+    const templateItem = await getTemplateItemByName(name);
+    if (templateItem) {
+        const template = await renderTemplate(id, templateItem.path);
+        const insertResult = await insertBlockAPI(template, id, "PARENT", "dom");
+        return createSuccessResponse("Template rendered and inserted successfully with new block ID: " + insertResult.id);
     }
     return createErrorResponse("Template not found: " + name);
 }
@@ -163,22 +200,16 @@ async function getRawTemplate(params, extra) {
     if (!validateResult.isValid) {
         return createErrorResponse("Invalid template name: " + validateResult.reason);
     }
-    const response = await searchTemplate(name.replaceAll("/", " "));
-    if (!response.length) {
-        return createErrorResponse("Template not found: " + name);
-    }
-    for (const item of response) {
-        const cleanedName = item.content.replaceAll("<mark>", "").replaceAll("</mark>", "");
-        if (cleanedName === name || (cleanedName.indexOf("/") === 0 && cleanedName.substring(1) === name)) {
-            const fileResponse = await getFileAPIv2(item.path.replaceAll(window.siyuan.config.system.workspaceDir, ""));
-            if (!fileResponse) {
-                return createErrorResponse("Failed to retrieve template file: " + name);
-            }
-            if (fileResponse instanceof Blob) {
-                return createSuccessResponse(await fileResponse.text());
-            }
-            return createSuccessResponse(fileResponse);
+    const templateItem = await getTemplateItemByName(name);
+    if (templateItem) {
+        const fileResponse = await getFileAPIv2(templateItem.path.replaceAll(window.siyuan.config.system.workspaceDir, ""));
+        if (!fileResponse) {
+            return createErrorResponse("Failed to retrieve template file: " + name);
         }
+        if (fileResponse instanceof Blob) {
+            return createSuccessResponse(await fileResponse.text());
+        }
+        return createSuccessResponse(fileResponse);
     }
     return createErrorResponse("Template not found: " + name);
 }
@@ -198,7 +229,7 @@ async function removeTemplate(params, extra) {
 }
 
 async function renderSprigTool(params, extra) {
-    const {sprigTemplate} = params;
+    const { sprigTemplate } = params;
     const response = await renderSprig(sprigTemplate);
     return createSuccessResponse(response);
 }
@@ -214,4 +245,18 @@ function validateTemplateName(path: string): { isValid: boolean; reason?: string
         return { isValid: false, reason: "路径不能以 '/' 或 '\\' 结尾" };
     }
     return validatePath(path);
+}
+
+async function getTemplateItemByName(name: string): Promise<{ "content": string, "path": string } | null> {
+    const response = await searchTemplate(name.replaceAll("/", " "));
+    if (!response.length) {
+        return null;
+    }
+    for (const item of response) {
+        const cleanedName = item.content.replaceAll("<mark>", "").replaceAll("</mark>", "");
+        if (cleanedName === name || (cleanedName.indexOf("/") === 0 && cleanedName.substring(1) === name)) {
+            return item;
+        }
+    }
+    return null;
 }

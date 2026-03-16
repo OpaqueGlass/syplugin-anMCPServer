@@ -170,3 +170,19 @@ export function isCurrentVersionLessThan(version: string): boolean {
     }
     return false;
 }
+
+/**
+ * 检查 HTML 字符串是否包含明显的解析错误
+ */
+export function isValidHTML(htmlString: string): boolean {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, "text/html");
+
+    // 在 Chrome/Firefox 中，解析错误会生成一个 <parsererror> 元素
+    const errorNode = doc.querySelector("parsererror");
+    if (errorNode) {
+    return false;
+    }
+
+    return true;
+}
