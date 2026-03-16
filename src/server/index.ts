@@ -26,6 +26,7 @@ import { generateUUID } from '@/utils/common';
 import { InMemoryEventStore } from '@modelcontextprotocol/sdk/examples/shared/inMemoryEventStore.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
+import { TemplateToolProvider } from '@/tools/template';
 
 const http = require("http");
 
@@ -302,6 +303,7 @@ export default class MyMCPServer {
             new AttributeToolProvider(),
             new BlockWriteToolProvider(),
             new MoveBlockToolProvider(),
+            new TemplateToolProvider(),
         ];
         const toolNames: string[] = [];
         let changedFlag = false;
@@ -309,6 +311,7 @@ export default class MyMCPServer {
         for (const provider of toolProviders) {
             const tools = await provider.getTools();
             for (const tool of tools) {
+                // 排除工具
                 if (readOnlyMode === "deny_all" && (tool.annotations?.readOnlyHint === false || tool.annotations?.destructiveHint === true)) {
                     logPush(`Skipping tool in read-only mode (deny_all): ${tool.name}`);
                     continue;
@@ -317,6 +320,7 @@ export default class MyMCPServer {
                     logPush(`Skipping destructive tool in non-destructive mode: ${tool.name}`);
                     continue;
                 }
+                // 接纳工具
                 toolNames.push(tool.name);
                 if (this.registeredToolDict[tool.name]) {
                     debugPush(`Tool ${tool.name} is already registered, skipping.`);

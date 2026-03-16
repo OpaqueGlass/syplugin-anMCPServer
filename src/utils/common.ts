@@ -344,3 +344,12 @@ export function extractNodeParagraphIds(htmlString: string): string[] {
     .filter((id): id is string => id !== null);
   return ids;
 }
+
+/**
+ * 包装模板名称
+ * @param templateName 模板名称，来源于searchTemplate返回值content字段
+ * @returns 
+ */
+export function wrapTemplateFilePath(templateName: string): string {
+    return "/data/templates/" + templateName + ".md";
+}

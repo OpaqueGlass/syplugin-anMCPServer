@@ -848,24 +848,36 @@ export async function putJSONFile(path, object, format = false) {
  */
 export async function putStringFile(path, object, format = false) {
     const url = "/api/file/putFile";
-    const pathSplited = path.split("/");
-    let fileContent = object;
-    // File的文件名实际上无关，但这里考虑到兼容，将上传文件按照路径进行了重命名
-    const file = new File([fileContent], pathSplited[pathSplited.length - 1], {type: "text/plain"});
+    
+    const fileName = path.split("/").pop() || "file.txt";
+    let fileContent = typeof object === 'object' ? JSON.stringify(object, null, format ? 2 : 0) : object;
+    const file = new File([fileContent], fileName, { type: "text/plain" });
     const data = new FormData();
     data.append("path", path);
     data.append("isDir", "false");
-    data.append("modTime", new Date().valueOf().toString());
+    data.append("modTime", Date.now().toString());
     data.append("file", file);
-    return fetch(url, {
-        body: data,
-        method: 'POST',
-        headers: {
-            "Authorization": "Token "+ getToken()
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: data,
+            headers: {
+                "Authorization": "Token " + getToken()
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    }).then((response) => {
-        return response.json();
-    });
+        const result = await response.json();
+        if (result.code !== 0) {
+            throw new Error(`Failed to put string file: ${result.msg || 'Unknown error'}`);
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Upload failed:", error);
+        throw error; // 抛出错误以便调用者处理
+    }
 }
 
 /**
@@ -960,7 +972,7 @@ export async function removeFileAPI(path) {
     if (response.code == 0) {
         return true;
     } else {
-        return false;
+        throw new Error(`Failed to remove file: ${response.msg}`);
     }
 }
 
@@ -1140,6 +1152,67 @@ export async function listDocTree(notebook:string, path:string) {
         throw new Error("listDocTree Failed: " + response.msg);
     }
 }
+
+interface SearchTemplateResult {
+    content: string;
+    path: string;
+}
+
+export async function searchTemplate(k:string): Promise<SearchTemplateResult[]> {
+    const url = "/api/search/searchTemplate";
+    let postBody = {
+        k
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data.blocks as SearchTemplateResult[];
+    } else {
+        throw new Error("searchTemplate Failed: " + response.msg);
+    }
+}
+
+
+/**
+ * 渲染模板
+ * @param id 渲染上下文文档id
+ * @param path 模板全路径
+ * @returns 渲染后的dom字符串
+ */
+export async function renderTemplate(id:string, path: string): Promise<string> {
+    const url = "/api/template/render";
+    let postBody = {
+        id,
+        path
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data.content as string;
+    } else {
+        throw new Error("renderTemplate Failed: " + response.msg);
+    }
+
+}
+
+
+/**
+ * 渲染Sprig模板字符串
+ * @param template 模板内容字符串
+ * @returns 渲染后的内容
+ */
+export async function renderSprig(template: string): Promise<string> {
+    const url = "/api/template/renderSprig";
+    let postBody = {
+        template
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data as string;
+    } else {
+        throw new Error("renderSprig Failed: " + response.msg);
+    }
+
+}
+
 
 export const DOC_SORT_TYPES = {
     FILE_NAME_ASC: 0,
