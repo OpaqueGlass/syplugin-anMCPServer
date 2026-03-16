@@ -19,6 +19,7 @@ import { DocVectorSearchProvider } from '@/tools/vectorSearch';
 import { FlashcardToolProvider } from '@/tools/flashCard';
 import promptCreateCardsSystemCN from '@/../static/prompt_create_cards_system_CN.md';
 import promptQuerySystemCN from '@/../static/prompt_dynamic_query_system_CN.md';
+import promptTemplatePromptCN from '@/../static/prompt_template_CN.md';
 import { AttributeToolProvider } from '@/tools/attributes';
 import { BlockWriteToolProvider } from '@/tools/blockWrite';
 import { MoveBlockToolProvider } from '@/tools/move';
@@ -280,7 +281,22 @@ export default class MyMCPServer {
                 }]
             })
         );
-
+        this.mcpServer.registerPrompt(
+            "template_creator_prompt_cn",
+            {
+                title: lang("prompt_template"),
+                description: "Template Creator System Prompt",
+            },
+            ({  }) => ({
+                messages: [{
+                    role: "assistant",
+                    content: {
+                        type: "text",
+                        text: promptTemplatePromptCN
+                    }
+                }]
+            })
+        );
     }
     async loadToolsAndPrompts() {
         await this.loadTools();

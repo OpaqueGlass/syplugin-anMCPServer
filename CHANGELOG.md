@@ -1,5 +1,10 @@
 ## 更新日志 | CHANGELOG
 
+### v1.0.0-beta1 (2026-03-16)
+
+- 新增：模板相关工具；
+- 新增：重命名相关工具；
+
 ### v1.0.0-alpha2 （2026-03-15）
 
 - 新增：依赖[OpaqueGlass/syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)的RAG检索工具；

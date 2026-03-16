@@ -63,6 +63,7 @@
   "tool_title_generate_answer_with_doc": "Generate Answer with Document (RAG)",
   "prompt_sql": "System prompt for sql query (zh-CN)",
   "prompt_flashcards": "System prompt for creating flashcards (zh-CN)",
+  "prompt_template": "System prompt for template creation (zh-CN)",
   "tool_title_get_block_kramdown": "Get Block Kramdown",
   "tool_title_insert_block": "Insert Block",
   "tool_title_prepend_block": "Prepend Block",

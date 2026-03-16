@@ -1,11 +1,15 @@
 
-# A little MCP server for siyuan-note
+# An MCP server for siyuan-note
 
 [中文](./README_zh_CN.md)
 
 > A plugin that provides MCP service for [Siyuan Note](https://github.com/siyuan-note/siyuan).
 
-> ⚠️ Breaking changes: Upgrading from v0.1.x to v0.2.x introduces breaking changes. [CHANGELOG_zh-CN](./CHANGELOG.md)
+## 🌻 Features
+
+- Most tools support the **exclude document** function.
+- It includes certain input parameter validation and is **not a direct API wrapper** for SiYuan Note.
+- Ready to use once the plugin is installed and enabled on the **desktop client**; Docker and mobile platforms are **not supported**.
 
 ## ✨ Quick Start
 
@@ -17,50 +21,68 @@
 
 ## 🔧 Supported Tools
 
-| Category | Function Item | Doc Exclusion | Status / Description |
-| --- | --- | --- | --- |
-| Search | Keyword Search | N/A | ⚠️ Temporarily removed; feedback is welcome if needed |
-| Search | SQL Search | ⚠️ | Checks exclusion only if: result contains ID AND count < 300 |
-| Search | RAG Q&A (Note Index) | - | 🚫 To be removed; new solution coming soon |
-| Fetch | Get Doc Markdown via ID | ✅ | — |
-| Fetch | Get Block Kramdown via ID | ✅ | — |
-| Fetch | List Notebooks | ❌ | — |
-| Fetch | Get Backlinks via ID | ✅ | — |
-| Fetch | Get List of Sub-documents | ✅ | — |
-| Fetch | Get List of Sub-blocks | ✅ | — |
-| Fetch | Read Attributes | ✅ | — |
-| Fetch | Read Daily Note of Specific Date | - | 🚫 Temporarily removed; feedback welcome |
-| Fetch | SiYuan Database Format | - | — |
-| Write / Doc | Append to Daily Note | ✅ | — |
-| Write / Doc | Append to Doc via ID | ✅ | — |
-| Write / Doc | Create New Doc at Position via ID | ✅ | — |
-| Write / Doc | Insert Sub-block (Prepend/Append) | ✅ | — |
-| Write / Doc | Insert Block (Specific Position) | ✅ | — |
-| Write / Doc | Update Block | ✅ | — |
-| Write / Card | Create Flashcard via Markdown | ✅ | — |
-| Write / Card | Create Flashcard via Block ID | ✅ | — |
-| Write / Card | Delete Flashcard via Block ID | ❌ | — |
-| Write / Attr | Change Attributes (Add/Del/Edit) | ✅ | — |
-| Write / Move | Move Document | ✅ | — |
-| Write / Move | Move Block | ✅ | ⚠️ Moving headings requires folding, which loses fold status |
+> [!WARNING]
+> Not all tools have strict excluded document validation. Before using excluded documents or after updating MCP tools, please read the tool support list carefully and consider disabling some tools.
 
-## ❓ FAQ
+| Category     | Item                          | Exclude Doc | Status/Notes                                                                                                         |
+|--------------|-------------------------------|-------------|-----------------------------------------------------------------------------------------------------------------------|
+| Retrieval    | Search using SQL              | ⚠️          | Excluded documents are only checked if: the result contains IDs **and** the number of entries < 300                   |
+| Get          | Get document Markdown by ID   | ✅          | —                                                                                                                     |
+| Get          | Get block Kramdown by ID      | ✅          | —                                                                                                                     |
+| Get          | List notebooks                | ❌          | —                                                                                                                     |
+| Get          | Get backlinks by ID           | ✅          | —                                                                                                                     |
+| Get          | Get subdocuments of a document| ✅          | —                                                                                                                     |
+| Get          | Get child block list          | ✅          | —                                                                                                                     |
+| Get          | Read attributes               | ✅          | —                                                                                                                     |
+| Get          | SiYuan database format        | ❌          | This function does not involve user documents                                                                         |
+| Get          | Vector Search Client Plugin - Query | ❌      | To use this function, download and properly configure the [syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient) plugin.<br />This tool does not support excluded documents yet. |
+| Get          | Template file raw content     | ❌          | —                                                                                                                     |
+| Get          | Template render result preview| ⚠️          | Only kramdown content is returned.<br />Since functions like `getBlock` can be used in templates, excluded documents may be accessed bypassing checks via this tool. |
+| Get          | Sprig render result preview   | ❌          | —                                                                                                                     |
+| Get          | Retrieve existing templates   | ❌          | —                                                                                                                     |
+| Write / Doc  | Append content to journal     | ✅          | —                                                                                                                     |
+| Write / Doc  | Append content to document by ID | ✅       | domstring not supported                                                                                               |
+| Write / Doc  | Create new doc at position by ID | ✅        | domstring not supported                                                                                               |
+| Write / Doc  | Insert child block (before/after) | ✅      | domstring not supported                                                                                               |
+| Write / Doc  | Insert block at specified position | ✅     | domstring not supported                                                                                               |
+| Write / Doc  | Update block                  | ✅          | domstring not supported                                                                                               |
+| Write / Card | Create flashcard from Markdown | ✅        | —                                                                                                                     |
+| Write / Card | Create flashcard by block ID  | ✅          | —                                                                                                                     |
+| Write / Card | Delete flashcard by block ID  | ❌          | —                                                                                                                     |
+| Write / Attr | Modify attributes (add/del/edit) | ✅       | —                                                                                                                     |
+| Write / Move | Move document                 | ✅          | —                                                                                                                     |
+| Write / Move | Move block                    | ✅          | ⚠️ Moving headings requires folded movement, which will cause folded state to be lost.                               |
+| Write / Tpl  | Create or overwrite template  | ❌          | —                                                                                                                     |
+| Write / Doc  | Render template & insert at doc start | ⚠️ | Inserted at document start, position cannot be specified.<br />Since functions like `getBlock` can be used in templates, excluded documents may be accessed bypassing checks via this tool. |
+| Write / Tpl  | Delete existing template      | ❌          | —                                                                                                                     |
+| Write / Doc  | Rename document               | ✅          | —                                                                                                                     |
+| Write / Doc  | Rename notebook              | ✅          | —                                                                                                                     |
 
-- Q: How to use it in an MCP client?  
-  Please refer to the later sections;  
+## ❓ Frequently Asked Questions
 
-- Q: What are some common MCP clients?  
-  - Refer to: https://github.com/punkpeye/awesome-mcp-clients or https://modelcontextprotocol.io/clients;  
+- Q: How to use in an MCP client?
+  - Please refer to the sections below.
+- Q: What are common MCP clients?
+  - Please refer to: https://github.com/punkpeye/awesome-mcp-clients or https://modelcontextprotocol.io/clients.
+- Q: Does the plugin support authentication?
+  - Authentication is supported since v0.2.0. After setting an auth token in plugin settings, you must set the `authorization` request header in your MCP client with value: `Bearer {YourToken}`.
+- Q: Can it be used in Docker?
+  - No. The plugin depends on the Node.js environment and does not support running on mobile or in Docker.
 
-- Q: Does the plugin support authentication?  
-  - Version v0.2.0 now supports authentication. After setting the authentication token in the plugin settings, the MCP client needs to configure the `authorization` request header with the value `Bearer YourToken`;  
-
-- Q: Can it be used in Docker?  
-  - No, the plugin relies on a Node.js environment and does not support running on mobile devices or Docker.  
-
-    > To support SiYuan deployed in Docker, it is recommended to switch to other MCP projects. Some relevant projects may be listed [here](https://github.com/siyuan-note/siyuan/issues/13795).
-    >  
-    > Alternatively, decouple this plugin from the SiYuan frontend.  
+    > If you need to support SiYuan deployed in Docker, it is recommended to use other MCP projects. Some may be listed [here](https://github.com/siyuan-note/siyuan/issues/13795).
+    >
+    > Alternatively, modify the code to decouple this plugin from the SiYuan frontend.
+- Q: How to view the set authorization token?
+  - The token is stored hashed. It can only be modified, not viewed in plaintext while active.
+- Q: I only connected once, why does the connection count on the settings page show more than 1?
+  - Outdated statistics: Please manually click Refresh Status to get the latest result.
+  - Connections not fully released: Some MCP clients do not send a standard disconnect signal on close, leaving old connections alive in the background. New connections are added when the feature is restarted.
+  - Multi-device connections: Please confirm whether other software is accessing the MCP service or related ports.
+  - Still having issues? Check the plugin logs or set an authorization token to prevent information leakage.
+- Q: What is the "Vector Search Client Plugin - Query" tool?
+  - This tool retrieves matching content blocks or answers questions directly via knowledge graph / vector search.
+  - To use it, you must first download, enable, and properly configure the [syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient) plugin.
+  - Currently, this plugin only supports lightRAG-server.
 
 ## How to Configure in an MCP Client?  
 
