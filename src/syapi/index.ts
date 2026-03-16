@@ -739,10 +739,10 @@ export async function renameDocAPI(notebookid, path, title) {
     let url = "/api/filetree/renameDoc";
     let response = await postRequest({"notebook": notebookid, "path": path, "title": title}, url);
     if (response.code == 0) {
-        return response.code;
+        return true;
     }
     warnPush("重命名文档时发生错误", response.msg);
-    return response.code;
+    throw new Error(`Rename document failed: ${response.msg}`);
 }
 
 export function isDarkMode() {
@@ -1211,6 +1211,19 @@ export async function renderSprig(template: string): Promise<string> {
         throw new Error("renderSprig Failed: " + response.msg);
     }
 
+}
+
+export async function renameNotebook(notebookId: string, newName: string): Promise<boolean> {
+    const url = "/api/notebook/renameNotebook";
+    let postBody = {
+        notebook: notebookId,
+        name: newName
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return true;
+    }
+    throw new Error("renameNotebook Failed: " + response.msg);
 }
 
 
