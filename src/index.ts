@@ -18,7 +18,7 @@ import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
 import EventHandler from "./utils/eventHandler";
 import { setIndexProvider } from "./utils/indexerHelper";
 import { MyIndexProvider } from "./indexer/myProvider";
-import { generateUUID, getFormattedTimestr } from "./utils/common";
+import { generateUUID, getFormattedTimestr, showPluginMessage } from "./utils/common";
 import { createApp } from "vue";
 import historyVue from "./components/history.vue";
 import ElementPlus from 'element-plus';
@@ -27,6 +27,7 @@ import { ConnectionLogger } from "./logger/connectionLogger";
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
 const DEFAULT_SETTING = {
+    address: "127.0.0.1",
     port: "16806",
     autoStart: false,
     readOnly: "allow_all", // "allow_all", "allow_non_destructive", "deny_all"
@@ -35,6 +36,7 @@ const DEFAULT_SETTING = {
     autoApproveLocalChange: false, // 是否自动批准原地更改
     filterDocuments: "",   // 多行文本，每行一个文档 id
     filterNotebooks: "",   // 多行文本，每行一个笔记本 id
+    allowedHosts: "",
 }
 
 export default class OGanMCPServerPlugin extends Plugin {
@@ -84,6 +86,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         //         logPush("search", response);
         //     }
         // });
+        const addressInputElem = document.createElement("input");
         const portInputElem = document.createElement("input");
         const ragBaseUrlInputElem = document.createElement("input");
         const authInputElem = document.createElement("input");
@@ -92,7 +95,8 @@ export default class OGanMCPServerPlugin extends Plugin {
         const autoApproveLocalChangeSwitchElem = document.createElement("input");
         const filterDocTextareaElem = document.createElement("textarea");
         const filterNotebookTextareaElem = document.createElement("textarea");
-        
+        const allowedHostsTextareaElem = document.createElement("textarea");
+
         this.setting = new Setting({
             confirmCallback: async () => {
                 let myAuthCode = authInputElem.value;
@@ -111,9 +115,11 @@ export default class OGanMCPServerPlugin extends Plugin {
                 }
                 const filterDocumentsValue = filterDocTextareaElem.value ? filterDocTextareaElem.value.trim() : "";
                 const filterNotebooksValue = filterNotebookTextareaElem.value ? filterNotebookTextareaElem.value.trim() : "";
+                const allowedHostsValue = allowedHostsTextareaElem.value ? allowedHostsTextareaElem.value.trim() : "";
 
                 this.mySettings = {
                     autoStart: autoStartSwitchElem.checked,
+                    address: addressInputElem.value,
                     port: portInputElem.value,
                     authCode: myAuthCode,
                     ragBaseUrl: ragBaseUrlInputElem.value,
@@ -121,10 +127,33 @@ export default class OGanMCPServerPlugin extends Plugin {
                     autoApproveLocalChange: autoApproveLocalChangeSwitchElem.checked,
                     filterDocuments: filterDocumentsValue,
                     filterNotebooks: filterNotebooksValue,
+                    allowedHosts: allowedHostsValue
                 };
-                this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings);
+                this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings).then(()=>{
+                    showPluginMessage(lang("msg_save_and_restarting"));
+                    this.myMCPServer.restart();
+                });
+
             }
         });
+
+        this.setting.addItem({
+            title: lang("setting_address"),
+            direction: "column",
+            description: lang("setting_address_desp"),
+            createActionElement: () => {
+                addressInputElem.className = "b3-text-field fn__flex-center fn__size200";
+                addressInputElem.type = "text";
+                addressInputElem.placeholder = "127.0.0.1";
+                // 确保从 mySettings 中读取 address
+                addressInputElem.value = this.mySettings.address || "127.0.0.1"; 
+                addressInputElem.addEventListener("change", () => {
+                    this.mySettings['address'] = addressInputElem.value;
+                });
+                return addressInputElem;
+            },
+        });
+
         
         this.setting.addItem({
             title: lang("setting_port"),
@@ -141,6 +170,22 @@ export default class OGanMCPServerPlugin extends Plugin {
                     this.mySettings['port'] = portInputElem.value;
                 });
                 return portInputElem;
+            },
+        });
+
+        this.setting.addItem({
+            title: lang("setting_allowedHosts") || "Allowed Hosts",
+            direction: "row",
+            description: lang("setting_allowedHosts_desp") || "允许访问的 Host 列表（例如 192.168.31.152），每行一个。当监听 0.0.0.0 时生效。",
+            createActionElement: () => {
+                allowedHostsTextareaElem.className = "b3-text-field fn__block";
+                allowedHostsTextareaElem.placeholder = "localhost\n127.0.0.1\n192.168.x.x";
+                allowedHostsTextareaElem.rows = 2;
+                allowedHostsTextareaElem.value = this.mySettings.allowedHosts ?? "";
+                allowedHostsTextareaElem.addEventListener("change", () => {
+                    this.mySettings['allowedHosts'] = allowedHostsTextareaElem.value;
+                });
+                return allowedHostsTextareaElem;
             },
         });
 
@@ -202,21 +247,21 @@ export default class OGanMCPServerPlugin extends Plugin {
             },
         });
 
-        this.setting.addItem({
-            title: lang("setting_rag_baseurl"),
-            direction: "column",
-            description: lang("setting_rag_baseurl_desp"),
-            createActionElement: () => {
-                ragBaseUrlInputElem.className = "b3-text-field fn__flex-center fn__size200";
-                ragBaseUrlInputElem.type = "text";
-                ragBaseUrlInputElem.placeholder = "http://127.0.0.1:26806";
-                ragBaseUrlInputElem.value = this.mySettings.ragBaseUrl ?? "";
-                ragBaseUrlInputElem.addEventListener("change", ()=>{
-                    this.mySettings['ragBaseUrl'] = ragBaseUrlInputElem.value;
-                });
-                return ragBaseUrlInputElem;
-            },
-        });
+        // this.setting.addItem({
+        //     title: lang("setting_rag_baseurl"),
+        //     direction: "column",
+        //     description: lang("setting_rag_baseurl_desp"),
+        //     createActionElement: () => {
+        //         ragBaseUrlInputElem.className = "b3-text-field fn__flex-center fn__size200";
+        //         ragBaseUrlInputElem.type = "text";
+        //         ragBaseUrlInputElem.placeholder = "http://127.0.0.1:26806";
+        //         ragBaseUrlInputElem.value = this.mySettings.ragBaseUrl ?? "";
+        //         ragBaseUrlInputElem.addEventListener("change", ()=>{
+        //             this.mySettings['ragBaseUrl'] = ragBaseUrlInputElem.value;
+        //         });
+        //         return ragBaseUrlInputElem;
+        //     },
+        // });
 
 
         this.setting.addItem({
@@ -295,7 +340,6 @@ export default class OGanMCPServerPlugin extends Plugin {
                 return container;
             },
         });
-        
 
         // 新增：过滤文档（每行一个文档 id）
         this.setting.addItem({
@@ -413,7 +457,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         this.loadData(name).then(()=>{
             this.mySettings = Object.assign({}, DEFAULT_SETTING, this.data[name]);
             logPush("this.data", this.mySettings);
-            this.myMCPServer.initialize();
+            // this.myMCPServer.initialize();
             this.eventHandler.bindHandler();
             setIndexProvider(new MyIndexProvider(this.data["ragBaseUrl"], this.data["ragAuthKey"]));
             this.myMCPServer.loadToolsAndPrompts().then(()=>{

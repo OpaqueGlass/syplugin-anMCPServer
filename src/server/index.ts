@@ -94,7 +94,14 @@ export default class MyMCPServer {
     }
     initialize() {
         logPush("Initializing mcp server");
-        this.expressApp = createMcpExpressApp(); // express();
+        const plugin = getPluginInstance();
+        const address = plugin?.mySettings["address"] || "127.0.0.1";
+        const allowedHostsSetting = plugin?.mySettings["allowedHosts"] || "";
+        const allowedHosts = allowedHostsSetting.split("\n").map((host: string) => host.trim()).filter((host: string) => host.length > 0);
+        this.expressApp = createMcpExpressApp({
+            "host": address,
+            "allowedHosts": allowedHosts
+        }); // express();
         // this.expressApp.use(express.json());
         this.expressApp.get('/health', (_, res) => {
             res.status(200).send("ok");
@@ -369,6 +376,7 @@ export default class MyMCPServer {
         }
     }
     start() {
+        this.initialize();
         let port = 16806;
         try {
             const plugin = getPluginInstance();
@@ -385,13 +393,14 @@ export default class MyMCPServer {
         try {
             logPush("启动服务中");
             const httpServer = http.createServer(this.expressApp);
-            const bindAddress = "127.0.0.1";
-            if (bindAddress !== "127.0.0.1" && (getPluginInstance()?.mySettings["authCode"] === CONSTANTS.CODE_UNSET) || !isValidStr(getPluginInstance()?.mySettings["authCode"])) {
-                throw new Error("Please set an authentication code (authCode) for security reasons");
+            const bindAddress = getPluginInstance()?.mySettings["address"] || "127.0.0.1";
+            if ((bindAddress !== "127.0.0.1" && bindAddress !== "localhost") && (getPluginInstance()?.mySettings["authCode"] === CONSTANTS.CODE_UNSET) || !isValidStr(getPluginInstance()?.mySettings["authCode"])) {
+                throw new Error(lang("msg_auth_code_please"));
             }
             httpServer.listen(port, bindAddress, () => {
                 logPush("服务运行在端口：", port);
-                showMessage(lang("server_running_on") + port);
+                logPush("服务运行在地址：", bindAddress);
+                showMessage(lang("server_running_on") + port + " (" + bindAddress + ")");
                 this.runningFlag = true;
                 this.httpServer = httpServer;
                 this.workingPort = port;
