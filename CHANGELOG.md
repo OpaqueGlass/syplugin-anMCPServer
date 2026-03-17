@@ -1,5 +1,18 @@
 ## 更新日志 | CHANGELOG
 
+### v1.0.0 (2026-03-17)
+
+- 新增：MCP连接、工具调用日志；
+  - 日志保存于`工作空间/temp/petal/syplugin-anMCPServer/logs`，单条目中`H`表示请求头中给出的代理ip，`S`表示连接接口ip；
+  - 在插件启动时，清理1次日志（>7天的）；
+- 新增：支持绑定 非127.0.0.1 地址；
+- 移除：弃用SSE连接方式；
+- 新增：使用有状态连接方式（但实质上未保存内容），存在的连接将在无消息10分钟后关闭；
+- 新增：工具；
+  - 模板创建相关；
+  - 重命名文档/笔记本；
+  - 依赖[OpaqueGlass/syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)的RAG检索工具；
+
 ### v1.0.0-beta1 (2026-03-16)
 
 - 新增：模板相关工具；
