@@ -18,7 +18,7 @@ import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
 import EventHandler from "./utils/eventHandler";
 import { setIndexProvider } from "./utils/indexerHelper";
 import { MyIndexProvider } from "./indexer/myProvider";
-import { generateUUID, getFormattedTimestr, showPluginMessage } from "./utils/common";
+import { generateUUID, getFormattedTimestr, showPluginMessage, sleep } from "./utils/common";
 import { createApp } from "vue";
 import historyVue from "./components/history.vue";
 import ElementPlus from 'element-plus';
@@ -129,7 +129,7 @@ export default class OGanMCPServerPlugin extends Plugin {
                     filterNotebooks: filterNotebooksValue,
                     allowedHosts: allowedHostsValue
                 };
-                this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings).then(()=>{
+                this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings).then(async ()=>{
                     showPluginMessage(lang("msg_save_and_restarting"));
                     this.myMCPServer.restart();
                 });
@@ -460,11 +460,9 @@ export default class OGanMCPServerPlugin extends Plugin {
             // this.myMCPServer.initialize();
             this.eventHandler.bindHandler();
             setIndexProvider(new MyIndexProvider(this.data["ragBaseUrl"], this.data["ragAuthKey"]));
-            this.myMCPServer.loadToolsAndPrompts().then(()=>{
-                if (this.mySettings["autoStart"]) {
-                    this.myMCPServer.start();
-                }
-            });
+            if (this.mySettings["autoStart"]) {
+                this.myMCPServer.start();
+            }
         })
     }
 

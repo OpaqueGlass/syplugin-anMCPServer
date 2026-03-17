@@ -51,16 +51,13 @@ export default class MyMCPServer {
     checkInterval: ReturnType<typeof setInterval> | null = null;
     checkToolChangeInterval: ReturnType<typeof setInterval> | null = null;
     registeredToolDict: { [name: string]: RegisteredTool } = {};
+
+    mcpInitConfig = {
+        "name": "siyuan",
+        "version": "1.0.0"
+    }
     constructor() {
-        this.mcpServer = new McpServer({
-            "name": "siyuan",
-            "version": "1.0.0"
-        }, {
-            "capabilities": {
-                "tools": {},
-                "prompts": {},
-            }
-        });
+        
     }
     /**
      * 根据sessionId关闭链接
@@ -93,8 +90,15 @@ export default class MyMCPServer {
         }
         delete this.transports[transportInfo.sessionId];
     }
-    initialize() {
+    async initialize() {
         logPush("Initializing mcp server");
+        this.mcpServer = new McpServer(this.mcpInitConfig, {
+            "capabilities": {
+                "tools": {},
+                "prompts": {},
+            }
+        });
+        await this.loadToolsAndPrompts();
         const plugin = getPluginInstance();
         let address = plugin?.mySettings["address"] || "127.0.0.1";
         const allowedHostsSetting = plugin?.mySettings["allowedHosts"] || "";
@@ -388,8 +392,8 @@ export default class MyMCPServer {
             this.mcpServer.sendToolListChanged();
         }
     }
-    start() {
-        this.initialize();
+    async start() {
+        await this.initialize();
         let port = 16806;
         try {
             const plugin = getPluginInstance();
@@ -462,6 +466,7 @@ export default class MyMCPServer {
             if (this.mcpServer) {
                 this.mcpServer.close();
             }
+            this.registeredToolDict = {};
             this.runningFlag = false;
             this.workingPort = -1;
             logPush("MCP服务关闭");
@@ -472,9 +477,9 @@ export default class MyMCPServer {
         clearInterval(this.checkInterval);
         clearInterval(this.checkToolChangeInterval);
     }
-    restart() {
+    async restart() {
         this.stop();
-        this.start();
+        await this.start();
     }
     isRunning() {
         return this.runningFlag;
