@@ -1,5 +1,5 @@
 import { createFolder, getFileAPI, listFileAPI, putStringFile, removeFileAPI } from "@/syapi";
-import { debugPush, errorPush } from ".";
+import { debugPush, errorPush, logPush } from ".";
 
 // 定义日志项接口
 interface LogEntry {
@@ -120,21 +120,26 @@ export class ConnectionLogger {
 
     async cleanOldLogs(daysToKeep: number = 7) {
         const files = await listFileAPI(this.logDir);
-        if (!files || files.length === 0) return;
-
+        if (!files || !Array.isArray(files) || files.length === 0) return;
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-        
         const pad = (n: number) => String(n).padStart(2, '0');
-        const cutoffStr = `${cutoffDate.getFullYear()}-${pad(cutoffDate.getMonth() + 1)}-${pad(cutoffDate.getDate())}_${pad(cutoffDate.getHours())}-${pad(cutoffDate.getMinutes())}-${pad(cutoffDate.getSeconds())}`;
-
-        debugPush(`正在清理 ${daysToKeep} 天前的日志，截止时间点: ${cutoffStr}`);
-        for (const fileName of files) {
-            // 假设文件名类似: 2023-10-27_14-30-05.log
-            // 直接进行字符串比较，比解析成 Date 对象效率更高
-            if (fileName < cutoffStr) {
-                debugPush(`发现过时文件: ${fileName}，准备删除...`);
-                await removeFileAPI(`${this.logDir}/${fileName}`); 
+        const cutoffStr = `${cutoffDate.getFullYear()}-${pad(cutoffDate.getMonth() + 1)}-${pad(cutoffDate.getDate())}_${pad(cutoffDate.getHours())}-${pad(cutoffDate.getMinutes())}-${pad(cutoffDate.getSeconds())}.log`;
+        debugPush(`正在清理 ${daysToKeep} 天前的日志，截止阈值: ${cutoffStr}`);
+        for (const file of files) {
+            if (file.isDir || file.isSymlink) {
+                continue; 
+            }
+            const fileName = file.name;
+            if (fileName.endsWith('.log') && fileName.length === cutoffStr.length) {
+                if (fileName < cutoffStr) {
+                    try {
+                        debugPush(`发现过时文件: ${fileName}，准备删除...`);
+                        await removeFileAPI(`${this.logDir}/${fileName}`);
+                    } catch (err) {
+                        errorPush(`日志清理失败: ${fileName}`, err);
+                    }
+                }
             }
         }
     }
