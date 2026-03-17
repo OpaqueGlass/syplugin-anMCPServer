@@ -31,7 +31,7 @@ export class DocVectorSearchProvider extends McpToolsProvider<any> {
         }
         return [{
             name: "siyuan_get_available_rag_service_type",
-            description: '获取思源笔记中当前可用的 RAG（检索增强生成）服务列表及其 ID。在调用 siyuan_rag_query 之前，必须先通过此工具确定有效的 serviceId。',
+            description: 'Retrieve the list of currently available RAG (Retrieval-Augmented Generation) services and their IDs in SiYuan Note. Before invoking `siyuan_rag_query`, you must first use this tool to determine a valid `serviceId`. If no services are available, you should fall back to other retrieval tools.',
             schema: {},
             handler: async (params, extra)=>{
                 const result = await window["__opaqueGlassVectorIndexService"]["api"]["getAvailableServices"]();
@@ -47,7 +47,7 @@ export class DocVectorSearchProvider extends McpToolsProvider<any> {
         },
         {
             name: "siyuan_rag_query",
-            description: '基于指定的 RAG 服务，在思源笔记本地知识库中检索相关文档。lightRAG为生成回答，而其他为检索文档，只提供相关文档块。调用前请先使用 siyuan_get_available_rag_service_type 工具获取有效的 serviceId。',
+            description: 'Based on the specified RAG service, retrieve relevant documents from the local SiYuan Note knowledge base. lightRAG generates answers, while other services only retrieve and return relevant document blocks. Before calling, please use the siyuan_get_available_rag_service_type tool to obtain a valid serviceId.',
             schema: {
                 "text": z.string().describe("用户输入的查询文本"),
                 "serviceId": z.string().optional().describe("要使用的RAG服务ID，调用siyuan_get_available_rag_service_type接口获取")

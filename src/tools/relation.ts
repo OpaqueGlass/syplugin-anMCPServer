@@ -36,7 +36,7 @@ export class RelationToolProvider extends McpToolsProvider<any> {
             }
         },{
             "name": "siyuan_get_children_blocks",
-            "description": "根据父块的 ID，获取其下方的所有子块列表。这包括直接嵌套的块以及标题下方的块。过长的块内容将被省略、仅提供预览。有助于理解块的层级结构和内容组织。",
+            "description": "Retrieve the list of all sub-blocks under a parent block by its ID. This includes directly nested blocks and blocks under headings. Overly long block content will be truncated and only a preview provided. It helps to understand the hierarchical structure and content organization of blocks.",
             "schema": {
                 "id": z.string().describe("父块的唯一标识符（ID）。")
             },

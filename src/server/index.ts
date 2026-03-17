@@ -28,6 +28,7 @@ import { InMemoryEventStore } from '@modelcontextprotocol/sdk/examples/shared/in
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { TemplateToolProvider } from '@/tools/template';
+import { HelpDocToolProvider } from '@/tools/helpDoc';
 
 const http = require("http");
 
@@ -95,13 +96,25 @@ export default class MyMCPServer {
     initialize() {
         logPush("Initializing mcp server");
         const plugin = getPluginInstance();
-        const address = plugin?.mySettings["address"] || "127.0.0.1";
+        let address = plugin?.mySettings["address"] || "127.0.0.1";
         const allowedHostsSetting = plugin?.mySettings["allowedHosts"] || "";
-        const allowedHosts = allowedHostsSetting.split("\n").map((host: string) => host.trim()).filter((host: string) => host.length > 0);
+        let allowedHosts = allowedHostsSetting.split("\n").map((host: string) => host.trim()).filter((host: string) => host.length > 0);
+        if (address === "127.0.0.1" || address === "localhost" || address === "::1") {
+            if (allowedHosts.length !== 0) {
+                allowedHosts = allowedHosts.concat(["localhost", "127.0.0.1", "::1"]);
+            }
+        } else if (address !== "0.0.0.0") {
+            allowedHosts = allowedHosts.concat([address]);
+        }
+        if (allowedHosts.length === 0) {
+            allowedHosts = undefined;
+        }
+
         this.expressApp = createMcpExpressApp({
             "host": address,
             "allowedHosts": allowedHosts
         }); // express();
+        logPush("MCP Express app created with allowed hosts: ", allowedHosts, "Binding address: ", address);
         // this.expressApp.use(express.json());
         this.expressApp.get('/health', (_, res) => {
             res.status(200).send("ok");
@@ -315,6 +328,7 @@ export default class MyMCPServer {
 
         // 工具提供者列表
         const toolProviders = [
+            new HelpDocToolProvider(),
             new DailyNoteToolProvider(),
             new DocWriteToolProvider(),
             new SearchToolProvider(),
@@ -336,20 +350,19 @@ export default class MyMCPServer {
             for (const tool of tools) {
                 // 排除工具
                 if (readOnlyMode === "deny_all" && (tool.annotations?.readOnlyHint === false || tool.annotations?.destructiveHint === true)) {
-                    logPush(`Skipping tool in read-only mode (deny_all): ${tool.name}`);
+                    debugPush(`Skipping tool in read-only mode (deny_all): ${tool.name}`);
                     continue;
                 }
                 if (readOnlyMode === "allow_non_destructive" && tool.annotations?.destructiveHint === true) {
-                    logPush(`Skipping destructive tool in non-destructive mode: ${tool.name}`);
+                    debugPush(`Skipping destructive tool in non-destructive mode: ${tool.name}`);
                     continue;
                 }
                 // 接纳工具
                 toolNames.push(tool.name);
                 if (this.registeredToolDict[tool.name]) {
-                    debugPush(`Tool ${tool.name} is already registered, skipping.`);
                     continue;
                 }
-                logPush("启用工具中", tool.name, tool.title);
+                debugPush("启用工具中", tool.name, tool.title);
                 const registeredTool = this.mcpServer.registerTool(
                     tool.name,
                     {
@@ -365,7 +378,7 @@ export default class MyMCPServer {
         }
         for (const toolName in this.registeredToolDict) {
             if (!toolNames.includes(toolName)) {
-                logPush(`Unregistering tool that is no longer provided: ${toolName}`);
+                debugPush(`Unregistering tool that is no longer provided: ${toolName}`);
                 this.registeredToolDict[toolName].remove();
                 delete this.registeredToolDict[toolName];
                 changedFlag = true;

@@ -180,7 +180,7 @@ export default class OGanMCPServerPlugin extends Plugin {
             createActionElement: () => {
                 allowedHostsTextareaElem.className = "b3-text-field fn__block";
                 allowedHostsTextareaElem.placeholder = "localhost\n127.0.0.1\n192.168.x.x";
-                allowedHostsTextareaElem.rows = 2;
+                allowedHostsTextareaElem.rows = 3;
                 allowedHostsTextareaElem.value = this.mySettings.allowedHosts ?? "";
                 allowedHostsTextareaElem.addEventListener("change", () => {
                     this.mySettings['allowedHosts'] = allowedHostsTextareaElem.value;
