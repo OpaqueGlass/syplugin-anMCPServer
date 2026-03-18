@@ -239,6 +239,8 @@ export default class MyMCPServer {
                         if (authHeader) {
                             res.status(403).send("Invalid Token. Authentication is required. 鉴权失败");
                         } else {
+                            const baseUrl = `${req.protocol}://${req.get('host')}`;
+                            res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${baseUrl}/.well-known/oauth-authorization-server"`);
                             res.status(401).send("Authentication is required. 鉴权失败");
                         }
                         return;

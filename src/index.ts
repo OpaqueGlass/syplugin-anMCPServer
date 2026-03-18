@@ -15,7 +15,6 @@ import { lang, setLanguage } from "./utils/lang";
 import { CONSTANTS } from "./constants";
 import { isAuthCodeSetted, isValidAuthCode, isValidStr } from "./utils/commonCheck";
 import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
-import { clearJWKSCache } from "./utils/cloudflareAccess";
 import EventHandler from "./utils/eventHandler";
 import { setIndexProvider } from "./utils/indexerHelper";
 import { MyIndexProvider } from "./indexer/myProvider";
@@ -24,6 +23,7 @@ import { createApp } from "vue";
 import historyVue from "./components/history.vue";
 import ElementPlus from 'element-plus';
 import { ConnectionLogger } from "./logger/connectionLogger";
+import { clearJWKSCache } from "./utils/cloudflareAccess";
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
@@ -33,15 +33,14 @@ const DEFAULT_SETTING = {
     autoStart: false,
     readOnly: "allow_all", // "allow_all", "allow_non_destructive", "deny_all"
     authCode: CONSTANTS.CODE_UNSET,
+    cfAccessEnabled: false,
+    cfAccessTeamDomain: "",
+    cfAccessPolicyAud: "",
     ragBaseUrl: undefined,
     autoApproveLocalChange: false, // 是否自动批准原地更改
     filterDocuments: "",   // 多行文本，每行一个文档 id
     filterNotebooks: "",   // 多行文本，每行一个笔记本 id
     allowedHosts: "",
-    // Cloudflare Access settings
-    cfAccessEnabled: false,
-    cfAccessTeamDomain: "",  // e.g., "https://myteam.cloudflareaccess.com"
-    cfAccessPolicyAud: "",   // Application Audience (AUD) tag
 }
 
 export default class OGanMCPServerPlugin extends Plugin {
@@ -95,16 +94,15 @@ export default class OGanMCPServerPlugin extends Plugin {
         const portInputElem = document.createElement("input");
         const ragBaseUrlInputElem = document.createElement("input");
         const authInputElem = document.createElement("input");
+        const cfAccessEnabledSwitchElem = document.createElement("input");
+        const cfAccessTeamDomainInputElem = document.createElement("input");
+        const cfAccessPolicyAudInputElem = document.createElement("input");
         const autoStartSwitchElem = document.createElement("input");
         const readOnlySelectElem = document.createElement("select");
         const autoApproveLocalChangeSwitchElem = document.createElement("input");
         const filterDocTextareaElem = document.createElement("textarea");
         const filterNotebookTextareaElem = document.createElement("textarea");
         const allowedHostsTextareaElem = document.createElement("textarea");
-        // Cloudflare Access elements
-        const cfAccessEnabledSwitchElem = document.createElement("input");
-        const cfAccessTeamDomainInputElem = document.createElement("input");
-        const cfAccessPolicyAudInputElem = document.createElement("input");
 
         this.setting = new Setting({
             confirmCallback: async () => {
@@ -142,15 +140,15 @@ export default class OGanMCPServerPlugin extends Plugin {
                     address: addressInputElem.value,
                     port: portInputElem.value,
                     authCode: myAuthCode,
+                    cfAccessEnabled: cfAccessEnabledValue,
+                    cfAccessTeamDomain: cfAccessTeamDomainValue,
+                    cfAccessPolicyAud: cfAccessPolicyAudValue,
                     ragBaseUrl: ragBaseUrlInputElem.value,
                     readOnly: readOnlySelectElem.value,
                     autoApproveLocalChange: autoApproveLocalChangeSwitchElem.checked,
                     filterDocuments: filterDocumentsValue,
                     filterNotebooks: filterNotebooksValue,
                     allowedHosts: allowedHostsValue,
-                    cfAccessEnabled: cfAccessEnabledValue,
-                    cfAccessTeamDomain: cfAccessTeamDomainValue,
-                    cfAccessPolicyAud: cfAccessPolicyAudValue,
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings).then(async ()=>{
                     showPluginMessage(lang("msg_save_and_restarting"));
@@ -237,7 +235,6 @@ export default class OGanMCPServerPlugin extends Plugin {
                 return cfAccessEnabledSwitchElem;
             },
         });
-
         this.setting.addItem({
             title: lang("setting_cfAccess_teamDomain"),
             direction: "column",
@@ -250,7 +247,6 @@ export default class OGanMCPServerPlugin extends Plugin {
                 return cfAccessTeamDomainInputElem;
             },
         });
-
         this.setting.addItem({
             title: lang("setting_cfAccess_policyAud"),
             direction: "column",
@@ -263,7 +259,6 @@ export default class OGanMCPServerPlugin extends Plugin {
                 return cfAccessPolicyAudInputElem;
             },
         });
-
 
         this.setting.addItem({
             title: lang("setting_autoStart"),
