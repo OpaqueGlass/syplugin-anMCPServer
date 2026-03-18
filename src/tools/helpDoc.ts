@@ -1,4 +1,3 @@
-import databaseSchema from "@/../static/database_schema.md";
 import mdSyntax from "@/../static/data_md_syntax_CN.md";
 import templateFunction from "@/../static/data_template_action_CN.md";
 import { McpToolsProvider } from "./baseToolProvider";
