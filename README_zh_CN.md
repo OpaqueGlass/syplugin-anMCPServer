@@ -80,6 +80,10 @@
     > 或者，修改代码，将本插件和思源前端解耦；
 - Q: 如何查看已经设置的授权码？
   - 授权码哈希后保存，只能修改，不能查看生效中的授权码；
+- Q：插件支持 Cloudflare Access 鉴权吗？应该如何配置？
+  - 支持。你可以在插件设置中找到与 Cloudflare Access 相关的配置项，按照界面提示将 Cloudflare Access 应用中对应的参数（例如域名、受众、密钥等）复制填入。
+  - 一般推荐的做法是：将本 MCP 服务部署在 Cloudflare Access 保护的域名之后，由 Cloudflare 在边缘为请求自动添加 Cloudflare Access 所需的请求头；此时 MCP 客户端只需访问该受保护域名，无需额外手动添加这些头。
+  - 如果你选择绕过 Cloudflare 直接连接服务，则需要在请求中带上符合 Cloudflare Access 要求的令牌（具体 header 名称和格式以插件设置说明为准），否则鉴权会失败。
 - Q：MCP客户端连接时，提示`Invalid Host: x.x.x.x`，或类似下面的内容，如何解决？
   ```json
   {
