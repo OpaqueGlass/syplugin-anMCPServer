@@ -526,7 +526,18 @@ export default class MyMCPServer {
             return;
         }
         try {
-            Object.values(this.transports).forEach(ts => this.cleanTransport(ts));
+            Object.values(this.transports).forEach(ts => {
+                // Ensure underlying StreamableHTTPServerTransport instances are closed
+                try {
+                    // If the transport is stored directly
+                    (ts as any)?.close?.();
+                    // If the transport is stored under a "transport" property
+                    (ts as any)?.transport?.close?.();
+                } catch (closeErr) {
+                    errorPush("Error closing transport during server stop", closeErr);
+                }
+                this.cleanTransport(ts);
+            });
             if (this.httpServer) {
                 this.httpServer.close();
             }
