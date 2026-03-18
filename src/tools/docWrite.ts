@@ -140,7 +140,10 @@ async function renameDocTool(params, extra) {
 
 async function renameNotebookTool(params, extra) {
     const { notebookId, newTitle } = params;
-    isValidNotebookId(notebookId);
+    const isValid = isValidNotebookId(notebookId);
+    if (!isValid) {
+        return createErrorResponse("Failed to rename notebook: The provided ID is not a notebook ID.");
+    }
     if (filterNotebook(notebookId)) {
         return createErrorResponse("The specified notebook is excluded by the user settings, so cannot rename it.");
     }
