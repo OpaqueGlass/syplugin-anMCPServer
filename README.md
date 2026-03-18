@@ -1,11 +1,15 @@
 
-# A little MCP server for siyuan-note
+# An MCP server for siyuan-note
 
 [中文](./README_zh_CN.md)
 
 > A plugin that provides MCP service for [Siyuan Note](https://github.com/siyuan-note/siyuan).
 
-> ⚠️ Breaking changes: Upgrading from v0.1.x to v0.2.x introduces breaking changes. [CHANGELOG_zh-CN](./CHANGELOG.md)
+## 🌻 Features
+
+- Most tools support the **exclude document** function.
+- It includes certain input parameter validation and is **not a direct API wrapper** for SiYuan Note.
+- Ready to use once the plugin is installed and enabled on the **desktop client**; Docker and mobile platforms are **not supported**.
 
 ## ✨ Quick Start
 
@@ -17,56 +21,68 @@
 
 ## 🔧 Supported Tools
 
-* **\[Search]**
+> [!WARNING]
+> Not all tools have strict excluded document validation. Before using excluded documents or after updating MCP tools, please read the tool support list carefully and consider disabling some tools.
 
-  * ~~Keyword search;~~ Temporarily removed, please provide feedback if needed
-  * SQL search;
-  * Notebook index Q\&A (using RAG backend service, [feature in testing](./RAG_BETA.md), see also [rag-server/](./rag-server/));
+| Category     | Item                          | Exclude Doc | Status/Notes                                                                                                         |
+|--------------|-------------------------------|-------------|-----------------------------------------------------------------------------------------------------------------------|
+| Retrieval    | Search using SQL              | ⚠️          | Excluded documents are only checked if: the result contains IDs **and** the number of entries < 300                   |
+| Get          | Get document Markdown by ID   | ✅          | —                                                                                                                     |
+| Get          | Get block Kramdown by ID      | ✅          | —                                                                                                                     |
+| Get          | List notebooks                | ❌          | —                                                                                                                     |
+| Get          | Get backlinks by ID           | ✅          | —                                                                                                                     |
+| Get          | Get subdocuments of a document| ✅          | —                                                                                                                     |
+| Get          | Get child block list          | ✅          | —                                                                                                                     |
+| Get          | Read attributes               | ✅          | —                                                                                                                     |
+| Get          | SiYuan database format        | ❌          | This function does not involve user documents                                                                         |
+| Get          | Vector Search Client Plugin - Query | ❌      | To use this function, download and properly configure the [syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient) plugin.<br />This tool does not support excluded documents yet. |
+| Get          | Template file raw content     | ❌          | —                                                                                                                     |
+| Get          | Template render result preview| ⚠️          | Only kramdown content is returned.<br />Since functions like `getBlock` can be used in templates, excluded documents may be accessed bypassing checks via this tool. |
+| Get          | Sprig render result preview   | ❌          | —                                                                                                                     |
+| Get          | Retrieve existing templates   | ❌          | —                                                                                                                     |
+| Write / Doc  | Append content to journal     | ✅          | —                                                                                                                     |
+| Write / Doc  | Append content to document by ID | ✅       | domstring not supported                                                                                               |
+| Write / Doc  | Create new doc at position by ID | ✅        | domstring not supported                                                                                               |
+| Write / Doc  | Insert child block (before/after) | ✅      | domstring not supported                                                                                               |
+| Write / Doc  | Insert block at specified position | ✅     | domstring not supported                                                                                               |
+| Write / Doc  | Update block                  | ✅          | domstring not supported                                                                                               |
+| Write / Card | Create flashcard from Markdown | ✅        | —                                                                                                                     |
+| Write / Card | Create flashcard by block ID  | ✅          | —                                                                                                                     |
+| Write / Card | Delete flashcard by block ID  | ❌          | —                                                                                                                     |
+| Write / Attr | Modify attributes (add/del/edit) | ✅       | —                                                                                                                     |
+| Write / Move | Move document                 | ✅          | —                                                                                                                     |
+| Write / Move | Move block                    | ✅          | ⚠️ Moving headings requires folded movement, which will cause folded state to be lost.                               |
+| Write / Tpl  | Create or overwrite template  | ❌          | —                                                                                                                     |
+| Write / Doc  | Render template & insert at doc start | ⚠️ | Inserted at document start, position cannot be specified.<br />Since functions like `getBlock` can be used in templates, excluded documents may be accessed bypassing checks via this tool. |
+| Write / Tpl  | Delete existing template      | ❌          | —                                                                                                                     |
+| Write / Doc  | Rename document               | ✅          | —                                                                                                                     |
+| Write / Doc  | Rename notebook              | ✅          | —                                                                                                                     |
 
-* **\[Retrieve]**
+## ❓ Frequently Asked Questions
 
-  * Get document kramdown by ID;
-  * List notebooks;
-  * Get backlinks by ID;
-  * Get child document IDs;
-  * Read properties;
-  * ~~Read journal entries by date;~~ Temporarily removed, please provide feedback if needed
-
-* **\[Write]**
-
-  * **Document type**
-
-    * Append content to journal;
-    * Append content to a document by ID;
-    * Create a new document at a specified location by ID;
-  * **Flashcard type**
-
-    * Create flashcards from Markdown content;
-    * Create flashcards by block ID;
-    * Delete flashcards by block ID;
-  * **Properties**
-
-    * Modify properties;
-
-
-## ❓ FAQ
-
-- Q: How to use it in an MCP client?  
-  Please refer to the later sections;  
-
-- Q: What are some common MCP clients?  
-  - Refer to: https://github.com/punkpeye/awesome-mcp-clients or https://modelcontextprotocol.io/clients;  
-
+- Q: How to use in an MCP client?
+  - Please refer to the sections below.
+- Q: What are common MCP clients?
+  - Please refer to: https://github.com/punkpeye/awesome-mcp-clients or https://modelcontextprotocol.io/clients.
 - Q: Does the plugin support authentication?
-  - Version v0.2.0 now supports authentication. After setting the authentication token in the plugin settings, the MCP client needs to configure the `authorization` request header with the value `Bearer YourToken`;
-  - Version v0.7.0 adds Cloudflare Access authentication support. See [Cloudflare Access Authentication](#cloudflare-access-authentication) section below;
+  - Authentication is supported since v0.2.0. After setting an auth token in plugin settings, you must set the `authorization` request header in your MCP client with value: `Bearer {YourToken}`.
+- Q: Can it be used in Docker?
+  - No. The plugin depends on the Node.js environment and does not support running on mobile or in Docker.
 
-- Q: Can it be used in Docker?  
-  - No, the plugin relies on a Node.js environment and does not support running on mobile devices or Docker.  
-
-    > To support SiYuan deployed in Docker, it is recommended to switch to other MCP projects. Some relevant projects may be listed [here](https://github.com/siyuan-note/siyuan/issues/13795).
-    >  
-    > Alternatively, decouple this plugin from the SiYuan frontend.  
+    > If you need to support SiYuan deployed in Docker, it is recommended to use other MCP projects. Some may be listed [here](https://github.com/siyuan-note/siyuan/issues/13795).
+    >
+    > Alternatively, modify the code to decouple this plugin from the SiYuan frontend.
+- Q: How to view the set authorization token?
+  - The token is stored hashed. It can only be modified, not viewed in plaintext while active.
+- Q: I only connected once, why does the connection count on the settings page show more than 1?
+  - Outdated statistics: Please manually click Refresh Status to get the latest result.
+  - Connections not fully released: Some MCP clients do not send a standard disconnect signal on close, leaving old connections alive in the background. New connections are added when the feature is restarted.
+  - Multi-device connections: Please confirm whether other software is accessing the MCP service or related ports.
+  - Still having issues? Check the plugin logs or set an authorization token to prevent information leakage.
+- Q: What is the "Vector Search Client Plugin - Query" tool?
+  - This tool retrieves matching content blocks or answers questions directly via knowledge graph / vector search.
+  - To use it, you must first download, enable, and properly configure the [syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient) plugin.
+  - Currently, this plugin only supports lightRAG-server.
 
 ## How to Configure in an MCP Client?  
 
@@ -127,46 +143,6 @@ Environment Variable:
 
 Name: `AUTH_HEADER`  
 Value: `Bearer abcdefg`
-
-## Cloudflare Access Authentication
-
-Version v0.7.0 adds support for [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/) authentication. This allows you to securely expose your MCP server to the internet through Cloudflare Tunnel while using Cloudflare Zero Trust for authentication.
-
-### Use Cases
-
-1. **Self-hosted Public App**: Expose your MCP server via Cloudflare Tunnel and use Cloudflare Access for user authentication
-2. **Linked Apps for AI**: Allow AI agents to access your MCP server using [Cloudflare Linked Apps OAuth](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/linked-apps/)
-
-### Configuration
-
-1. Set up a self-hosted application in the [Cloudflare Zero Trust dashboard](https://one.dash.cloudflare.com/)
-2. Create a Cloudflare Tunnel to expose your MCP server
-3. In the plugin settings, enable **Cloudflare Access Authentication**
-4. Enter your **Team Domain** (e.g., `https://myteam.cloudflareaccess.com`)
-5. Enter your **Application AUD** tag (found in Access > Applications > [Your App] > Overview)
-6. Save settings and restart the MCP service
-
-### How It Works
-
-The plugin validates incoming requests using multiple authentication methods:
-
-| Method | Header/Token | Use Case |
-|--------|--------------|----------|
-| Cloudflare Access | `Cf-Access-Jwt-Assertion` header | Users accessing via Cloudflare Tunnel |
-| Cloudflare Linked Apps | `Authorization: Bearer <JWT>` | AI agents with OAuth delegation |
-| Local Bearer Token | `Authorization: Bearer <hash>` | Direct local access |
-
-When Cloudflare Access is enabled:
-- Requests with `Cf-Access-Jwt-Assertion` header are validated against Cloudflare's JWKS
-- Bearer tokens that look like JWTs are also validated as Cloudflare OAuth tokens
-- If both Cloudflare Access and local auth are configured, the system tries Cloudflare first, then falls back to local auth
-
-### Performance
-
-The plugin includes optimizations for JWT validation:
-- JWKS instances are cached per team domain
-- Validated tokens are cached until 30 seconds before expiry
-- Repeated requests with the same token skip cryptographic verification
 
 ## 🙏 References & Acknowledgements
 

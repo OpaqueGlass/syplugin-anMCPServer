@@ -93,21 +93,3 @@ interface ExportMdContentBody {
     yfm: boolean,
     // Markdown 导出时是否添加 YAML Front Matter
 }
-
-export interface NotebookConf {
-    box: string;
-    conf: {
-        name: string;
-        sort: number;
-        icon: string;
-        closed: boolean;
-        refCreateSaveBox: string;
-        refCreateSavePath: string;
-        docCreateSaveBox: string;
-        docCreateSavePath: string;
-        dailyNoteSavePath: string;
-        dailyNoteTemplatePath: string;
-        sortMode: number;
-    };
-    name: string;
-}

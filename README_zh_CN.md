@@ -2,11 +2,17 @@
 
 > 为[思源笔记](https://github.com/siyuan-note/siyuan)提供MCP服务的插件。
 
-> 当前版本: v0.7.0
+> 当前版本: v1.0.0
 >
-> 新增：Cloudflare Access 认证支持，支持通过 Cloudflare Tunnel 安全暴露 MCP 服务；
+> 新增：MCP连接、工具调用日志，支持绑定到非127.0.0.1地址；新增：模板相关工具、重命名相关工具；新增：RAG检索工具（依赖其他插件）；
 >
 > 其他详见[更新日志](./CHANGELOG.md)。
+
+## 🌻特点
+
+- 大部分工具提供排除文档功能；
+- 有一定的输入参数检查，并不是直接将思源笔记的API包装为工具；
+- 在电脑客户端安装插件即可使用；不支持Docker/移动端；
 
 ## ✨快速开始
 
@@ -19,35 +25,43 @@
 
 ## 🔧支持的工具
 
-- 【检索】
-  - ~~使用关键词搜索；~~  
-    > 目前来看，在需要SQL动态检索时，大模型仍然使用此工具。暂时移除，如有需要请反馈
-  - 使用SQL搜索；
-  - ~~笔记索引库问答（使用RAG后端服务，[功能测试中](./RAG_BETA.md)）；~~ 
-    > 此功能即将被移除，后续将使用其他方案实现。
-- 【获取】
-  - 通过id获取文档markdown；
-  - 通过id获取块kramdown；
-  - 列出笔记本；
-  - 通过id获取反向链接；
-  - 获取文档的子文档列表；
-  - 读取属性；
-  - ~~读取指定日期日记；~~ 
-    > 暂时移除，如有需要请反馈
-- 【写入】
-  - 文档类
-    - 向日记追加内容；
-    - 通过id向指定文档追加内容；
-    - 通过id在指定位置创建新文档；
-    - 插入子块；（前置插入/后置插入）
-    - 插入块；（指定位置）
-    - 更新块；
-  - 闪卡类
-    - 通过Markdown内容创建闪卡；
-    - 通过块id创建闪卡；
-    - 通过块id删除闪卡；
-  - 属性
-    - 更改属性；（增删改）
+> [!WARNING]
+> 
+> 并不是所有工具都有严格的排除文档校验，使用排除文档前或MCP工具更新后，请仔细阅读工具支持列表，并考虑禁用部分工具。
+
+| 分类        | 功能项                       | 排除文档 | 状态/说明                                                                                        |
+| ------------- | ------------------------------ | ---------- | -------------------------------------------------------------------------------------------------- |
+| 检索        | 使用 SQL 搜索                | ⚠️     | 排除文档仅在：返回值含 ID 且条目数 < 300 时检查                                                  |
+| 获取        | 通过 ID 获取文档 Markdown    | ✅       | —                                                                                               |
+| 获取        | 通过 ID 获取块 Kramdown      | ✅       | —                                                                                               |
+| 获取        | 列出笔记本                   | ❌       | —                                                                                               |
+| 获取        | 通过 ID 获取反向链接         | ✅       | —                                                                                               |
+| 获取        | 获取文档的子文档列表         | ✅       | —                                                                                               |
+| 获取        | 获取子块列表                 | ✅       | —                                                                                               |
+| 获取        | 读取属性                     | ✅       | —                                                                                               |
+| 获取        | 思源笔记数据库格式           | ❌       | 此功能不涉及用户文档                                                                             |
+| 获取        | 向量检索客户端插件-查询      | ❌       | 使用此功能需要下载并正确配置 [syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)插件<br />此工具暂不支持排除文档<br />                                      |
+| 获取        | 模板文件原始内容             | ❌       | —                                                                                               |
+| 获取        | 模板渲染结果预览             | ⚠️     | 仅返回kramdown内容<br />由于模板中可以使用`getBlock`等函数，通过该工具可以绕过检查获取被排除的文档             |
+| 获取        | Sprig渲染结果预览            | ❌       | —                                                                                               |
+| 获取        | 检索已有模板                 | ❌       | —                                                                                               |
+| 写入 / 文档 | 向日记追加内容               | ✅       | —                                                                                               |
+| 写入 / 文档 | 通过 ID 向指定文档追加内容   | ✅       | 不支持domstring                                                                                  |
+| 写入 / 文档 | 通过 ID 在指定位置创建新文档 | ✅       | 不支持domstring                                                                                  |
+| 写入 / 文档 | 插入子块（前置/后置）        | ✅       | 不支持domstring                                                                                  |
+| 写入 / 文档 | 插入块（指定位置）           | ✅       | 不支持domstring                                                                                  |
+| 写入 / 文档 | 更新块                       | ✅       | 不支持domstring                                                                                  |
+| 写入 / 闪卡 | 通过 Markdown 内容创建闪卡   | ✅       | —                                                                                               |
+| 写入 / 闪卡 | 通过块 ID 创建闪卡           | ✅       | —                                                                                               |
+| 写入 / 闪卡 | 通过块 ID 删除闪卡           | ❌       | —                                                                                               |
+| 写入 / 属性 | 更改属性（增/删/改）         | ✅       | —                                                                                               |
+| 写入 / 移动 | 移动文档                     | ✅       | —                                                                                               |
+| 写入 / 移动 | 移动块                       | ✅       | ⚠️ 移动标题需折叠移动，会导致折叠状态丢失                                                      |
+| 写入 / 模板 | 创建或覆盖模板               | ❌       | —                                                                                               |
+| 写入 / 文档 | 渲染模板，并插入到文档开头   | ⚠️     | 插入位置为文档开头且不能指定<br />由于模板中可以使用`getBlock`等函数，通过该工具可以绕过检查获取被排除的文档<br /> |
+| 写入 / 模板 | 删除已有模板                 | ❌       | —                                                                                               |
+| 写入 / 文档 | 重命名文档                   | ✅       | —                                                                                               |
+| 写入 / 文档 | 重命名笔记本                 | ✅       | —                                                                                               |
 
 
 ## ❓可能常见的问题
@@ -58,7 +72,6 @@
   - 请参考：https://github.com/punkpeye/awesome-mcp-clients 或 https://modelcontextprotocol.io/clients ；
 - Q：插件支持鉴权吗？
   - v0.2.0版本已支持鉴权，在插件设置处设置鉴权token后，在MCP客户端，需要设置`authorization`请求头，其值为 `Bearer 你的Token`；
-  - v0.7.0版本新增 Cloudflare Access 认证支持，详见下文 [Cloudflare Access 认证](#cloudflare-access-认证) 章节；
 - Q: 可以在docker使用吗？
   - 不可以，插件依赖nodejs环境，不支持在移动端、docker运行；
   
@@ -67,11 +80,29 @@
     > 或者，修改代码，将本插件和思源前端解耦；
 - Q: 如何查看已经设置的授权码？
   - 授权码哈希后保存，只能修改，不能查看生效中的授权码；
-- Q：什么是“笔记索引库问答（使用RAG后端服务）”工具？
-  - “笔记索引库问答”是一种基于 RAG（Retrieval-Augmented Generation，检索增强生成）技术的问答工具。该工具允许语言模型在回答问题时，引用已被索引的笔记内容，确保生成的回答更加准确；
-  - 参考[RAG_BETA文档](./RAG_BETA.md)正确部署并在插件设置 “插件RAG后端：请求baseURL” 之后，可以在文档树右键-插件选择索引文档，文档将发送到 RAG后端 进行索引（目前的实现使用对 [LightRAG](https://github.com/HKUDS/LightRAG) 简单包装的python后端）；
-  - 语言模型在用户提问时，可以调用该工具，获取基于 LightRAG 知识图谱给出的回答；
-  - 注意：回答仅基于已被索引的文档，不会使用未被索引的文档内容。
+- Q：MCP客户端连接时，提示`Invalid Host: x.x.x.x`，或类似下面的内容，如何解决？
+  ```json
+  {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32000,
+      "message": "Invalid Host: x.x.x.x"
+    },
+    "id": null
+  }
+  ```
+  - 默认情况下，为了安全起见，服务仅处理来自本地（localhost）的请求。如果你需要通过特定域名访问，或者在非本地环境下连接到MCP服务，必须在 插件设置 - 允许的主机列表（Allowed Hosts） 中手动声明。
+  - 在这个设置项填写电脑对应的局域网IP或绑定到的域名。
+  - 简单来说，在MCP客户端中填写了什么IP或域名，这里就需要填写什么。
+- Q: 我只连接了一次，为何设置页中显示连接数的连接数大于1？
+  - 统计更新不及时：请手动点击刷新状态获取最新结果；
+  - 未完全释放连接：部分 MCP 客户端在关闭时未发送标准的断开信号，导致旧连接仍在后台占用。重新开启功能时，系统会建立新的连接叠加；
+  - 多端连接：请确认是否有其他软件正在访问mcp服务或相关端口；
+  - 仍有问题？请查看插件日志，或设置授权码避免信息泄露；
+- Q：什么是“向量检索客户端插件-查询”工具？
+  - 该工具通过知识图谱/向量检索等方式获取匹配的内容块或直接回答问题。
+  - 要使用此工具，需要先下载、启用并正确配置[syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)插件。
+  - 目前该插件仅支持lightRAG-server。
 
 ## ✅如何在MCP客户端中配置？
 
@@ -95,7 +126,7 @@
 
 1. 类型：选择 可流式传输的HTTP（streamablehttp）；
 2. URL：`http://127.0.0.1:16806/mcp`；
-3. 请求头：`Authorization=Bearer abcedfg`；
+3. 请求头：`Authorization=Bearer abcdefg`；
 
 > 这里假设：插件设置的端口号为 `16806`，授权码为 `abcdefg`，请以实际填写的插件设置为准。
 
@@ -135,46 +166,6 @@ npx mcp-remote@next http://127.0.0.1:16806/mcp --header Authorization:${AUTH_HEA
 值：`Bearer abcdefg`
 
 > 这里假设：插件设置的端口号为 `16806`，授权码为 `abcdefg`，请以实际填写的插件设置为准。
-
-## Cloudflare Access 认证
-
-v0.7.0 版本新增对 [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/) 认证的支持。这允许您通过 Cloudflare Tunnel 安全地将 MCP 服务暴露到互联网，同时使用 Cloudflare Zero Trust 进行身份验证。
-
-### 使用场景
-
-1. **自托管公开应用**：通过 Cloudflare Tunnel 暴露 MCP 服务，使用 Cloudflare Access 进行用户认证
-2. **AI 代理链接应用**：允许 AI 代理使用 [Cloudflare Linked Apps OAuth](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/linked-apps/) 访问您的 MCP 服务
-
-### 配置步骤
-
-1. 在 [Cloudflare Zero Trust 控制台](https://one.dash.cloudflare.com/) 设置自托管应用
-2. 创建 Cloudflare Tunnel 暴露您的 MCP 服务
-3. 在插件设置中，启用 **Cloudflare Access 认证**
-4. 输入您的 **团队域名**（例如：`https://myteam.cloudflareaccess.com`）
-5. 输入您的 **应用 AUD 标签**（在 Access > Applications > [您的应用] > Overview 中找到）
-6. 保存设置并重启 MCP 服务
-
-### 工作原理
-
-插件使用多种认证方式验证传入请求：
-
-| 方式 | 头/令牌 | 使用场景 |
-|------|---------|----------|
-| Cloudflare Access | `Cf-Access-Jwt-Assertion` 头 | 通过 Cloudflare Tunnel 访问的用户 |
-| Cloudflare Linked Apps | `Authorization: Bearer <JWT>` | 具有 OAuth 委托的 AI 代理 |
-| 本地 Bearer Token | `Authorization: Bearer <hash>` | 直接本地访问 |
-
-启用 Cloudflare Access 后：
-- 带有 `Cf-Access-Jwt-Assertion` 头的请求将根据 Cloudflare 的 JWKS 进行验证
-- 看起来像 JWT 的 Bearer 令牌也会作为 Cloudflare OAuth 令牌进行验证
-- 如果同时配置了 Cloudflare Access 和本地认证，系统会先尝试 Cloudflare，然后回退到本地认证
-
-### 性能优化
-
-插件包含 JWT 验证优化：
-- 每个团队域名缓存 JWKS 实例
-- 已验证的令牌在过期前 30 秒内被缓存
-- 使用相同令牌的重复请求跳过加密验证
 
 ## 🙏参考&感谢
 

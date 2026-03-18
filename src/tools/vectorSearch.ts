@@ -4,41 +4,74 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush, errorPush, logPush } from "@/logger";
 import { useConsumer, useProvider } from "@/utils/indexerHelper";
 import { lang } from "@/utils/lang";
+import { isPluginExist, showPluginMessage, sleep } from "@/utils/common";
 
+let userAlerted = false;
 export class DocVectorSearchProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
-        const indexProvider = useProvider();
-        const healthResult = await indexProvider.health();
-        if (healthResult == null) {
-            logPush("Connection with RAG backend ERROR: (RAG Tool will not be load to MCP server)", healthResult);
-            return [];
-        }
-        const EXPORT_API = async (question)=>{
-            const provider = useProvider();
-            return await provider.query(question)
-        };
-        if (window["OpaqueGlassAPI"]) {
-            window["OpaqueGlassAPI"]["ragQuery"] = EXPORT_API;
-        } else {
-            window["OpaqueGlassAPI"] = {
-                "ragQuery": EXPORT_API 
+        if (!window["__opaqueGlassVectorIndexService"]) {
+            if (isPluginExist("syplugin-vectorIndexClient")) {
+                await sleep(3000);
+            }
+            if (!window["__opaqueGlassVectorIndexService"]) {
+                return [];
             }
         }
-        window["OpaqueGlassAPI"][""]
+        if (window["__opaqueGlassVectorIndexService"]["versionCode"] !== 1) { 
+            if (!userAlerted) {
+                showPluginMessage("syplugin-vectorIndexClient版本不符，无法启用RAG，请将两插件都升级到最新版。");
+            }
+            userAlerted = true;
+            return [];
+        }
+        const api = window["__opaqueGlassVectorIndexService"]["api"];
+        if (!await api["isAvailable"]()) {
+            logPush("RAG工具依赖的向量索引服务不可用，无任一后端处于启用状态，不提供RAG工具");
+            return [];
+        }
         return [{
-            name: "siyuan_generate_answer_with_doc",
-            description: 'This tool provides a Retrieval-Augmented Generation (RAG) based Q&A capability. It generates context-aware answers using only the notes that the user has explicitly indexed from their siyuan-notes. Please note: the tool does not access or use all documents—only those that have been indexed by the user. ',
-            schema: {
-                question: z.string().describe("Describe question about note here"),
+            name: "siyuan_get_available_rag_service_type",
+            description: 'Retrieve the list of currently available RAG (Retrieval-Augmented Generation) services and their IDs in SiYuan Note. Before invoking `siyuan_rag_query`, you must first use this tool to determine a valid `serviceId`. If no services are available, you should fall back to other retrieval tools.',
+            schema: {},
+            handler: async (params, extra)=>{
+                const result = await window["__opaqueGlassVectorIndexService"]["api"]["getAvailableServices"]();
+                debugPush("获取可用RAG服务列表", result);
+                return createJsonResponse(result);
             },
-            handler: answerWithRAG,
-            title: lang("tool_title_generate_answer_with_doc"),
+            // title: lang("tool_title_generate_answer_with_doc"),
             annotations: {
-                readOnlyHint: false,
+                readOnlyHint: true,
                 destructiveHint: false,
                 idempotentHint: false,
             }
-        }];
+        },
+        {
+            name: "siyuan_rag_query",
+            description: 'Based on the specified RAG service, retrieve relevant documents from the local SiYuan Note knowledge base. lightRAG generates answers, while other services only retrieve and return relevant document blocks. Before calling, please use the siyuan_get_available_rag_service_type tool to obtain a valid serviceId.',
+            schema: {
+                "text": z.string().describe("用户输入的查询文本"),
+                "serviceId": z.string().optional().describe("要使用的RAG服务ID，调用siyuan_get_available_rag_service_type接口获取")
+            },
+            handler: async (params, extra) => {
+                const { text, serviceId } = params;
+                const result = await window["__opaqueGlassVectorIndexService"]["api"]["query"](text, serviceId);
+                const TRIM_SIZE = 5;
+                for (const item of result) {
+                    if (item.matchedBlocks && item.matchedBlocks.length > TRIM_SIZE) {
+                        item.matchedBlocks = item.matchedBlocks.slice(0, TRIM_SIZE);
+                    }
+                }
+                debugPush("RAG查询结果", result);
+                return createJsonResponse(result);
+            },
+            // title: lang("tool_title_generate_answer_with_doc"),
+            annotations: {
+                readOnlyHint: true,
+                destructiveHint: false,
+                idempotentHint: false,
+            }
+        }
+        ];
     }
 }
 

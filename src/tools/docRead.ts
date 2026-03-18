@@ -12,7 +12,7 @@ import { filterBlock } from "@/utils/filterCheck";
 export class DocReadToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
         return [{
-            name: "siyuan_read_doc_content_markdown",
+            name: "siyuan_read_doc_content",
             description: 'Retrieve the content of a document or block by its ID',
             schema: {
                 id: z.string().describe("The unique identifier of the document or block"),
@@ -27,12 +27,12 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
         },
         {
             name: "siyuan_get_block_kramdown",
-            description: '从思源笔记中根据文档或块 ID 获取其完整的 Kramdown 内容。与普通文本不同，此 Kramdown 格式将保留包括颜色、属性、ID 在内的所有丰富格式信息。此工具主要用于修改前读取块内容，确保更新后能完整地保留原有格式。',
+            description: 'Retrieve the complete Kramdown content from SiYuan Note based on the document or block ID. Unlike plain text, this Kramdown format preserves all rich formatting information, including colors, attributes, and IDs. This tool is mainly used to read block content before modification, ensuring that the original formatting is fully retained after updates.',
             schema: {
                 id: z.string().describe("The unique identifier of the block"),
             },
             handler: kramdownReadHandler,
-            title: lang("tool_title_get_block_kramdown"),
+            // title: lang("tool_title_get_block_kramdown"),
             annotations: {
                 readOnlyHint: true,
             }
