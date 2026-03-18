@@ -26,6 +26,21 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
             }
         },
         {
+            // Legacy alias for backward compatibility with older MCP clients
+            name: "siyuan_read_doc_content_markdown",
+            description: 'Retrieve the content of a document or block by its ID (legacy alias of siyuan_read_doc_content).',
+            schema: {
+                id: z.string().describe("The unique identifier of the document or block"),
+                offset: z.number().default(0).describe("The starting character offset for partial content reading (for pagination/large docs)"),
+                limit: z.number().default(10000).describe("The maximum number of characters to return in this request"),
+            },
+            handler: blockReadHandler,
+            title: lang("tool_title_read_doc_content_markdown"),
+            annotations: {
+                readOnlyHint: true,
+            }
+        },
+        {
             name: "siyuan_get_block_kramdown",
             description: 'Retrieve the complete Kramdown content from SiYuan Note based on the document or block ID. Unlike plain text, this Kramdown format preserves all rich formatting information, including colors, attributes, and IDs. This tool is mainly used to read block content before modification, ensuring that the original formatting is fully retained after updates.',
             schema: {
