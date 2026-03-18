@@ -220,10 +220,10 @@ async function removeTemplate(params, extra) {
     if (!validateResult.isValid) {
         return createErrorResponse("Invalid template name: " + validateResult.reason);
     }
-    const response = await removeFileAPI(wrapTemplateFilePath(name));
-    if (response) {
+    try {
+        await removeFileAPI(wrapTemplateFilePath(name));
         return createSuccessResponse("Template removed successfully: " + name);
-    } else {
+    } catch (error) {
         return createErrorResponse("Failed to remove template: " + name);
     }
 }
