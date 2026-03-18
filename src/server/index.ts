@@ -1,7 +1,7 @@
 import { debugPush, errorPush, logPush } from '../logger';
 import { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import * as express from "express";
 import { DailyNoteToolProvider} from '@/tools/dailynote';
 import { getPluginInstance } from '@/utils/pluginHelper';
