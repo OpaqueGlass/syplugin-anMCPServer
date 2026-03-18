@@ -1,6 +1,6 @@
 import { getBlockDBItem } from "@/syapi/custom";
 import { getPluginInstance } from "./pluginHelper";
-import { logPush } from "@/logger";
+import { debugPush, logPush } from "@/logger";
 
 function getPluginSettings() {
     const plugin = getPluginInstance();
@@ -15,7 +15,7 @@ export async function filterBlock(blockId: string, dbItem: any|null): Promise<bo
     if (!dbItem) {
         dbItem = await getBlockDBItem(blockId);
     }
-    logPush("Checking", dbItem);
+    debugPush("Checking", dbItem);
     if (dbItem) {
         const notebookId = dbItem.box;
         const path = dbItem.path;
@@ -36,7 +36,7 @@ export async function filterBlock(blockId: string, dbItem: any|null): Promise<bo
 export function filterNotebook(notebookId: string): boolean {
     const settings = getPluginSettings();
     const filterNotebooks = settings?.filterNotebooks.split("\n").map(id => id.trim()).filter(id => id);
-    logPush("Checking", settings, filterNotebooks);
+    debugPush("Checking", settings, filterNotebooks);
     if (filterNotebooks && filterNotebooks.includes(notebookId)) {
         return true;
     }

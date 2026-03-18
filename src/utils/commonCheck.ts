@@ -84,6 +84,54 @@ export function isNonParentBlockType(type: string) {
     return nonContainerTypes.includes(type);
 }
 
+export function isContainerBlockType(type: string) {
+    const containerTypes = ["d", "l", "i", "callout", "b", "s"];
+    return containerTypes.includes(type);
+}
+
+/**
+ * 检查路径是否合法
+ * 请注意，该函数允许`/`作为路径分隔符
+ * @param path 待检查的路径字符串
+ * @returns { isValid: boolean; reason?: string } 返回校验结果及失败原因
+ */
+export function validatePath(path: string): { isValid: boolean; reason?: string } {
+  if (!path || typeof path !== 'string' || path.trim() === '') {
+    return { isValid: false, reason: "路径不能为空" };
+  }
+
+  // 1. 禁止目录逃逸：检测 ".."
+  // 匹配单独的 ".."，或路径片段中的 "/../", "../", "/.."
+  const traversalPattern = /(^|[\\\/])\.\.([\\\/]|$)/;
+  if (traversalPattern.test(path)) {
+    return { isValid: false, reason: "检测到非法路径跳转 '..'" };
+  }
+
+  // 2. 非法字符集 (Windows & Linux 通用标准)
+  // 包含控制字符 (0-31, 127) 和 Windows 保留字符: < > : " | ? *
+  // 注意：此处未包含 / 和 \，因为你允许 / 创建文件夹
+  const invalidCharsPattern = /[\x00-\x1F\x7F<>:"|?*]/;
+  if (invalidCharsPattern.test(path)) {
+    return { isValid: false, reason: "路径包含非法字符 (例如 < > : \" | ? *)" };
+  }
+
+  // 3. 检查 Windows 系统保留的文件名 (如 CON, PRN, NUL 等)
+  const reservedNames = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i;
+  const pathSegments = path.split(/[\\\/]/);
+  for (const segment of pathSegments) {
+    if (reservedNames.test(segment.trim())) {
+      return { isValid: false, reason: `使用了系统保留名称: ${segment}` };
+    }
+    
+    // 额外检查：Windows 不允许文件名以空格或点结尾
+    if (segment.endsWith(' ') || (segment.endsWith('.') && segment !== '.')) {
+      return { isValid: false, reason: "文件名不能以空格或点结尾" };
+    }
+  }
+
+  return { isValid: true };
+}
+
 /**
  * 解析版本号字符串，移除除数字和点之外的所有字符，并将其分割成数字数组。
  * 例如 "v3.1.2-beta" -> [3, 1, 2]
@@ -121,4 +169,20 @@ export function isCurrentVersionLessThan(version: string): boolean {
         }
     }
     return false;
+}
+
+/**
+ * 检查 HTML 字符串是否包含明显的解析错误
+ */
+export function isValidHTML(htmlString: string): boolean {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, "text/html");
+
+    // 在 Chrome/Firefox 中，解析错误会生成一个 <parsererror> 元素
+    const errorNode = doc.querySelector("parsererror");
+    if (errorNode) {
+    return false;
+    }
+
+    return true;
 }

@@ -243,6 +243,9 @@ export function parseDateString(dateString: string): Date | null {
 }
 
 export function generateUUID() {
+    return crypto?.randomUUID?.() ?? generateUUIDFallback();
+}
+export function generateUUIDFallback() {
     let uuid = '';
     let i = 0;
     let random = 0;
@@ -262,6 +265,21 @@ export function generateUUID() {
     }
 
     return uuid;
+}
+
+export function getFormattedTimestr() {
+  const now = new Date();
+
+  const pad = (num) => String(num).padStart(2, '0');
+
+  const yyyy = now.getFullYear();
+  const MM = pad(now.getMonth() + 1); // 月份从 0 开始
+  const dd = pad(now.getDate());
+  const hh = pad(now.getHours());
+  const mm = pad(now.getMinutes());
+  const ss = pad(now.getSeconds());
+
+  return `${hh}-${mm}-${ss}`;
 }
 
 export function isPluginExist(pluginName: string) {
@@ -325,4 +343,13 @@ export function extractNodeParagraphIds(htmlString: string): string[] {
     .map(element => element.getAttribute('data-node-id'))
     .filter((id): id is string => id !== null);
   return ids;
+}
+
+/**
+ * 包装模板名称
+ * @param templateName 模板名称，来源于searchTemplate返回值content字段
+ * @returns 
+ */
+export function wrapTemplateFilePath(templateName: string): string {
+    return "/data/templates/" + templateName + ".md";
 }

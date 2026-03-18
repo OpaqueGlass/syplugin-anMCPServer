@@ -1,26 +1,41 @@
 ## 更新日志 | CHANGELOG
 
-### v0.7.0 (2025-12-31)
+### v1.0.0 (2026-03-17)
 
-- 新增：Cloudflare Access 认证支持；
-  - 支持通过 Cloudflare Tunnel 暴露 MCP 服务时使用 Cloudflare Access 进行身份验证；
-  - 支持 Cloudflare Linked Apps OAuth（用于 AI 代理访问）；
-  - 验证 `Cf-Access-Jwt-Assertion` 头和 `CF_Authorization` cookie；
-  - 配置项：团队域名 URL、应用 AUD 标签；
-- 性能优化：JWT 验证优化；
-  - 缓存 JWKS 实例，避免重复创建；
-  - 缓存已验证的令牌，避免重复验证；
+- 新增：MCP连接、工具调用日志；
+  - 日志保存于`工作空间/temp/petal/syplugin-anMCPServer/logs`，单条目中`H`表示请求头中给出的代理ip，`S`表示连接接口ip；
+  - 在插件启动时，清理1次日志（>7天的）；
+- 新增：支持绑定 非127.0.0.1 地址；
+- 移除：弃用SSE连接方式；
+- 新增：使用有状态连接方式（但实质上未保存内容），存在的连接将在无消息10分钟后关闭；
+- 新增：工具；
+  - 模板创建相关；
+  - 重命名文档/笔记本；
+  - 依赖[OpaqueGlass/syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)的RAG检索工具；
 
----
+### v1.0.0-beta1 (2026-03-16)
 
-- New: Cloudflare Access authentication support;
-  - Support authentication via Cloudflare Access when exposing MCP service through Cloudflare Tunnel;
-  - Support Cloudflare Linked Apps OAuth (for AI agent access);
-  - Validates `Cf-Access-Jwt-Assertion` header and `CF_Authorization` cookie;
-  - Configuration: Team domain URL, Application AUD tag;
-- Performance: JWT validation optimization;
-  - Cache JWKS instance to avoid recreation;
-  - Cache validated tokens to avoid re-validation;
+- 新增：模板相关工具；
+- 新增：重命名相关工具；
+
+### v1.0.0-alpha2 （2026-03-15）
+
+- 新增：依赖[OpaqueGlass/syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)的RAG检索工具；
+- 修复：（alpha1）自动清理已有时卡死的问题；
+
+### v1.0.0-alpha1 （2026-02-27）
+
+- 新增：MCP连接、工具调用日志；
+  - 日志保存于`工作空间/temp/petal/syplugin-anMCPServer/logs`，单条目中`H`表示请求头中给出的代理ip，`S`表示连接接口ip；
+  - 在插件启动时，清理1次日志（>7天的）；
+- 移除：弃用SSE连接方式；
+- 新增：使用有状态连接方式（但实质上未保存内容），存在的连接将在无消息10分钟后关闭；
+
+### v0.7.0 (2026-01-28)
+
+- 新增：文档移动工具，块移动工具；
+- 构建：使用MCP TS SDK v1.25.3版本；
+- 改进：部分工具名字长度缩短；
 
 ### v0.6.0 (2025-11-01)
 
