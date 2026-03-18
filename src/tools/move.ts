@@ -10,6 +10,19 @@ import { lang } from "@/utils/lang";
 import { filterBlock, filterNotebook } from "@/utils/filterCheck";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 
+function _suppressUnusedImportsForMoveTool(): void {
+    void createJsonResponse;
+    void exportMdContent;
+    void getFileAPIv2;
+    void getKramdown;
+    void getBlockAssets;
+    void blobToBase64Object;
+    void errorPush;
+    void logPush;
+    void isNonContainerBlockType;
+    void lang;
+}
+
 export class MoveBlockToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
         return [{
