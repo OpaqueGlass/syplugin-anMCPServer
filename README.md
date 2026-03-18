@@ -66,6 +66,10 @@
   - Please refer to: https://github.com/punkpeye/awesome-mcp-clients or https://modelcontextprotocol.io/clients.
 - Q: Does the plugin support authentication?
   - Authentication is supported since v0.2.0. After setting an auth token in plugin settings, you must set the `authorization` request header in your MCP client with value: `Bearer {YourToken}`.
+- Q: Does the plugin support Cloudflare Access authentication?
+  - Yes. If you enable the Cloudflare Access–related options in the plugin settings and expose this MCP server through Cloudflare (for example via a Tunnel or a domain protected by a Cloudflare Access application), only requests that have been authenticated by Cloudflare Access will be accepted according to your Cloudflare configuration.
+  - In this setup, your MCP client should connect to the public HTTPS endpoint fronted by Cloudflare instead of `http://127.0.0.1:16806/sse`. The Cloudflare Access flow runs in front of the MCP server, so the client does not need to send the plugin’s Bearer token unless you explicitly keep token-based authentication enabled as an additional check.
+  - See the plugin settings UI for the exact meaning of each Cloudflare Access option and how it interacts with token-based authentication.
 - Q: Can it be used in Docker?
   - No. The plugin depends on the Node.js environment and does not support running on mobile or in Docker.
 
@@ -87,6 +91,10 @@
 ## How to Configure in an MCP Client?  
 
 > Different MCP clients require different configuration methods. Please refer to the MCP client documentation.  
+>
+> Common patterns:
+> - **Local-only:** Connect directly to `http://127.0.0.1:16806/sse` and configure your MCP client to send `authorization: Bearer {YourToken}` if you have set a plugin auth token.
+> - **Remote / Cloudflare Access:** Expose the MCP server through Cloudflare (Tunnel or domain) and protect it with a Cloudflare Access application. Configure your MCP client to use the public HTTPS URL; authentication will be enforced by Cloudflare Access according to your Cloudflare settings.
 >  
 > MCP clients are continuously updated, so the configuration or usage instructions here may not be directly applicable and are for reference only.  
 >  
