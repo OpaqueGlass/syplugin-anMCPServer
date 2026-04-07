@@ -1,5 +1,9 @@
 ## 更新日志 | CHANGELOG
 
+### v1.0.1 (2026-04-07)
+
+- 修复：多实例连接时可能出现`Error: Already connected to a transport.`错误；
+
 ### v1.0.0 (2026-03-17)
 
 - 新增：MCP连接、工具调用日志；

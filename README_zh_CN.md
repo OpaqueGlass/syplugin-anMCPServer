@@ -2,9 +2,9 @@
 
 > 为[思源笔记](https://github.com/siyuan-note/siyuan)提供MCP服务的插件。
 
-> 当前版本: v1.0.0
+> 当前版本: v1.0.1
 >
-> 新增：MCP连接、工具调用日志，支持绑定到非127.0.0.1地址；新增：模板相关工具、重命名相关工具；新增：RAG检索工具（依赖其他插件）；
+> 修复：多实例连接时可能出现`Error: Already connected to a transport.`错误；
 >
 > 其他详见[更新日志](./CHANGELOG.md)。
 

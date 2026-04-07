@@ -55,7 +55,7 @@ export default class MyMCPServer {
 
     mcpInitConfig = {
         "name": "siyuan",
-        "version": "1.0.0"
+        "version": "1.0.1"
     }
     constructor() {
         this.toolProviders = [
@@ -409,13 +409,13 @@ export default class MyMCPServer {
                 const now = new Date();
                 const nowTime = now.getTime();
                 const sessionsToClose = Object.values(this.transports)
-                    .filter(info => (nowTime - info.recentActivityAt.getTime()) / 1000 > 30);
+                    .filter(info => (nowTime - info.recentActivityAt.getTime()) / 1000 > 5 * 60);
 
                 sessionsToClose.forEach(sessionInfo => {
                     logPush(`Transport ${sessionInfo.sessionId} exceeded idle timeout, terminating.`);
                     this.cleanTransport(sessionInfo);
                 });
-            }, 30 * 1000);
+            }, 2 * 60 * 1000);
         } catch (err) {
             errorPush("创建http server ERROR: ", err);
             showMessage(`${lang("start_error")} ${err} [${lang("plugin_name")}]`, 10000, "error");
