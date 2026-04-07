@@ -39,6 +39,7 @@ interface MCPTransportInfo {
     transport: StreamableHTTPServerTransport;
     createdAt: Date;
     recentActivityAt: Date;
+    serverInstance?: McpServer;
 }
 
 export default class MyMCPServer {
@@ -50,55 +51,58 @@ export default class MyMCPServer {
     workingPort: number = -1;
     checkInterval: ReturnType<typeof setInterval> | null = null;
     checkToolChangeInterval: ReturnType<typeof setInterval> | null = null;
-    registeredToolDict: { [name: string]: RegisteredTool } = {};
+    toolProviders: any[] = [];
 
     mcpInitConfig = {
         "name": "siyuan",
         "version": "1.0.0"
     }
     constructor() {
-        
-    }
-    /**
-     * 根据sessionId关闭链接
-     * 不能在onclose中调用，会导致死循环
-     * @param sessionId 
-     * @returns 
-     */
-    closeTrasnportBySessionId(sessionId: string) {
-        if (!this.transports[sessionId]) {
-            return;
-        }
-        const transport = this.transports[sessionId].transport;
-        this.cleanTransportBySessionId(sessionId);
-        transport?.close();
-    }
-    /**
-     * 安全清理连接
-     * @param sessionId 
-     * @returns 
-     */
-    cleanTransportBySessionId(sessionId: string) {
-        if (!this.transports[sessionId]) {
-            return;
-        }
-        this.cleanTransport(this.transports[sessionId]);
+        this.toolProviders = [
+            new HelpDocToolProvider(),
+            new DailyNoteToolProvider(),
+            new DocWriteToolProvider(),
+            new SearchToolProvider(),
+            new SqlToolProvider(),
+            new DocReadToolProvider(),
+            new RelationToolProvider(),
+            new DocVectorSearchProvider(),
+            new FlashcardToolProvider(),
+            new AttributeToolProvider(),
+            new BlockWriteToolProvider(),
+            new MoveBlockToolProvider(),
+            new TemplateToolProvider(),
+        ];
     }
     cleanTransport(transportInfo: MCPTransportInfo) {
-        if (!this.transports[transportInfo.sessionId]) {
-            return;
+        const sessionId = transportInfo.sessionId;
+        const info = this.transports[sessionId];
+        if (!info) return;
+
+        logPush(`Cleaning up transport for session ${sessionId}`);
+        if (info.transport) {
+            info.transport.onclose = null;
+            info.transport.close();
         }
-        delete this.transports[transportInfo.sessionId];
+        if (info.serverInstance) {
+            info.serverInstance.close().catch(e => errorPush("Close server error", e));
+            info.serverInstance = null;
+        }
+
+        delete this.transports[sessionId];
     }
-    async initialize() {
-        logPush("Initializing mcp server");
-        this.mcpServer = new McpServer(this.mcpInitConfig, {
+    async getMcpServerInstance() {
+        const mcpServer = new McpServer(this.mcpInitConfig, {
             "capabilities": {
                 "tools": {},
                 "prompts": {},
             }
         });
-        await this.loadToolsAndPrompts();
+        await this.loadToolsAndPrompts(mcpServer);
+        return mcpServer;
+    }
+    async initialize() {
+        logPush("Initializing mcp server");
         const plugin = getPluginInstance();
         let address = plugin?.mySettings["address"] || "127.0.0.1";
         const allowedHostsSetting = plugin?.mySettings["allowedHosts"] || "";
@@ -143,7 +147,7 @@ export default class MyMCPServer {
                     transport = this.transports[sessionId].transport;
                     // 检查IP是否匹配，防止会话被劫持
                     if (this.transports[sessionId].socketIp !== socketIp || this.transports[sessionId].clientIp !== clientIp) {
-                        this.closeTrasnportBySessionId(sessionId);
+                        this.cleanTransport(this.transports[sessionId]);
                         logPush(`Session IP mismatch for session ${sessionId}. Expected client IP: ${this.transports[sessionId].clientIp}, socket IP: ${this.transports[sessionId].socketIp}. Received client IP: ${clientIp}, socket IP: ${socketIp}. Session terminated for security.`);
                         plugin.connectionLogger.warn(`Session IP mismatch. Expected client IP: ${this.transports[sessionId].clientIp}, socket IP: ${this.transports[sessionId].socketIp}. Terminating session ${sessionId} for security.`, clientIp as string, socketIp);
                         res.status(404).json({
@@ -165,27 +169,29 @@ export default class MyMCPServer {
                         if (!await isAuthTokenValid(token)) {
                             plugin.connectionLogger.warn(`Authentication failed for incoming connection. Invalid token provided. Client IP: ${clientIp}, Socket IP: ${socketIp}.`, clientIp as string, socketIp);
                             if (authHeader) {
-                                res.status(403).send("Invalid Token. Authentication is requied. 鉴权失败");
+                                res.status(403).send("Invalid Token. Authentication is required. 鉴权失败");
                             }else {
-                                res.status(401).send("Authentication is requied. 鉴权失败");
+                                res.status(401).send("Authentication is required. 鉴权失败");
                             }
                             return
                         }
                     }
                     const eventStore = new InMemoryEventStore();
+                    const mcpServerInstance = await this.getMcpServerInstance();
                     transport = new StreamableHTTPServerTransport({
                         sessionIdGenerator: () => generateUUID(),
                         eventStore,
                         onsessioninitialized: sessionId =>{
                             logPush("New Session Initialized", sessionId, clientIp, socketIp);
                             plugin.connectionLogger.info(`New session initialized: ${sessionId}`, clientIp as string, socketIp);
-                            this.transports[transport.sessionId] = {
-                                sessionId: transport.sessionId,
+                            this.transports[sessionId] = {
+                                sessionId: sessionId,
                                 clientIp: clientIp as string,
                                 socketIp: socketIp,
                                 transport: transport,
                                 createdAt: new Date(),
-                                recentActivityAt: new Date()
+                                recentActivityAt: new Date(),
+                                serverInstance: mcpServerInstance,
                             };
                         }
                     });
@@ -193,18 +199,18 @@ export default class MyMCPServer {
                         const sid = transport.sessionId;
                         logPush("Session Close", sid);
                         plugin.connectionLogger.info(`Session closed: ${sid}`, clientIp as string, socketIp);
-                        this.cleanTransportBySessionId(sid);
+                        this.cleanTransport(this.transports[sid]);
                     };
-                    // res.on('error', (e)=>{
-                    //     const sid = transport.sessionId;
-                    //     errorPush("An Error Occured: ", e);
-                    //     this.cleanTransportBySessionId(sid);
-                    // })
-                    await this.mcpServer.connect(transport);
+                    res.on('error', (e)=>{
+                        const sid = transport.sessionId;
+                        errorPush("An Error Occured: ", e);
+                        this.cleanTransport(this.transports[sid]);
+                    });
+                    await mcpServerInstance.connect(transport);
                     await transport.handleRequest(req, res, req.body);
                     return;
                 } else {
-                    logPush(`Received MCP request with invalid session ID: ${sessionId}. No existing session found. Client IP: ${clientIp}, Socket IP: ${socketIp}. Request body: `, req.body, req);
+                    logPush(`Received MCP request with invalid session ID: ${sessionId}. No existing session found. Client IP: ${clientIp}, Socket IP: ${socketIp}. Request body: `, req.body);
                     res.status(400).json({
                         jsonrpc: '2.0',
                         error: {
@@ -215,7 +221,7 @@ export default class MyMCPServer {
                     });
                     return;
                 }
-                logPush(`Handling MCP request for session ${transport.sessionId}. Client IP: ${clientIp}, Socket IP: ${socketIp}. Request body: `, req.body, req);
+                debugPush(`Handling MCP request for session ${transport.sessionId}. Client IP: ${clientIp}, Socket IP: ${socketIp}. Request body: `, req.body);
                 try {
                     if (req.body && req.body["method"] === "tools/call") {
                         logPush("Tool call ", req.body["params"]["name"]);
@@ -269,11 +275,13 @@ export default class MyMCPServer {
                 if (!res.headersSent) {
                     res.status(500).send('Error processing session termination');
                 }
+            } finally {
+                this.cleanTransport(this.transports[sessionId]);
             }
         });
     }
-    async loadPrompts() {
-        this.mcpServer.registerPrompt(
+    async loadPrompts(mcpServerInstance?: McpServer) {
+        mcpServerInstance.registerPrompt(
             "create_flashcards_system_cn",
             {
                 title: lang("prompt_flashcards"),
@@ -289,7 +297,7 @@ export default class MyMCPServer {
                 }]
             })
         );
-        this.mcpServer.registerPrompt(
+        mcpServerInstance.registerPrompt(
             "sql_query_prompt_cn",
             {
                 title: lang("prompt_sql"),
@@ -305,7 +313,7 @@ export default class MyMCPServer {
                 }]
             })
         );
-        this.mcpServer.registerPrompt(
+        mcpServerInstance.registerPrompt(
             "template_creator_prompt_cn",
             {
                 title: lang("prompt_template"),
@@ -322,34 +330,16 @@ export default class MyMCPServer {
             })
         );
     }
-    async loadToolsAndPrompts() {
-        await this.loadTools();
-        await this.loadPrompts();
+    async loadToolsAndPrompts(mcpServerInstance?: McpServer) {
+        await this.loadTools(mcpServerInstance);
+        await this.loadPrompts(mcpServerInstance);
     }
-    async loadTools() {
+    async loadTools(mcpServerInstance?: McpServer) {
         const plugin = getPluginInstance();
         const readOnlyMode = plugin?.mySettings["readOnly"] || "allow_all";
 
         // 工具提供者列表
-        const toolProviders = [
-            new HelpDocToolProvider(),
-            new DailyNoteToolProvider(),
-            new DocWriteToolProvider(),
-            new SearchToolProvider(),
-            new SqlToolProvider(),
-            new DocReadToolProvider(),
-            new RelationToolProvider(),
-            new DocVectorSearchProvider(),
-            new FlashcardToolProvider(),
-            new AttributeToolProvider(),
-            new BlockWriteToolProvider(),
-            new MoveBlockToolProvider(),
-            new TemplateToolProvider(),
-        ];
-        const toolNames: string[] = [];
-        let changedFlag = false;
-
-        for (const provider of toolProviders) {
+        for (const provider of this.toolProviders) {
             const tools = await provider.getTools();
             for (const tool of tools) {
                 // 排除工具
@@ -361,13 +351,8 @@ export default class MyMCPServer {
                     debugPush(`Skipping destructive tool in non-destructive mode: ${tool.name}`);
                     continue;
                 }
-                // 接纳工具
-                toolNames.push(tool.name);
-                if (this.registeredToolDict[tool.name]) {
-                    continue;
-                }
                 debugPush("启用工具中", tool.name, tool.title);
-                const registeredTool = this.mcpServer.registerTool(
+                mcpServerInstance.registerTool(
                     tool.name,
                     {
                         "title": tool.title,
@@ -376,20 +361,7 @@ export default class MyMCPServer {
                         "annotations": tool.annotations,
                     }, tool.handler
                 );
-                this.registeredToolDict[tool.name] = registeredTool;
-                changedFlag = true;
             }
-        }
-        for (const toolName in this.registeredToolDict) {
-            if (!toolNames.includes(toolName)) {
-                debugPush(`Unregistering tool that is no longer provided: ${toolName}`);
-                this.registeredToolDict[toolName].remove();
-                delete this.registeredToolDict[toolName];
-                changedFlag = true;
-            }
-        }
-        if (changedFlag) {
-            this.mcpServer.sendToolListChanged();
         }
     }
     async start() {
@@ -435,18 +407,15 @@ export default class MyMCPServer {
             clearInterval(this.checkInterval);
             this.checkInterval = setInterval(() => {
                 const now = new Date();
-                Object.values(this.transports).forEach(transportInfo => {
-                    const idleTime = (now.getTime() - transportInfo.recentActivityAt.getTime()) / 1000;
-                    if (idleTime > 300) { // 5 minutes
-                        logPush(`Transport ${transportInfo.transport.sessionId} has been idle for ${idleTime} seconds, terminating.`);
-                        this.closeTrasnportBySessionId(transportInfo.transport.sessionId);
-                    }
+                const nowTime = now.getTime();
+                const sessionsToClose = Object.values(this.transports)
+                    .filter(info => (nowTime - info.recentActivityAt.getTime()) / 1000 > 30);
+
+                sessionsToClose.forEach(sessionInfo => {
+                    logPush(`Transport ${sessionInfo.sessionId} exceeded idle timeout, terminating.`);
+                    this.cleanTransport(sessionInfo);
                 });
-            }, 600000);
-            clearInterval(this.checkToolChangeInterval);
-            this.checkToolChangeInterval = setInterval(() => {
-                this.loadTools();
-            }, 30000);
+            }, 30 * 1000);
         } catch (err) {
             errorPush("创建http server ERROR: ", err);
             showMessage(`${lang("start_error")} ${err} [${lang("plugin_name")}]`, 10000, "error");
@@ -461,12 +430,10 @@ export default class MyMCPServer {
         try {
             Object.values(this.transports).forEach(ts => this.cleanTransport(ts));
             if (this.httpServer) {
+                this.httpServer.removeAllListeners();
                 this.httpServer.close();
             }
-            if (this.mcpServer) {
-                this.mcpServer.close();
-            }
-            this.registeredToolDict = {};
+            clearInterval(this.checkInterval);
             this.runningFlag = false;
             this.workingPort = -1;
             logPush("MCP服务关闭");
