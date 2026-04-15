@@ -1,6 +1,8 @@
-import { getBlockDBItem } from "@/syapi/custom";
+import { getBlockDBItem, isValidIdFormat } from "@/syapi/custom";
 import { getPluginInstance } from "./pluginHelper";
 import { debugPush, logPush } from "@/logger";
+import { createErrorResponse } from "./mcpResponse";
+import { isValidNotebookId } from "./commonCheck";
 
 function getPluginSettings() {
     const plugin = getPluginInstance();
@@ -41,4 +43,51 @@ export function filterNotebook(notebookId: string): boolean {
         return true;
     }
     return false;
+}
+
+
+export function mcpToolPermissionWrapper(handler: (args: any, extra: any) => Promise<any>, funcTypeDict?: McpToolAnnotations) {
+    return async (args: any, extra: any) => {
+        // 通用id
+        // if (args?.id !== undefined && !isValidIdFormat(args.id)) {
+        //     return createErrorResponse("Invalid id format");
+        // }
+        // 文档id
+        if (args.blockId) {
+            if (!isValidIdFormat(args.blockId)) {
+                return createErrorResponse("Invalid blockId format");
+            }
+            if (await filterBlock(args.blockId, null)) {
+                return createErrorResponse("Permission denied for this blockId");
+            }
+        }
+        // 块id
+        if (args.blockIds && Array.isArray(args.blockIds)) {
+            for (const blockId of args.blockIds) {
+                if (!isValidIdFormat(blockId)) {
+                    return createErrorResponse("Invalid blockId format");
+                }
+                if (await filterBlock(blockId, null)) {
+                    return createErrorResponse("Permission denied for one or more blockIds");
+                }
+            }
+        }
+
+        // 笔记本id
+        if (args.notebookId) {
+            if (!isValidIdFormat(args.notebookId)) {
+                return createErrorResponse("Invalid notebookId format");
+            }
+            if (!isValidNotebookId(args.notebookId)) {
+                return createErrorResponse("The notebook identified by " + args.notebookId + " does not exist");
+            }
+            if (filterNotebook(args.notebookId)) {
+                return createErrorResponse("Permission denied for this notebookId");
+            }
+        }
+
+        // 数据库id
+
+        return await handler(args, extra);
+    }
 }

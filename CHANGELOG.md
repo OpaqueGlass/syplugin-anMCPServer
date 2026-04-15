@@ -1,8 +1,15 @@
 ## 更新日志 | CHANGELOG
 
+### v1.1.0
+
+- 新增：数据库相关操作工具（alpha）；
+- 新增：删除相关工具（块、文档、数据库）；
+  - 删除类工具由用户手动确认后才会被实际执行，需要从“MCP修改操作记录”入口进入审阅页面；删除类操作原则上不自动批准。
+
 ### v1.0.1 (2026-04-07)
 
 - 修复：多实例连接时可能出现`Error: Already connected to a transport.`错误；
+  REF https://github.com/OpaqueGlass/syplugin-anMCPServer/issues/30 https://github.com/hangwin/mcp-chrome/issues/321
 
 ### v1.0.0 (2026-03-17)
 

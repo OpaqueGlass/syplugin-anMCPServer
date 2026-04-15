@@ -57,7 +57,7 @@ declare global {
          * This should be a record of Zod validators
          * For tools with no parameters, use {} (empty object)
          */
-        schema: Record<string, z.ZodType<any>> | undefined;
+        schema: Record<string, z.ZodType<any>> | undefined | z.ZodType<any>;
 
         /**
          * The handler function for the tool
@@ -69,11 +69,12 @@ declare global {
         /**
          * The tool annotations
          */
-        annotations?: {        // Optional hints about tool behavior
-            readOnlyHint?: boolean;    // If true, the tool does not modify its environment
-            destructiveHint?: boolean; // If true, the tool may perform destructive updates
-            idempotentHint?: boolean;  // If true, repeated calls with same args have no additional effect
-            openWorldHint?: boolean;   // If true, tool interacts with external entities
-        }
+        annotations?: McpToolAnnotations;
     }
+    interface McpToolAnnotations {
+        readOnlyHint?: boolean;    // If true, the tool does not modify its environment
+        destructiveHint?: boolean; // If true, the tool may perform destructive updates
+        idempotentHint?: boolean;  // If true, repeated calls with same args have no additional effect
+        openWorldHint?: boolean;   // If true, tool interacts with external entities
+    } 
 }

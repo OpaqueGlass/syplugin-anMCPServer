@@ -34,6 +34,7 @@ const DEFAULT_SETTING = {
     authCode: CONSTANTS.CODE_UNSET,
     ragBaseUrl: undefined,
     autoApproveLocalChange: false, // 是否自动批准原地更改
+    autoApproveDeleteChange: false, // 是否自动批准删除更改
     filterDocuments: "",   // 多行文本，每行一个文档 id
     filterNotebooks: "",   // 多行文本，每行一个笔记本 id
     allowedHosts: "",
@@ -96,6 +97,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         const filterDocTextareaElem = document.createElement("textarea");
         const filterNotebookTextareaElem = document.createElement("textarea");
         const allowedHostsTextareaElem = document.createElement("textarea");
+        const autoApproveDeleteChangeSwitchElem = document.createElement("input");
 
         this.setting = new Setting({
             confirmCallback: async () => {
@@ -125,6 +127,7 @@ export default class OGanMCPServerPlugin extends Plugin {
                     ragBaseUrl: ragBaseUrlInputElem.value,
                     readOnly: readOnlySelectElem.value,
                     autoApproveLocalChange: autoApproveLocalChangeSwitchElem.checked,
+                    autoApproveDeleteChange: autoApproveDeleteChangeSwitchElem.checked,
                     filterDocuments: filterDocumentsValue,
                     filterNotebooks: filterNotebooksValue,
                     allowedHosts: allowedHostsValue
@@ -244,6 +247,18 @@ export default class OGanMCPServerPlugin extends Plugin {
                 autoApproveLocalChangeSwitchElem.type = "checkbox";
                 autoApproveLocalChangeSwitchElem.checked = this.mySettings.autoApproveLocalChange || false;
                 return autoApproveLocalChangeSwitchElem;
+            },
+        });
+
+        this.setting.addItem({
+            title: lang("setting_autoApproveDeleteChange"),
+            direction: "column",
+            description: lang("setting_autoApproveDeleteChange_desp"),
+            createActionElement: () => {
+                autoApproveDeleteChangeSwitchElem.className = "b3-switch fn__flex-center";
+                autoApproveDeleteChangeSwitchElem.type = "checkbox";
+                autoApproveDeleteChangeSwitchElem.checked = this.mySettings.autoApproveDeleteChange || false;
+                return autoApproveDeleteChangeSwitchElem;
             },
         });
 

@@ -228,7 +228,7 @@ export function isValidIdFormat(id: string): boolean {
 
 export function checkIdValid(id: string): void {
     if (!isValidIdFormat(id)) {
-        throw new Error("The `id` format is incorrect, please check if it is a valid `id`.");
+        throw new Error("The id format is incorrect, please check if it is a valid id. An id is something like this '20260414211243-5b1ynyc'");
     }
 }
 
@@ -347,4 +347,15 @@ export async function isValidDeck(deckId) {
     if (deckId === QUICK_DECK_ID) return true;
     const deckResponse = await getRiffDecks();
     return !!deckResponse.find(item => item.id == deckId);
+}
+
+export async function getDatabaseBlockId(avId: string): Promise<string[] | null> {
+    if (!isValidIdFormat(avId)) {
+        return null;
+    }
+    const queryResponse = await queryAPI(`"SELECT * FROM blocks WHERE markdown LIKE '<div data-type=\"NodeAttributeView\" data-av-id=\"${avId}\"%'`);
+    if (queryResponse && queryResponse.length > 0) {
+        return queryResponse.map((item: any) => item.id);
+    }
+    return null;
 }

@@ -250,7 +250,7 @@ export async function insertBlockOriginAPI({ dataType, data, nextID, previousID,
     };
     let response = await postRequest(payload, "/api/block/insertBlock");
     if (response.data == null || response.data.length == 0 || response.data[0].doOperations == null || response.data[0].doOperations.length === 0 || response.data[0].doOperations[0] == null || !isValidStr(response.data[0].doOperations[0].id)) {
-        throw new Error("Insert block failed: No operations returned");
+        throw new Error("Insert block failed: No operations returned. " + response.msg);
     }
     return response.data;
 }
@@ -1224,6 +1224,122 @@ export async function renameNotebook(notebookId: string, newName: string): Promi
         return true;
     }
     throw new Error("renameNotebook Failed: " + response.msg);
+}
+
+/**
+ * 渲染属性视图
+ * @param body 请求体
+ * @returns 渲染结果返回值
+ */
+export async function renderAttributeView(body: RenderAttributeViewBody): Promise<AttributeViewRenderResult> {
+    const url = "/api/av/renderAttributeView";
+    let postBody = body;
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data as AttributeViewRenderResult;
+    } else {
+        throw new Error("renderAttributeView Failed: " + response.msg);
+    }
+}
+
+/**
+ * 获取数据库列字段信息
+ * @param avId 数据库id
+ * @returns 数据库列字段信息
+ */
+export async function getAttributeViewKeysByAvID(avId: string): Promise<any> {
+    const url = "/api/av/getAttributeViewKeysByAvID";
+    let postBody = {
+        avID: avId
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data;
+    } else {
+        throw new Error("getAttributeViewKeysByAvID Failed: " + response.msg);
+    }
+}
+
+
+/**
+ * 添加行，但不插入其他列数据
+ * @param avId 数据库id
+ * @param srcs 行字段信息
+ * @param ignoreDefaultFill 是否忽略默认填充（即不自动将其他列填充为默认值），默认为false
+ * @returns 
+ */
+export async function addAttributeViewBlocks(avId: string, srcs: AddAttributeViewBlocksBodySrcs[], ignoreDefaultFill: boolean = false): Promise<any> {
+    const url = "/api/av/addAttributeViewBlocks";
+    let postBody = {
+        avID: avId,
+        srcs,
+        ignoreDefaultFill
+    }
+    let response = await postRequest(postBody, url);
+    if (response.code == 0) {
+        return response.data;
+    } else {
+        throw new Error("addAttributeViewBlocks Failed: " + response.msg);
+    }
+}
+
+export async function batchSetAttributeViewBlockAttrs(avID: string, values: BatchAddAttributeViewBlockAttrsValue[]) {
+    const url = "/api/av/batchSetAttributeViewBlockAttrs";
+    let postBody = {
+        avID,
+        values
+    }
+    let response = await postRequest(postBody, url)
+    if (response.code == 0) {
+        return response.data;
+    } else {
+        throw new Error("batchSetAttributeViewBlockAttrs Failed: " + response.msg);
+    }
+}
+
+export async function removeAttributeViewBlocks(avID: string, srcIDs: string[]) {
+    const url = "/api/av/removeAttributeViewBlocks";
+    let postBody = {
+        avID,
+        srcIDs
+    }
+    let response = await postRequest(postBody, url)
+    if (response.code == 0) {
+        return response.data;
+    } else {
+        throw new Error("removeAttributeViewBlocks Failed: " + response.msg);
+    }
+}
+
+export async function addAttributeViewKey(avID: string, keyID: string, keyName: string, keyType: string, keyIcon: string, previousKeyID: string) {
+    const url = "/api/av/addAttributeViewKey";
+    let postBody = {
+        avID,
+        keyID,
+        keyName,
+        keyType,
+        keyIcon,
+        previousKeyID
+    }
+    let response = await postRequest(postBody, url)
+    if (response.code == 0) {
+        return response.data;
+    }
+    throw new Error("addAttributeViewKey Failed: " + response.msg);
+}
+
+export async function removeAttributeViewKey(avID: string, keyID: string, removeRelationDest: boolean = false) {
+    const url = "/api/av/removeAttributeViewKey";
+    let postBody = {
+        avID,
+        keyID,
+        removeRelationDest
+    }
+    let response = await postRequest(postBody, url)
+    if (response.code == 0) {
+        return response.data;
+    }
+    throw new Error("removeAttributeViewKey Failed: " + response.msg);
 }
 
 

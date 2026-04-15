@@ -29,6 +29,7 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { TemplateToolProvider } from '@/tools/template';
 import { HelpDocToolProvider } from '@/tools/helpDoc';
+import { AttributeViewToolProvider } from '@/tools/attributeView';
 
 const http = require("http");
 
@@ -72,6 +73,7 @@ export default class MyMCPServer {
             new BlockWriteToolProvider(),
             new MoveBlockToolProvider(),
             new TemplateToolProvider(),
+            new AttributeViewToolProvider(),
         ];
     }
     cleanTransport(transportInfo: MCPTransportInfo) {
@@ -352,7 +354,7 @@ export default class MyMCPServer {
                     continue;
                 }
                 debugPush("启用工具中", tool.name, tool.title);
-                mcpServerInstance.registerTool(
+                const mymcptool = mcpServerInstance.registerTool(
                     tool.name,
                     {
                         "title": tool.title,
@@ -361,6 +363,7 @@ export default class MyMCPServer {
                         "annotations": tool.annotations,
                     }, tool.handler
                 );
+                logPush(`Tool registered: ${tool.name} (${tool.title})`, mymcptool);
             }
         }
     }

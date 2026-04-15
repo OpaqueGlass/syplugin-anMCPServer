@@ -47,7 +47,6 @@ async function moveDocsByIds(params, extra) {
     const { ids, toId } = params;
     debugPush("通过ID移动文档");
     // 检查输入
-    // TODO: 是笔记本的情况
     if (isValidNotebookId(toId)) {
         if (filterNotebook(toId)) {
             return createErrorResponse("The specified target notebook is excluded by the user settings. So cannot write or read. ");

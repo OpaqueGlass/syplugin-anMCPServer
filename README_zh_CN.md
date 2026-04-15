@@ -75,7 +75,7 @@
 - Q: 可以在docker使用吗？
   - 不可以，插件依赖nodejs环境，不支持在移动端、docker运行；
   
-    > 若要支持docker中部署的思源，建议转为使用其他MCP项目，部分项目可能在[这里](https://github.com/siyuan-note/siyuan/issues/13795)列出；
+    > 若要支持docker中部署的思源，建议转为使用其他MCP项目，部分项目在[这里](https://github.com/siyuan-note/siyuan/issues/13795)列出；
     > 
     > 或者，修改代码，将本插件和思源前端解耦；
 - Q: 如何查看已经设置的授权码？
@@ -103,6 +103,9 @@
   - 该工具通过知识图谱/向量检索等方式获取匹配的内容块或直接回答问题。
   - 要使用此工具，需要先下载、启用并正确配置[syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)插件。
   - 目前该插件仅支持lightRAG-server。
+- Q: 如何更好地使用插件提供的MCP服务？
+  - 为不同任务限制可用的工具，例如不需要操作模板时，禁用模板相关工具；
+  - 插件提供了适用于部分任务类型的Prompt，需要在MCP客户端中使用相关提示词，具体操作方式请参考各客户端说明文档；
 
 ## ✅如何在MCP客户端中配置？
 

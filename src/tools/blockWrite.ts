@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { appendBlockAPI, insertBlockOriginAPI, prependBlockAPI, updateBlockAPI } from "@/syapi";
+import { appendBlockAPI, insertBlockOriginAPI, prependBlockAPI, removeBlockAPI, updateBlockAPI } from "@/syapi";
 import { checkIdValid, getBlockDBItem } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush } from "@/logger";
@@ -72,6 +72,17 @@ export class BlockWriteToolProvider extends McpToolsProvider<any> {
                 destructiveHint: true,
                 idempotentHint: false
             }
+        }, {
+            name: "siyuan_delete_block_by_id",
+            description: "根据块ID删除一个块。",
+            schema: {
+                blockId: z.string().describe("待删除块的ID")
+            },
+            handler: deleteBlockById,
+            annotations: {
+                readOnlyHint: false,
+                destructiveHint: true,
+            }
         }];
     }
 }
@@ -79,6 +90,27 @@ export class BlockWriteToolProvider extends McpToolsProvider<any> {
 async function insertBlockHandler(params, extra) {
     const { data, nextID, previousID, parentID } = params;
     debugPush("插入内容块API被调用");
+    const response = await insertBlockWithCheckWrapper(data, nextID, previousID, parentID);
+    if (response == null) {
+        return createErrorResponse("Failed to insert the block");
+    }
+    if (response["isError"] !== undefined && response["isError"] === true) {
+        return response;
+    }
+    taskManager.insert(response[0].doOperations[0].id, data, "insertBlock", { parentID }, TASK_STATUS.APPROVED);
+    return createJsonResponse(response[0].doOperations[0]);
+}
+
+/**
+ * 插入块的包装函数，提供统一的参数校验和错误处理
+ * @param data 插入数据
+ * @param nextID 下一块id，用于锚定插入位置
+ * @param previousID 上一块id，用于锚定插入位置
+ * @param parentID 父块id，用于锚定插入位置
+ * @param dataType 插入数据类型，支持dom或markdown
+ * @returns 请务必判断isError是否存在，存在时返回的是mcp Error格式的报错信息
+ */
+export async function insertBlockWithCheckWrapper(data, nextID, previousID, parentID, dataType = "markdown") {
     if (isValidNotebookId(nextID) || isValidNotebookId(previousID) || isValidNotebookId(parentID)) {
         return createErrorResponse("nextID, previousID, and parentID must be block IDs, not notebook IDs.");
     }
@@ -115,11 +147,7 @@ async function insertBlockHandler(params, extra) {
         return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
     }
     const response = await insertBlockOriginAPI({data, dataType: "markdown", nextID, previousID, parentID});
-    if (response == null) {
-        return createErrorResponse("Failed to insert the block");
-    }
-    taskManager.insert(response[0].doOperations[0].id, data, "insertBlock", { parentID }, TASK_STATUS.APPROVED);
-    return createJsonResponse(response[0].doOperations[0]);
+    return response;
 }
 
 async function prependBlockHandler(params, extra) {
@@ -215,6 +243,35 @@ async function updateBlockHandler(params, extra) {
         return createSuccessResponse("Block updated successfully.");
     } else {
         taskManager.insert(id, data, "updateBlock", {}, TASK_STATUS.PENDING);
+        return createSuccessResponse("Changes have entered the waiting queue, please remind users to review ");
+    }
+}
+
+async function deleteBlockById(params, extra) {
+    const { blockId } = params;
+    checkIdValid(blockId);
+    const blockDbItem = await getBlockDBItem(blockId);
+    if (blockDbItem == null) {
+        return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
+    }
+    if (blockDbItem.type === "d") {
+        return createErrorResponse("Cannot delete document blocks using this API. Please use the delete document API instead.");
+    }
+    if (await filterBlock(blockId, blockDbItem)) {
+        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
+    }
+
+    const plugin = getPluginInstance();
+    const autoApproveLocalChange = plugin?.mySettings["autoApproveLocalChange"];
+    if (autoApproveLocalChange) {
+        const response = await removeBlockAPI(blockId);
+        if (!response) {
+            return createErrorResponse("Failed to delete the block.");
+        }
+        taskManager.insert(blockId, {}, "deleteBlock", {}, TASK_STATUS.APPROVED);
+        return createSuccessResponse("Block deleted successfully.");
+    } else {
+        taskManager.insert(blockId, blockDbItem["markdown"], "deleteBlock", {}, TASK_STATUS.PENDING);
         return createSuccessResponse("Changes have entered the waiting queue, please remind users to review ");
     }
 }

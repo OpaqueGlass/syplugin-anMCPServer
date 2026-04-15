@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { appendBlockAPI, createDocWithPath, renameDocAPI, renameNotebook } from "@/syapi";
+import { appendBlockAPI, createDocWithPath, removeDocAPI, renameDocAPI, renameNotebook } from "@/syapi";
 import { checkIdValid, getDocDBitem, isADocId } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush } from "@/logger";
@@ -10,6 +10,7 @@ import { lang } from "@/utils/lang";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { filterBlock, filterNotebook } from "@/utils/filterCheck";
 import { isValidNotebookId } from "@/utils/commonCheck";
+import { getPluginInstance } from "@/utils/pluginHelper";
 
 export class DocWriteToolProvider extends McpToolsProvider<any> {
     async getTools(): Promise<McpTool<any>[]> {
@@ -69,6 +70,17 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
                 readOnlyHint: false,
                 destructiveHint: false,
                 idempotentHint: false,
+            }
+        }, {
+            name: "siyuan_delete_doc_by_id",
+            description: "Delete a document in SiYuan by its ID.",
+            schema: {
+                docId: z.string().describe("The unique identifier (ID) of the document to be deleted."),
+            },
+            handler: deleteByDocId,
+            annotations: {
+                readOnlyHint: false,
+                destructiveHint: true,
             }
         }];
     }
@@ -133,4 +145,28 @@ async function renameNotebookTool(params, extra) {
         return createErrorResponse("Failed to rename notebook.");
     }
     return createSuccessResponse("Notebook renamed successfully.");
+}
+
+async function deleteByDocId(params, extra) {
+    const { docId } = params;
+    checkIdValid(docId);
+    const docDbItem = await getDocDBitem(docId);
+    if (docDbItem == null) {
+        return createErrorResponse("Failed to delete document: No document found with the provided ID.");
+    }
+    if (await filterBlock(docId, docDbItem)) {
+        return createErrorResponse("The specified document or block is excluded by the user settings, so cannot delete it.");
+    }
+    const plugin = getPluginInstance();
+    const autoApproveDeleteChange = plugin?.mySettings["autoApproveDeleteChange"] ?? false;
+    if (autoApproveDeleteChange) {
+        const response = await removeDocAPI(docDbItem["box"], docDbItem["path"]);
+        if (!response) {
+            return createErrorResponse("Failed to delete document.");
+        }
+        taskManager.insert(docId, {}, "deleteDocument", { docId }, TASK_STATUS.APPROVED);
+        return createSuccessResponse("Document deleted successfully.");
+    } else {
+        taskManager.insert(docDbItem["id"], docDbItem["content"], "deleteDocument", { box: docDbItem["box"], path: docDbItem["path"] }, TASK_STATUS.PENDING);
+    }
 }

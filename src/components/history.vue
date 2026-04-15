@@ -1,11 +1,18 @@
 <template>
   <div :class="{'task-history': true, 'dark': darkModeFlag}">
     <h2>{{ lang("history_title") }}</h2>
-    <div style="margin-bottom: 12px; display: flex; gap: 12px; align-items: center;">
+    <div style="margin-bottom: 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
       <el-button size="small" type="primary" @click="toggleShowAll">{{ showAll ? lang("history_btn_pending") : lang("history_btn_all") }}</el-button>
       <el-button size="small" type="danger" @click="rejectAll">{{ lang("history_btn_reject_all") }}</el-button>
       <el-button size="small" type="success" @click="approveAll">{{ lang("history_btn_approve_all") }}</el-button>
       <el-button size="small" type="warning" @click="cleanTasks">{{ lang("history_btn_clean") }}</el-button>
+      <el-input
+      v-model="searchQuery"
+      :placeholder="lang('history_search_placeholder') || '搜索内容或ID...'"
+      style="width: 200px;"
+      clearable
+      @input="handleSearch"
+    ></el-input>
       <span>{{ lang("history_sort") }}：</span>
       <el-radio-group v-model="sortOrder" @change="refreshTasks">
         <el-radio-button label="desc">{{ lang("history_sort_desc") }}</el-radio-button>
@@ -130,6 +137,7 @@ const tasks = ref([]);
 const loading = ref(true);
 const showAll = ref(false);
 const sortOrder = ref('desc');
+const searchQuery = ref('');
 
 const darkModeFlag = ref(isDarkMode())
 
@@ -153,10 +161,25 @@ const limitedIds = (ids: string[]) => ids.slice(0, 5);
 // 获取任务并更新列表
 const fetchTasks = async () => {
   loading.value = true;
+  let rawTasks = [];
   if (showAll.value) {
-    tasks.value = taskManager.listAll(sortOrder.value);
+    rawTasks = taskManager.listAll(sortOrder.value);
   } else {
-    tasks.value = taskManager.list(sortOrder.value);
+    rawTasks = taskManager.list(sortOrder.value);
+  }
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase();
+    tasks.value = rawTasks.filter(task => {
+      // 搜索范围：ID、内容、以及关联的 modifiedIds
+      const contentMatch = task.content && String(task.content).toLowerCase().includes(query);
+      const idMatch = String(task.id).includes(query);
+      const modifiedIdsMatch = task.modifiedIds && task.modifiedIds.some(id => id.includes(query));
+      const typeMatch = task.taskType && task.taskType.toLowerCase().includes(query);
+      
+      return contentMatch || idMatch || modifiedIdsMatch || typeMatch;
+    });
+  } else {
+    tasks.value = rawTasks;
   }
   loading.value = false;
 };
@@ -249,6 +272,14 @@ const handleAction = async (taskId, action) => {
     showPluginMessage(lang('history_msg_action_error'), 6000);
     console.error(lang('history_msg_action_error'), error);
   }
+};
+
+let searchTimeout: any = null;
+const handleSearch = () => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    fetchTasks();
+  }, 500);
 };
 
 const getShortContent = (content: string) => {
