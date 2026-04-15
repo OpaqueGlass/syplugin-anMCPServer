@@ -228,7 +228,7 @@ export function isValidIdFormat(id: string): boolean {
 
 export function checkIdValid(id: string): void {
     if (!isValidIdFormat(id)) {
-        throw new Error("The id format is incorrect, please check if it is a valid id. An id is something like this '20260414211243-5b1ynyc'");
+        throw new Error("The id format is incorrect. Must be a 14-digit timestamp(yyyyMMddHHmmss) followed by a 7-char alphanumeric suffix. Example: '20260414211243-1a2b3c4'");
     }
 }
 

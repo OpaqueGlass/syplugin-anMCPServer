@@ -47,7 +47,7 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
             name: "siyuan_rename_doc",
             description: "Rename an existing document in SiYuan by its ID and a new title.",
             schema: {
-                id: z.string().describe("The unique identifier (ID) of the document to be renamed."),
+                docId: z.string().describe("The unique identifier (ID) of the document to be renamed."),
                 newTitle: z.string().describe("The new title for the document."),
             },
             handler: renameDocTool,
@@ -118,13 +118,13 @@ async function createNewNoteUnder(params, extra) {
 }
 
 async function renameDocTool(params, extra) {
-    const { id, newTitle } = params;
-    checkIdValid(id);
-    const docDbItem = await getDocDBitem(id);
+    const { docId, newTitle } = params;
+    checkIdValid(docId);
+    const docDbItem = await getDocDBitem(docId);
     if (docDbItem == null) {
         return createErrorResponse("Failed to rename document: No document found with the provided ID.");
     }
-    if (await filterBlock(id, docDbItem)) {
+    if (await filterBlock(docId, docDbItem)) {
         return createErrorResponse("The specified document or block is excluded by the user settings, so cannot rename it.");
     }
     const result = await renameDocAPI(docDbItem["box"], docDbItem["path"], newTitle);

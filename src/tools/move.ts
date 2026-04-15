@@ -68,7 +68,7 @@ async function moveDocsByIds(params, extra) {
             return createErrorResponse(`Invalid document ID: ${id}. Please check if the ID exists and is related to a document.`);
         }
         if (await filterBlock(id, dbItem)) {
-            return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
+            return createErrorResponse(`The specified document ${id} is excluded by the user settings. So cannot write or read. `);
         }
         recoveryDocIds.push({
             id,
@@ -94,7 +94,7 @@ async function moveBlockById(params, extra) {
         return createErrorResponse("Document blocks cannot be moved using this tool. Please use the document moving tool instead.");
     }
     if (await filterBlock(id, dbItem)) {
-        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
+        return createErrorResponse(`The specified block ${id} is excluded by the user settings. So cannot write or read. `);
     }
     let moveType = "", moveToId = "";
     if (isValidStr(previousId)) {
@@ -112,7 +112,7 @@ async function moveBlockById(params, extra) {
         return createErrorResponse(`Invalid ${moveType}. Please check if the ID exists and is correct.`);
     }
     if (await filterBlock(moveToId, moveToIdDbItem)) {
-        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
+        return createErrorResponse(`The specified document or block ${moveToId} is excluded by the user settings. So cannot write or read. `);
     }
     // 避免移动到非容器块
     if (moveType === "parentId" && !isContainerBlockType(moveToIdDbItem.type)) {
