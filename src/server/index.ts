@@ -1,4 +1,4 @@
-import { debugPush, errorPush, logPush } from '../logger';
+import { debugPush, errorPush, infoPush, logPush } from '../logger';
 import { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { Request, Response } from "express";
@@ -32,6 +32,8 @@ import { HelpDocToolProvider } from '@/tools/helpDoc';
 import { AttributeViewToolProvider } from '@/tools/attributeView';
 
 const http = require("http");
+const https = require("https");
+const fs = require("fs");
 
 interface MCPTransportInfo {
     sessionId: string;
@@ -53,6 +55,8 @@ export default class MyMCPServer {
     checkInterval: ReturnType<typeof setInterval> | null = null;
     checkToolChangeInterval: ReturnType<typeof setInterval> | null = null;
     toolProviders: any[] = [];
+    tryHttps: boolean = false;
+    httpsOptions: any = null;
 
     mcpInitConfig = {
         "name": "siyuan",
@@ -118,6 +122,19 @@ export default class MyMCPServer {
         }
         if (allowedHosts.length === 0) {
             allowedHosts = undefined;
+        }
+        try {
+            let keyFile = fs.readFileSync(window.siyuan.config.system.workspaceDir + '/data/storage/petal/syplugin-anMCPServer/server-key.pem');
+            let certFile = fs.readFileSync(window.siyuan.config.system.workspaceDir + '/data/storage/petal/syplugin-anMCPServer/server-cert.pem');
+            this.tryHttps = true;
+            this.httpsOptions = {
+                key: keyFile,
+                cert: certFile
+            }
+            logPush("HTTPS certificates loaded successfully, HTTPS will be enabled.");
+        } catch (error) {
+            infoPush("HTTPS certificates not found, falling back to HTTP. To enable HTTPS, please place 'server-key.pem' and 'server-cert.pem' in the plugin directory.");
+            this.tryHttps = false;
         }
 
         this.expressApp = createMcpExpressApp({
@@ -384,7 +401,12 @@ export default class MyMCPServer {
         }
         try {
             logPush("启动服务中");
-            const httpServer = http.createServer(this.expressApp);
+            let httpServer: any;
+            if (this.tryHttps) {
+                httpServer = https.createServer(this.httpsOptions, this.expressApp);
+            } else {
+                httpServer = http.createServer(this.expressApp);
+            }
             const bindAddress = getPluginInstance()?.mySettings["address"] || "127.0.0.1";
             if ((bindAddress !== "127.0.0.1" && bindAddress !== "localhost") && (getPluginInstance()?.mySettings["authCode"] === CONSTANTS.CODE_UNSET) || !isValidStr(getPluginInstance()?.mySettings["authCode"])) {
                 throw new Error(lang("msg_auth_code_please"));
@@ -392,7 +414,7 @@ export default class MyMCPServer {
             httpServer.listen(port, bindAddress, () => {
                 logPush("服务运行在端口：", port);
                 logPush("服务运行在地址：", bindAddress);
-                showMessage(lang("server_running_on") + port + " (" + bindAddress + ")");
+                showMessage(lang("server_running_on") + port + " (" + bindAddress + ")" + (this.tryHttps ? " with HTTPS" : ""));
                 this.runningFlag = true;
                 this.httpServer = httpServer;
                 this.workingPort = port;

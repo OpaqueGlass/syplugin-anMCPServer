@@ -66,21 +66,21 @@
 
 ## ❓可能常见的问题
 
-- Q: 如何在MCP客户端中使用？
+- Q1: 如何在MCP客户端中使用？
   请参考后文；
-- Q: 常见的MCP客户端有哪些？
+- Q2: 常见的MCP客户端有哪些？
   - 请参考：https://github.com/punkpeye/awesome-mcp-clients 或 https://modelcontextprotocol.io/clients ；
-- Q：插件支持鉴权吗？
+- Q3：插件支持鉴权吗？
   - v0.2.0版本已支持鉴权，在插件设置处设置鉴权token后，在MCP客户端，需要设置`authorization`请求头，其值为 `Bearer 你的Token`；
-- Q: 可以在docker使用吗？
+- Q4: 可以在docker使用吗？
   - 不可以，插件依赖nodejs环境，不支持在移动端、docker运行；
   
     > 若要支持docker中部署的思源，建议转为使用其他MCP项目，部分项目在[这里](https://github.com/siyuan-note/siyuan/issues/13795)列出；
     > 
     > 或者，修改代码，将本插件和思源前端解耦；
-- Q: 如何查看已经设置的授权码？
+- Q5: 如何查看已经设置的授权码？
   - 授权码哈希后保存，只能修改，不能查看生效中的授权码；
-- Q：MCP客户端连接时，提示`Invalid Host: x.x.x.x`，或类似下面的内容，如何解决？
+- Q6：MCP客户端连接时，提示`Invalid Host: x.x.x.x`，或类似下面的内容，如何解决？
   ```json
   {
     "jsonrpc": "2.0",
@@ -94,18 +94,29 @@
   - 默认情况下，为了安全起见，服务仅处理来自本地（localhost）的请求。如果你需要通过特定域名访问，或者在非本地环境下连接到MCP服务，必须在 插件设置 - 允许的主机列表（Allowed Hosts） 中手动声明。
   - 在这个设置项填写电脑对应的局域网IP或绑定到的域名。
   - 简单来说，在MCP客户端中填写了什么IP或域名，这里就需要填写什么。
-- Q: 我只连接了一次，为何设置页中显示连接数的连接数大于1？
+- Q7: 我只连接了一次，为何设置页中显示连接数的连接数大于1？
   - 统计更新不及时：请手动点击刷新状态获取最新结果；
   - 未完全释放连接：部分 MCP 客户端在关闭时未发送标准的断开信号，导致旧连接仍在后台占用。重新开启功能时，系统会建立新的连接叠加；
   - 多端连接：请确认是否有其他软件正在访问mcp服务或相关端口；
   - 仍有问题？请查看插件日志，或设置授权码避免信息泄露；
-- Q：什么是“向量检索客户端插件-查询”工具？
+- Q8：什么是“向量检索客户端插件-查询”工具？
   - 该工具通过知识图谱/向量检索等方式获取匹配的内容块或直接回答问题。
   - 要使用此工具，需要先下载、启用并正确配置[syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient)插件。
   - 目前该插件仅支持lightRAG-server。
-- Q: 如何更好地使用插件提供的MCP服务？
+- Q9: 如何更好地使用插件提供的MCP服务？
   - 为不同任务限制可用的工具，例如不需要操作模板时，禁用模板相关工具；
   - 插件提供了适用于部分任务类型的Prompt，需要在MCP客户端中使用相关提示词，具体操作方式请参考各客户端说明文档；
+- Q10: 可以创建基于https的服务吗？
+  - 可以，需要在 `工作空间/data/storage/petal/syplugin-anMCPServer`目录下放置 `server-key.pem`和`server-cert.pem` 两个文件，然后重启思源笔记；MCP服务启动时的通知消息以`with HTTPS`结尾则说明已经启用；
+  - Q10.1: MCP客户端提示`net::ERR_CERT_AUTHORITY_INVALID`
+    - 自签名证书是这样的。看上一条，a）删除两个证书文件继续使用http；b）或者更换为由权威机构签发的证书；c）又或者将自签名的证书添加到信任列表中（不推荐）。
+  - Q10.2: MCP客户端提示`net::ERR_EMPTY_RESPONSE`
+    - 检查一下，如果是使用了https，则需要在客户端修改URL为`https://`开头，或者删除两个证书文件、继续用http；
+  - Q10.3: MCP客户端提示`net::ERR_CERT_COMMON_NAME_INVALID`
+    - 在生成证书时，请确保CN(Common Name)字段的正确性，并添加`subjectAltName`(SAN)字段，以localhost为例：
+      ```
+      openssl  req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes  -keyout server-key.pem -out server-cert.pem  -subj "/CN=localhost"  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+      ```
 
 ## ✅如何在MCP客户端中配置？
 

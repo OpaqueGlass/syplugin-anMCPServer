@@ -60,29 +60,63 @@
 
 ## ❓ Frequently Asked Questions
 
-- Q: How to use in an MCP client?
-  - Please refer to the sections below.
-- Q: What are common MCP clients?
-  - Please refer to: https://github.com/punkpeye/awesome-mcp-clients or https://modelcontextprotocol.io/clients.
-- Q: Does the plugin support authentication?
-  - Authentication is supported since v0.2.0. After setting an auth token in plugin settings, you must set the `authorization` request header in your MCP client with value: `Bearer {YourToken}`.
-- Q: Can it be used in Docker?
-  - No. The plugin depends on the Node.js environment and does not support running on mobile or in Docker.
+- **Q1: How to use it in an MCP client?**
+  Please refer to the subsequent sections.
+- **Q2: What are some common MCP clients?**
+  - Please refer to: [https://github.com/punkpeye/awesome-mcp-clients](https://github.com/punkpeye/awesome-mcp-clients) or [https://modelcontextprotocol.io/clients](https://modelcontextprotocol.io/clients).
+- **Q3: Does the plugin support authentication?**
+  - Version v0.2.0 and above support authentication. After setting an authentication token in the plugin settings, you must set the `authorization` request header in your MCP client with the value `Bearer YourToken`.
+- **Q4: Can it be used in Docker?**
+  - No. The plugin depends on a Node.js environment and does not support running on mobile devices or within Docker.
+  
+    > To support SiYuan deployed in Docker, it is recommended to switch to other MCP projects. Some projects are listed [here](https://github.com/siyuan-note/siyuan/issues/13795).
+    > 
+    > Alternatively, you can modify the code to decouple this plugin from the SiYuan frontend.
+- **Q5: How can I view the configured authorization code?**
+  - Authorization codes are saved as hashes. You can only modify them; you cannot view the currently active authorization code.
+- **Q6: When connecting an MCP client, I get an error `Invalid Host: x.x.x.x` or something similar. How do I fix it?**
+  ```json
+  {
+    "jsonrpc": "2.0",
+    "error": {
+      "code": -32000,
+      "message": "Invalid Host: x.x.x.x"
+    },
+    "id": null
+  }
+  ```
 
-    > If you need to support SiYuan deployed in Docker, it is recommended to use other MCP projects. Some may be listed [here](https://github.com/siyuan-note/siyuan/issues/13795).
-    >
-    > Alternatively, modify the code to decouple this plugin from the SiYuan frontend.
-- Q: How to view the set authorization token?
-  - The token is stored hashed. It can only be modified, not viewed in plaintext while active.
-- Q: I only connected once, why does the connection count on the settings page show more than 1?
-  - Outdated statistics: Please manually click Refresh Status to get the latest result.
-  - Connections not fully released: Some MCP clients do not send a standard disconnect signal on close, leaving old connections alive in the background. New connections are added when the feature is restarted.
-  - Multi-device connections: Please confirm whether other software is accessing the MCP service or related ports.
-  - Still having issues? Check the plugin logs or set an authorization token to prevent information leakage.
-- Q: What is the "Vector Search Client Plugin - Query" tool?
-  - This tool retrieves matching content blocks or answers questions directly via knowledge graph / vector search.
-  - To use it, you must first download, enable, and properly configure the [syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient) plugin.
-  - Currently, this plugin only supports lightRAG-server.
+  - By default, for security reasons, the service only handles requests from `localhost`. If you need to access it via a specific domain or connect to the MCP service in a non-local environment, you must manually declare it in **Plugin Settings - Allowed Hosts**.
+  - Fill in this setting with the corresponding local network IP of the computer or the bound domain name.
+  - Simply put: whatever IP or domain name you entered in the MCP client must also be entered here.
+- **Q7: I only connected once, why does the settings page show a connection count greater than 1?**
+   - **Delayed Statistics**: Please click the refresh status button manually to get the latest results.
+   - **Connection Leak**: Some MCP clients do not send a standard disconnect signal when closing, causing old connections to remain occupied in the background. When the function is restarted, the system establishes a new overlapping connection.
+   - **Multi-device Connection**: Please confirm if other software is accessing the MCP service or the relevant port.
+   - **Still having issues?** Please check the plugin logs or set an authorization code to prevent information leakage.
+
+- **Q8: What is the "Vector Index Client Plugin - Query" tool?**
+   - This tool retrieves matching content blocks or answers questions directly via Knowledge Graph/Vector Search.
+   - To use this tool, you need to download, enable, and correctly configure the [syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient) plugin.
+   - Currently, this plugin only supports lightRAG-server.
+
+- **Q9: How to better utilize the MCP services provided by the plugin?**
+   - Limit available tools for different tasks. For example, disable template-related tools when you don't need to manipulate templates.
+   - The plugin provides Prompts suitable for certain task types. You need to use these related prompts in your MCP client; please refer to each client's documentation for specific operation methods.
+
+- **Q10: Can I create an HTTPS-based service?**
+   - Yes. You need to place two files, `server-key.pem` and `server-cert.pem`, in the directory `Workspace/data/storage/petal/syplugin-anMCPServer`, then restart SiYuan Note. If the notification message when the MCP service starts ends with `with HTTPS`, it means it has been enabled.
+   - **Q10.1: MCP client shows `net::ERR_CERT_AUTHORITY_INVALID`**
+      - This is expected with self-signed certificates. Refer to the previous point: a) Delete the two certificate files and continue using HTTP; b) Replace them with certificates issued by an authoritative CA; c) Or add the self-signed certificate to your trust list (not recommended).
+
+   - **Q10.2: MCP client shows `net::ERR_EMPTY_RESPONSE`**
+      - Please check: if HTTPS is used, the client URL must start with `https://`. Otherwise, delete the two certificate files and continue using HTTP.
+
+   - **Q10.3: MCP client shows `net::ERR_CERT_COMMON_NAME_INVALID`**
+      - When generating the certificate, ensure the correctness of the **CN (Common Name)** field and add the **`subjectAltName` (SAN)** field. Using `localhost` as an example:
+        ```
+        openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout server-key.pem -out server-cert.pem -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+        ```
 
 ## How to Configure in an MCP Client?  
 
