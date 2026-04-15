@@ -97,6 +97,8 @@
   "history_dialog_allids": "All Modified IDs",
   "history_dialog_close": "Close",
   "history_dialog_fullcontent": "Full Content",
+  "history_search_placeholder": "Search records by ID or content",
+  "history_log_position_info": "In addition, the plugin will also write request logs to the directory ${WorkSpace}/temp/petal/syplugin-anMCPServer/logs.",
 
   "history_btn_clean": "Clean history",
   "history_btn_approve_all": "Approve All",

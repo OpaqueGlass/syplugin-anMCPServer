@@ -323,6 +323,7 @@ async function deleteDatabaseRowHandler(params, extra) {
         return createSuccessResponse("Block updated successfully.");
     } else {
         taskManager.insert(avId, data, "deleteDatabaseRow", data, TASK_STATUS.PENDING);
+        return createSuccessResponse("The request has been submitted and is pending user approval. Please remind the user to go to \"MCP Update Operation History\" (for Chinese User: \"MCP 修改操作记录\") for manual approval.");
     }
 }
 
@@ -369,7 +370,7 @@ async function deleteDatabaseColumnHandler(params, extra) {
             return createErrorResponse("Failed to find the database block for the given avId");
         }
         taskManager.insert(blockIds[0], data, "deleteDatabaseColumn", data, TASK_STATUS.PENDING);
-        return createSuccessResponse("Delete column request submitted and pending user approval.");
+        return createSuccessResponse("The request has been submitted and is pending user approval. Please remind the user to go to \"MCP Update Operation History\" (for Chinese User: \"MCP 修改操作记录\") for manual approval.");
     }
 }
 

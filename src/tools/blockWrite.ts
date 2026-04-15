@@ -243,7 +243,7 @@ async function updateBlockHandler(params, extra) {
         return createSuccessResponse("Block updated successfully.");
     } else {
         taskManager.insert(id, data, "updateBlock", {}, TASK_STATUS.PENDING);
-        return createSuccessResponse("Changes have entered the waiting queue, please remind users to review ");
+        return createSuccessResponse("The request has been submitted and is pending user approval. Please remind the user to go to \"MCP Update Operation History\" (for Chinese User: \"MCP 修改操作记录\") for manual approval.");
     }
 }
 
@@ -272,6 +272,6 @@ async function deleteBlockById(params, extra) {
         return createSuccessResponse("Block deleted successfully.");
     } else {
         taskManager.insert(blockId, blockDbItem["markdown"], "deleteBlock", {}, TASK_STATUS.PENDING);
-        return createSuccessResponse("Changes have entered the waiting queue, please remind users to review ");
+        return createSuccessResponse("The request has been submitted and is pending user approval. Please remind the user to go to \"MCP Update Operation History\" (for Chinese User: \"MCP 修改操作记录\") for manual approval.");
     }
 }

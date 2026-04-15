@@ -168,5 +168,6 @@ async function deleteByDocId(params, extra) {
         return createSuccessResponse("Document deleted successfully.");
     } else {
         taskManager.insert(docDbItem["id"], docDbItem["content"], "deleteDocument", { box: docDbItem["box"], path: docDbItem["path"] }, TASK_STATUS.PENDING);
+        return createSuccessResponse("The request has been submitted and is pending user approval. Please remind the user to go to \"MCP Update Operation History\" (for Chinese User: \"MCP 修改操作记录\") for manual approval.");
     }
 }

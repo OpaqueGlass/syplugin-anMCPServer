@@ -1,6 +1,7 @@
 <template>
   <div :class="{'task-history': true, 'dark': darkModeFlag}">
     <h2>{{ lang("history_title") }}</h2>
+    <div>{{ lang("history_log_position_info") }}</div>
     <div style="margin-bottom: 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
       <el-button size="small" type="primary" @click="toggleShowAll">{{ showAll ? lang("history_btn_pending") : lang("history_btn_all") }}</el-button>
       <el-button size="small" type="danger" @click="rejectAll">{{ lang("history_btn_reject_all") }}</el-button>
@@ -132,6 +133,7 @@ import { auditRedo } from '@/audit/auditRedoer';
 import { showPluginMessage } from '@/utils/common';
 import { getBlockDBItem } from '@/syapi/custom';
 import { CONSTANTS } from '@/constants';
+import { logPush } from '@/logger';
 
 const tasks = ref([]);
 const loading = ref(true);
@@ -297,7 +299,7 @@ const isContentLong = (content: string) => {
 const showFullContent = (content: string) => {
   fullContent.value = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
   diffOldValue.value = "";
-  diffNewValue.value = content;
+  diffNewValue.value = fullContent.value;
   diffFormat.value = "line-by-line";
   dialogVisible.value = true;
 };
