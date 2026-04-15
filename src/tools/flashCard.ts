@@ -12,7 +12,7 @@ import { filterBlock } from "@/utils/filterCheck";
 const TYPE_VALID_LIST = ["h1", "h2", "h3", "h4", "h5", "highlight", "superBlock"] as const;
 
 export class FlashcardToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [{
             name: "siyuan_create_flashcards_with_new_doc",
             description: "Create New Document, and Make Flashcards with Specific Method",

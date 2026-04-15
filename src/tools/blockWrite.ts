@@ -13,7 +13,7 @@ import { extractNodeParagraphIds } from "@/utils/common";
 import { filterBlock } from "@/utils/filterCheck";
 
 export class BlockWriteToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [{
             name: "siyuan_insert_block",
             description: "在指定位置插入一个新块。插入内容必须是 markdown 格式。插入位置可通过 `nextID` (后一个块ID)、`previousID` (前一个块ID) 或 `parentID` (父块ID) 之一来锚定。`nextID` 的优先级最高。",

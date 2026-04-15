@@ -353,7 +353,7 @@ export async function getDatabaseBlockId(avId: string): Promise<string[] | null>
     if (!isValidIdFormat(avId)) {
         return null;
     }
-    const queryResponse = await queryAPI(`"SELECT * FROM blocks WHERE markdown LIKE '<div data-type=\"NodeAttributeView\" data-av-id=\"${avId}\"%'`);
+    const queryResponse = await queryAPI(`SELECT * FROM blocks WHERE markdown LIKE '<div data-type="NodeAttributeView" data-av-id="${avId}"%'`);
     if (queryResponse && queryResponse.length > 0) {
         return queryResponse.map((item: any) => item.id);
     }

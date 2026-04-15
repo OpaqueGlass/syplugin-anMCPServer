@@ -1,4 +1,4 @@
-import { getBlockDBItem, isValidIdFormat } from "@/syapi/custom";
+import { getBlockDBItem, getDatabaseBlockId, isValidIdFormat } from "@/syapi/custom";
 import { getPluginInstance } from "./pluginHelper";
 import { debugPush, logPush } from "@/logger";
 import { createErrorResponse } from "./mcpResponse";
@@ -46,7 +46,7 @@ export function filterNotebook(notebookId: string): boolean {
 }
 
 
-export function mcpToolPermissionWrapper(handler: (args: any, extra: any) => Promise<any>, funcTypeDict?: McpToolAnnotations) {
+export function mcpToolCheckPermissionWrapper(handler: (args: any, extra: any) => Promise<any>, funcTypeDict?: McpToolAnnotations) {
     return async (args: any, extra: any) => {
         // 通用id
         // if (args?.id !== undefined && !isValidIdFormat(args.id)) {
@@ -87,6 +87,21 @@ export function mcpToolPermissionWrapper(handler: (args: any, extra: any) => Pro
         }
 
         // 数据库id
+        if (args.avId) {
+            if (!isValidIdFormat(args.avId)) {
+                return createErrorResponse("Invalid avId format");
+            }
+            const databaseBlockIds = await getDatabaseBlockId(args.avId);
+            if (databaseBlockIds) {
+                for (const blockId of databaseBlockIds) {
+                    if (await filterBlock(blockId, null)) {
+                        return createErrorResponse("Permission denied for one or more database blocks");
+                    }
+                }
+            } else {
+                return createErrorResponse("No database block found for the provided avId");
+            }
+        }
 
         return await handler(args, extra);
     }

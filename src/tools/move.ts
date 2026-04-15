@@ -11,7 +11,7 @@ import { filterBlock, filterNotebook } from "@/utils/filterCheck";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 
 export class MoveBlockToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [{
             name: "siyuan_move_docs_by_ids", // 建议改为复数 docs 以体现批量功能
             description: "批量移动文档到目标位置。可以将一个或多个文档移动到指定的父文档下方，或直接移动到某个笔记本的根目录下。",

@@ -4,7 +4,7 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { lang } from "@/utils/lang";
 
 export class TimeToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [{
             name: "get_current_time",
             description: lang("tool_get_current_time"),

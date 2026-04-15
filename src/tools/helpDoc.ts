@@ -5,7 +5,7 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { createSuccessResponse } from "@/utils/mcpResponse";
 
 export class HelpDocToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [
             {
                 name: "siyuan_markdown_syntax_help",

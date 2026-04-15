@@ -7,7 +7,7 @@ import { getBlockDBItem, getChildDocumentIds, getDocDBitem, getSubDocIds } from 
 import { filterBlock } from "@/utils/filterCheck";
 
 export class RelationToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [{
             name: "siyuan_get_doc_backlinks",
             description: "Retrieve all documents or blocks that reference a specified document or block within the workspace. The result includes the referencing document's ID, name, notebook ID, and path. Useful for understanding backlinks and document relationships within the knowledge base.",

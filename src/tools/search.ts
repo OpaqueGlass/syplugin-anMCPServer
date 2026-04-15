@@ -10,7 +10,7 @@ import { lang } from "@/utils/lang";
 import { FullTextSearchQuery } from "@/types/api";
 
 export class SearchToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [];// # 16
         return [
             {

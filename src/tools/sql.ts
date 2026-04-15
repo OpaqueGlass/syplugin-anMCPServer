@@ -10,7 +10,7 @@ import { getBlockDBItem } from "@/syapi/custom";
 import { filterBlock } from "@/utils/filterCheck";
 
 export class SqlToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [
             {
                 name: "siyuan_database_schema",

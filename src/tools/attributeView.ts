@@ -51,7 +51,7 @@ const CreateDatabaseRowSchema = z.object({
 });
 
 export class AttributeViewToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [
             {
                 name: "siyuan_create_database",

@@ -10,7 +10,7 @@ import { lang } from "@/utils/lang";
 import { filterBlock } from "@/utils/filterCheck";
 
 export class DocReadToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [{
             name: "siyuan_read_doc_content",
             description: 'Retrieve the content of a document or block by its ID',

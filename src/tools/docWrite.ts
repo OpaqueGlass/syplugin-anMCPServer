@@ -13,7 +13,7 @@ import { isValidNotebookId } from "@/utils/commonCheck";
 import { getPluginInstance } from "@/utils/pluginHelper";
 
 export class DocWriteToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [{
             name: "siyuan_append_markdown_to_doc",
             description: 'Append Markdown content to the end of a document in SiYuan by its ID.',

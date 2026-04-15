@@ -8,7 +8,7 @@ import { isPluginExist, showPluginMessage, sleep } from "@/utils/common";
 
 let userAlerted = false;
 export class DocVectorSearchProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         if (!window["__opaqueGlassVectorIndexService"]) {
             if (isPluginExist("syplugin-vectorIndexClient")) {
                 await sleep(3000);

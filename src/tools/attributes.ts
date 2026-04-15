@@ -9,7 +9,7 @@ import { lang } from "@/utils/lang";
 import { filterBlock } from "@/utils/filterCheck";
 
 export class AttributeToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [
             {
                 name: "siyuan_set_block_attributes",

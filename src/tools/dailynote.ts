@@ -13,7 +13,7 @@ import { filterNotebook } from "@/utils/filterCheck";
 
 export class DailyNoteToolProvider extends McpToolsProvider<any> {
     
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [{
             name: "siyuan_append_to_dailynote",
             description: lang("tool_append_dailynote"),

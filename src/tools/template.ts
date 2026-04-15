@@ -10,7 +10,7 @@ import { wrapTemplateFilePath } from "@/utils/common";
 import item from "element-plus/lib/components/space/src/item.js";
 
 export class TemplateToolProvider extends McpToolsProvider<any> {
-    async getTools(): Promise<McpTool<any>[]> {
+    async _getTools(): Promise<McpTool<any>[]> {
         return [
             {
                 name: "siyuan_create_template",
