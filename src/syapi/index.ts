@@ -1342,6 +1342,23 @@ export async function removeAttributeViewKey(avID: string, keyID: string, remove
     throw new Error("removeAttributeViewKey Failed: " + response.msg);
 }
 
+/**
+ * 检索已有的数据库
+ * @param keyword 关键词，可以使用空格分割多个关键词，但每个关键词都必须存在
+ * @returns 
+ */
+export async function searchAttributeView(keyword: string) {
+    const url = "/api/av/searchAttributeView";
+    let postBody = {
+        keyword
+    }
+    let response = await postRequest(postBody, url)
+    if (response.code == 0) {
+        return response.data["results"] ?? [];
+    }
+    throw new Error("searchAttributeView Failed: " + response.msg);
+}
+
 
 export const DOC_SORT_TYPES = {
     FILE_NAME_ASC: 0,

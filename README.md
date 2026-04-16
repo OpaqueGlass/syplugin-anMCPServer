@@ -19,44 +19,17 @@
 
 > ⭐ If this is helpful to you, please consider giving it a star!
 
-## 🔧 Supported Tools
+## 🛠 Supported Tools (Summary)
 
-> [!WARNING]
-> Not all tools have strict excluded document validation. Before using excluded documents or after updating MCP tools, please read the tool support list carefully and consider disabling some tools.
+> For detailed tools, supported excluded documents, and other notes, please refer to the [Supported Tools](#supported-tools) section.
 
-| Category     | Item                          | Exclude Doc | Status/Notes                                                                                                         |
-|--------------|-------------------------------|-------------|-----------------------------------------------------------------------------------------------------------------------|
-| Retrieval    | Search using SQL              | ⚠️          | Excluded documents are only checked if: the result contains IDs **and** the number of entries < 300                   |
-| Get          | Get document Markdown by ID   | ✅          | —                                                                                                                     |
-| Get          | Get block Kramdown by ID      | ✅          | —                                                                                                                     |
-| Get          | List notebooks                | ❌          | —                                                                                                                     |
-| Get          | Get backlinks by ID           | ✅          | —                                                                                                                     |
-| Get          | Get subdocuments of a document| ✅          | —                                                                                                                     |
-| Get          | Get child block list          | ✅          | —                                                                                                                     |
-| Get          | Read attributes               | ✅          | —                                                                                                                     |
-| Get          | SiYuan database format        | ❌          | This function does not involve user documents                                                                         |
-| Get          | Vector Search Client Plugin - Query | ❌      | To use this function, download and properly configure the [syplugin-vectorIndexClient](https://github.com/OpaqueGlass/syplugin-vectorIndexClient) plugin.<br />This tool does not support excluded documents yet. |
-| Get          | Template file raw content     | ❌          | —                                                                                                                     |
-| Get          | Template render result preview| ⚠️          | Only kramdown content is returned.<br />Since functions like `getBlock` can be used in templates, excluded documents may be accessed bypassing checks via this tool. |
-| Get          | Sprig render result preview   | ❌          | —                                                                                                                     |
-| Get          | Retrieve existing templates   | ❌          | —                                                                                                                     |
-| Write / Doc  | Append content to journal     | ✅          | —                                                                                                                     |
-| Write / Doc  | Append content to document by ID | ✅       | domstring not supported                                                                                               |
-| Write / Doc  | Create new doc at position by ID | ✅        | domstring not supported                                                                                               |
-| Write / Doc  | Insert child block (before/after) | ✅      | domstring not supported                                                                                               |
-| Write / Doc  | Insert block at specified position | ✅     | domstring not supported                                                                                               |
-| Write / Doc  | Update block                  | ✅          | domstring not supported                                                                                               |
-| Write / Card | Create flashcard from Markdown | ✅        | —                                                                                                                     |
-| Write / Card | Create flashcard by block ID  | ✅          | —                                                                                                                     |
-| Write / Card | Delete flashcard by block ID  | ❌          | —                                                                                                                     |
-| Write / Attr | Modify attributes (add/del/edit) | ✅       | —                                                                                                                     |
-| Write / Move | Move document                 | ✅          | —                                                                                                                     |
-| Write / Move | Move block                    | ✅          | ⚠️ Moving headings requires folded movement, which will cause folded state to be lost.                               |
-| Write / Tpl  | Create or overwrite template  | ❌          | —                                                                                                                     |
-| Write / Doc  | Render template & insert at doc start | ⚠️ | Inserted at document start, position cannot be specified.<br />Since functions like `getBlock` can be used in templates, excluded documents may be accessed bypassing checks via this tool. |
-| Write / Tpl  | Delete existing template      | ❌          | —                                                                                                                     |
-| Write / Doc  | Rename document               | ✅          | —                                                                                                                     |
-| Write / Doc  | Rename notebook              | ✅          | —                                                                                                                     |
+- Document and block operations: create, read, update, and delete;
+- Database operations:
+  - Create databases, add/delete/update database rows, add/delete database columns, and retrieve database structure information;
+- Attribute operations: create, read, update, and delete;
+- Flashcard operations: create flashcards from Markdown content, create flashcards by block ID, delete flashcards by block ID;
+- Template operations: retrieve existing templates, get raw template file content, preview template rendering results, preview Sprig rendering results, create or overwrite templates, render templates and insert at the beginning of a document, delete existing templates;
+- Notebook operations: list notebooks, rename notebooks;
 
 ## ❓ Frequently Asked Questions
 
@@ -177,6 +150,63 @@ Environment Variable:
 
 Name: `AUTH_HEADER`  
 Value: `Bearer abcdefg`
+
+## 🔧 Supported Tools
+
+> [!WARNING]
+>
+> Not all tools enforce strict excluded document validation. Before using excluded documents or after updating MCP tools, please read the tool support list carefully and consider disabling some tools.
+
+| Target | R/W | Destructive / Manual review available<br /> | Tool Function | Excluded Doc | Status / Notes |
+|:--- |:--- |:--- |:--- |:---: |:--- |
+| **Documents & Blocks** | | | | | |
+| | Read | | Search using SQL | ⚠️ | Excluded documents are only checked if the result contains IDs and the number of returned items < 300 |
+| | | | Get document Markdown by ID | ✅ | — |
+| | | | Get block Kramdown by ID | ✅ | — |
+| | | | List child documents of a document | ✅ | — |
+| | | | List child blocks | ✅ | — |
+| | | | Vector Retrieval Client Plugin - Query | ❌ | Requires downloading and properly configuring the syplugin-vectorIndexClient plugin<br />Excluded documents are not yet supported for this tool |
+| | | | Get backlinks by ID | ✅ | — |
+| | Write | | Append content to daily note | ✅ | — |
+| | | | Append content to specified document by ID | ✅ | domstring not supported |
+| | | | Create new document at specified position by ID | ✅ | domstring not supported |
+| | | | Insert child block (before / after) | ✅ | domstring not supported |
+| | | | Insert block at specified position | ✅ | domstring not supported |
+| | | Yes / Yes | Update block | ✅ | domstring not supported |
+| | | | Rename document | ✅ | — |
+| | | Yes / No | Move document | ✅ | — |
+| | | Yes / No | Move block | ✅ | ⚠️ Moving headings requires folding first, which will cause folding state to be lost |
+| | | Yes / Yes | Delete document | ✅ | — |
+| | | Yes / Yes | Delete block | ✅ | — |
+| **Database** | | | | | Only basic database operations are supported, see [reference](./static/data_db_EN.md) |
+| | Read | | Get database schema | ✅ | — |
+| | | | Get database view schema | ✅ | — |
+| | | | Query database results | ✅ | — |
+| | | | Get block ID where database is located | ✅ | — |
+| | Write | | Create database | ✅ | — |
+| | | | Add new database row | ✅ | — |
+| | | | Modify database row | ✅ | Rollup, template and relation column types are not supported |
+| | | Yes / Yes | Delete database row | ✅ | — |
+| | | | Add database column | ✅ | — |
+| | | Yes / Yes | Delete database column | ✅ | — |
+| **Attributes** | | | | | |
+| | Read | | Read attributes | ✅ | — |
+| | Write | | Modify attributes (add / delete / update) | ✅ | — |
+| **Flashcards** | | | | | |
+| | Write | | Create flashcard from Markdown content | ✅ | — |
+| | | | Create flashcard by block ID | ✅ | — |
+| | | Yes / No | Delete flashcard by block ID | ❌ | — |
+| **Templates** | | | | | |
+| | Read | | List existing templates | ❌ | — |
+| | | | Raw template file content | ❌ | — |
+| | | | Preview template rendering result | ⚠️ | Only kramdown is returned; checks may be bypassed via getBlock |
+| | | | Preview Sprig rendering result | ❌ | Does not involve user documents |
+| | Write | | Create or overwrite template | ❌ | Does not involve user documents |
+| | | | Render template and insert at document start | ⚠️ | Insertion is fixed at document start and cannot be specified<br />Since functions like `getBlock` can be used in templates, this tool may bypass checks to access excluded documents |
+| | | | Delete existing template | ❌ | — |
+| **Notebooks** | | | | | |
+| | Read | | List notebooks | ❌ | Does not involve user documents |
+| | Write | | Rename notebook | ✅ | — |
 
 ## 🙏 References & Acknowledgements
 

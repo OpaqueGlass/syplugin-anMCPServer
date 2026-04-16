@@ -10,7 +10,6 @@ import { showMessage } from 'siyuan';
 import { lang } from '@/utils/lang';
 import { DocWriteToolProvider } from '@/tools/docWrite';
 import { SearchToolProvider } from '@/tools/search';
-import { SqlToolProvider } from '@/tools/sql';
 import { DocReadToolProvider } from '@/tools/docRead';
 import { isValidStr } from '@/utils/commonCheck';
 import { isAuthTokenValid } from '@/utils/crypto';
@@ -28,8 +27,11 @@ import { InMemoryEventStore } from '@modelcontextprotocol/sdk/examples/shared/in
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { TemplateToolProvider } from '@/tools/template';
-import { HelpDocToolProvider } from '@/tools/helpDoc';
 import { AttributeViewToolProvider } from '@/tools/attributeView';
+import dbHelpDocMD from "@/../static/data_db_CN.md";
+import mdSyntaxMD from "@/../static/data_md_syntax_CN.md";
+import templateFunctionMD from "@/../static/data_template_action_CN.md";
+import sqlBlockDatabaseSchemaMD from "@/../static/database_schema.md";
 
 const http = require("http");
 const https = require("https");
@@ -64,11 +66,9 @@ export default class MyMCPServer {
     }
     constructor() {
         this.toolProviders = [
-            new HelpDocToolProvider(),
             new DailyNoteToolProvider(),
             new DocWriteToolProvider(),
             new SearchToolProvider(),
-            new SqlToolProvider(),
             new DocReadToolProvider(),
             new RelationToolProvider(),
             new DocVectorSearchProvider(),
@@ -352,6 +352,7 @@ export default class MyMCPServer {
     async loadToolsAndPrompts(mcpServerInstance?: McpServer) {
         await this.loadTools(mcpServerInstance);
         await this.loadPrompts(mcpServerInstance);
+        await this.loadResources(mcpServerInstance);
     }
     async loadTools(mcpServerInstance?: McpServer) {
         const plugin = getPluginInstance();
@@ -383,6 +384,60 @@ export default class MyMCPServer {
                 logPush(`Tool registered: ${tool.name} (${tool.title})`, mymcptool);
             }
         }
+    }
+    async loadResources(mcpServerInstance?: McpServer) {
+        mcpServerInstance.registerResource(
+            'database_helpdoc',
+            'helpdoc://database',
+            {
+                title: 'Database Help Document',
+                description: '思源笔记数据库操作工具说明文档。数据库操作工具提供对思源笔记中数据库内容块的操作接口。注意区分，此工具操作的数据库类似于笔记文档中嵌入了一个智能表格，并非传统数据库。工具集目前支持创建数据库、增删改数据库行、增删数据库列、查询数据库内容等功能。',
+                mimeType: 'text/plain'
+            },
+            async uri => ({
+                contents: [{ uri: uri.href, 
+                    text:  dbHelpDocMD}]
+            })
+        );
+        mcpServerInstance.registerResource(
+            'markdown_syntax_helpdoc',
+            'helpdoc://markdown_syntax',
+            {
+                title: 'Markdown Syntax Help Document',
+                description: '思源笔记Markdown语法说明文档。',
+                mimeType: 'text/plain'
+            },
+            async uri => ({
+                contents: [{ uri: uri.href, 
+                    text:  mdSyntaxMD}]
+            })
+        );
+        mcpServerInstance.registerResource(
+            'template_function_helpdoc',
+            'helpdoc://template_function',
+            {
+                title: 'Template Function Help Document',
+                description: '思源笔记模板语法说明文档。',
+                mimeType: 'text/plain'
+            },
+            async uri => ({
+                contents: [{ uri: uri.href, 
+                    text:  templateFunctionMD}]
+            })
+        );
+        mcpServerInstance.registerResource(
+            'sql_contentblock_db_schema',
+            'helpdoc://sql_contentblock_db_schema',
+            {
+                title: 'SQL Block Database Schema Help Document',
+                description: '思源笔记SQL块数据库模式说明文档。',
+                mimeType: 'text/plain'
+            },
+            async uri => ({
+                contents: [{ uri: uri.href, 
+                    text:  sqlBlockDatabaseSchemaMD}]
+            })
+        );
     }
     async start() {
         await this.initialize();

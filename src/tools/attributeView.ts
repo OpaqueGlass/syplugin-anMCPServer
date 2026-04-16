@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { addAttributeViewBlocks, addAttributeViewKey, addblockAttrAPI, batchSetAttributeViewBlockAttrs, getAttributeViewKeysByAvID, getblockAttr, insertBlockOriginAPI, queryAPI, removeAttributeViewBlocks, removeAttributeViewKey, removeBlockAPI, removeDocAPI, renderAttributeView } from "@/syapi";
+import { addAttributeViewBlocks, addAttributeViewKey, addblockAttrAPI, batchSetAttributeViewBlockAttrs, getAttributeViewKeysByAvID, getblockAttr, insertBlockOriginAPI, queryAPI, removeAttributeViewBlocks, removeAttributeViewKey, removeBlockAPI, removeDocAPI, renderAttributeView, searchAttributeView } from "@/syapi";
 import { checkIdValid, generateBlockId, getBlockDBItem, getDatabaseBlockId, isValidIdFormat } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
 import { isCurrentVersionLessThan, isNonContainerBlockType, isValidNotebookId, isValidStr } from "@/utils/commonCheck";
@@ -68,8 +68,17 @@ export class AttributeViewToolProvider extends McpToolsProvider<any> {
                     destructiveHint: false,
                     idempotentHint: false,
                 }
-            },
-            {
+            }, {
+                name: "siyuan_search_existing_databases",
+                description: "Search for existing databases in the current workspace using keywords. This tool is designed to help you find the avId of an existing database, which is required for other database operations. Please use this tool to search for the target database and obtain its avId before performing operations such as querying, updating, or deleting database rows.",
+                schema: {
+                    keywords: z.string().describe("Search keywords.")
+                },
+                handler: searchExistingDatabasesHandler,
+                annotations: {
+                    readOnlyHint: true,
+                }
+            }, {
                 name: "siyuan_get_database_schema",
                 description: "Get the schema of a specific database.\n\n返回值包括：avId（数据库ID）和 blockId（数据库所在的块ID），对数据库的操作请求使用avId。",
                 schema: {
@@ -211,6 +220,20 @@ async function createDatabaseHandler(params, extra) {
     return createJsonResponse({
         "avId": avId,
     });
+}
+
+async function searchExistingDatabasesHandler(params, extra) {
+    const { keywords } = params;
+    const searchResult = await searchAttributeView(keywords);
+    for (const result of searchResult) {
+        result["views"] = result["children"].map(view => ({
+            name: view.viewName,
+            id: view.viewID,
+            layout: view.viewLayout,
+        }));
+        delete result["children"]
+    }
+    return createJsonResponse(searchResult);
 }
 
 async function getDatabaseViewSchemaHandler(params, extra) {

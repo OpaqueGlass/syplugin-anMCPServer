@@ -1,17 +1,32 @@
 import { z } from "zod";
-import { createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { DEFAULT_FILTER, fullTextSearchBlock } from "@/syapi";
+import { createErrorResponse, createJsonResponse, createSuccessResponse } from "../utils/mcpResponse";
+import { DEFAULT_FILTER, fullTextSearchBlock, queryAPI } from "@/syapi";
 import searchSyntax from "@/../static/query_syntax.md";
 import { McpToolsProvider } from "./baseToolProvider";
 import { formatSearchResult } from "@/utils/resultFilter";
 import { debugPush, errorPush, isDebugMode, logPush } from "@/logger";
 import { showMessage } from "siyuan";
 import { lang } from "@/utils/lang";
-import { FullTextSearchQuery } from "@/types/api";
+import { isSelectQuery } from "@/utils/commonCheck";
+import { getBlockDBItem } from "@/syapi/custom";
+import { filterBlock } from "@/utils/filterCheck";
 
 export class SearchToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
-        return [];// # 16
+        return [{
+                name: "siyuan_query_sql",
+                description: `Execute SQL queries to retrieve data (including notes, documents, and their content) from the SiYuan database. This tool is also used when you need to search notes content.
+Use the 'helpdoc://sql_contentblock_db_schema' resource to understand the database schema, including table names, field names, and relationships, before writing your query and use this tool.`,
+                schema: {
+                    stmt: z.string().describe("A valid SQL SELECT statement to execute"),
+                },
+                handler: sqlHandler,
+                // title: lang("tool_title_query_sql"),
+                annotations: {
+                    readOnlyHint: true,
+                },
+            }
+        ];// # 16 删除容易混淆的工具
         return [
             {
                 name: "siyuan_search",
@@ -55,6 +70,35 @@ export class SearchToolProvider extends McpToolsProvider<any> {
             },
         ];
     }
+}
+
+
+async function sqlHandler(params, extra) {
+    const { stmt } = params;
+    debugPush("SQL API 被调用", stmt);
+    if (!isSelectQuery(stmt)) {
+        return createErrorResponse("Not a SELECT statement");
+    }
+    let sqlResult;
+    try {
+        sqlResult = await queryAPI(stmt);
+    } catch (error) {
+        return createErrorResponse(error instanceof Error ? error.message : String(error));
+    }
+    debugPush("SQLAPI返回ing", sqlResult);
+    // 如果sql返回字段包括id， 需要筛选id，将被过滤掉的id去除
+    if (sqlResult.length > 0 && sqlResult.length < 300 && 'id' in sqlResult[0]) {
+        const filteredResult = [];
+        for (const row of sqlResult) {
+            const id = row['id'];
+            const dbItem = await getBlockDBItem(id);
+            if (dbItem && await filterBlock(id, dbItem) === false) {
+                filteredResult.push(dbItem);
+            }
+        }
+        sqlResult = filteredResult;
+    }
+    return createJsonResponse(sqlResult);
 }
 
 async function searchHandler(params, extra) {
