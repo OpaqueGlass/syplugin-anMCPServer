@@ -10,18 +10,33 @@ import { lang } from "@/utils/lang";
 import { isSelectQuery } from "@/utils/commonCheck";
 import { getBlockDBItem } from "@/syapi/custom";
 import { filterBlock } from "@/utils/filterCheck";
+import sqlBlockDatabaseSchemaMD from "@/../static/database_schema.md";
 
 export class SearchToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
         return [{
                 name: "siyuan_query_sql",
-                description: `Execute SQL queries to retrieve data (including notes, documents, and their content) from the SiYuan database. This tool is also used when you need to search notes content.
-Use the 'helpdoc://sql_contentblock_db_schema' resource to understand the database schema, including table names, field names, and relationships, before writing your query and use this tool.`,
+                description: `Execute read-only SQL queries to fetch notes and structured data from SiYuan. 
+Mandatory Step: Before writing your SQL, you MUST read the 'sql_contentblock_db_schema' resource (or use the 'siyuan_sql_helpdoc' tool) to verify table names, field types, and JOIN relationships. 
+Use this tool for:
+1. Complex content searches that simple keyword searches can't handle.
+2. Retrieving specific document metadata or block-level content.
+Note: Only SELECT statements are supported.`,
                 schema: {
                     stmt: z.string().describe("A valid SQL SELECT statement to execute"),
                 },
                 handler: sqlHandler,
                 // title: lang("tool_title_query_sql"),
+                annotations: {
+                    readOnlyHint: true,
+                },
+            }, {
+                name: "siyuan_sql_helpdoc",
+                description: "Provides documentation about the SiYuan content search database schema relevant to content blocks, including table names, field names, and relationships. This information is essential for constructing effective SQL queries when using the `siyuan_query_sql` tool.",
+                schema: {},
+                handler: async (params, extra) => {
+                    return createSuccessResponse(sqlBlockDatabaseSchemaMD);
+                },
                 annotations: {
                     readOnlyHint: true,
                 },

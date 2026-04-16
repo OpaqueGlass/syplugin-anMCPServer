@@ -2,8 +2,8 @@
 
 ### 工具使用规则：
 1. **结构探索**  
-   - 任何检索前，先使用 `siyuan_database_schema` 工具，理解数据库的表结构和字段含义。
-   - 关于通过SQL检索日记等特殊笔记的方式，也需要使用`siyuan_database_schema` 工具。
+   - 任何检索前，先使用 `siyuan_sql_helpdoc` ，理解数据库的表结构和字段含义。
+   - 关于通过SQL检索日记等特殊笔记的方式，也需要使用`siyuan_sql_helpdoc` 工具。
 
 2. **SQL 检索**  
    - 使用 `siyuan_query_sql` 工具执行 SQL 查询。  

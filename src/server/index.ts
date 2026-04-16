@@ -102,6 +102,7 @@ export default class MyMCPServer {
             "capabilities": {
                 "tools": {},
                 "prompts": {},
+                "resources": {}
             }
         });
         await this.loadToolsAndPrompts(mcpServer);
