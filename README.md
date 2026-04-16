@@ -183,6 +183,7 @@ Value: `Bearer abcdefg`
 | | | | Get database view schema | ✅ | — |
 | | | | Query database results | ✅ | — |
 | | | | Get block ID where database is located | ✅ | — |
+| | | | Search Existing Databases| ✅ | — |
 | | Write | | Create database | ✅ | — |
 | | | | Add new database row | ✅ | — |
 | | | | Modify database row | ✅ | Rollup, template and relation column types are not supported |

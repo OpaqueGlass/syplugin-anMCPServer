@@ -12,6 +12,7 @@ import { getPluginInstance } from "@/utils/pluginHelper";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { CONSTANTS } from "@/constants";
 import { getRowsByIdInAttributeView, isRowIdExistInAttributeView } from "@/utils/avUtils";
+import { filterBlock } from "@/utils/filterCheck";
 
 
 const columnDataSchema = z.object({
@@ -70,9 +71,9 @@ export class AttributeViewToolProvider extends McpToolsProvider<any> {
                 }
             }, {
                 name: "siyuan_search_existing_databases",
-                description: "Search for existing databases in the current workspace using keywords. This tool is designed to help you find the avId of an existing database, which is required for other database operations. Please use this tool to search for the target database and obtain its avId before performing operations such as querying, updating, or deleting database rows.",
+                description: "Search for existing databases in the current workspace using keywords. This tool is designed to help you find the avId of an existing database, which is required for other database operations.",
                 schema: {
-                    keywords: z.string().describe("Search keywords.")
+                    keywords: z.string().optional().describe("Search keywords. If not provided, the search will return up to 100 existing databases in the workspace. If provided, separate multiple keywords with spaces; only databases matching all keywords will be returned.")
                 },
                 handler: searchExistingDatabasesHandler,
                 annotations: {
@@ -224,16 +225,26 @@ async function createDatabaseHandler(params, extra) {
 
 async function searchExistingDatabasesHandler(params, extra) {
     const { keywords } = params;
-    const searchResult = await searchAttributeView(keywords);
-    for (const result of searchResult) {
-        result["views"] = result["children"].map(view => ({
-            name: view.viewName,
-            id: view.viewID,
-            layout: view.viewLayout,
-        }));
-        delete result["children"]
+    let searchResult = [];
+    searchResult = await searchAttributeView(keywords ?? "");
+    if (!isValidStr(keywords)) {
+        searchResult = searchResult.slice(0, 100);
     }
-    return createJsonResponse(searchResult);
+    const processedResults = searchResult.map(result => {
+        const { children, ...rest } = result;
+        return {
+            ...rest,
+            views: (children || []).map(view => ({
+                name: view.viewName,
+                id: view.viewID,
+                layout: view.viewLayout,
+            }))
+        };
+    });
+    const filterPromises = processedResults.map(result => filterBlock(result.blockID, null));
+    const filterFlags = await Promise.all(filterPromises);
+    const filteredResult = processedResults.filter((_, index) => !filterFlags[index]);
+    return createJsonResponse(filteredResult);
 }
 
 async function getDatabaseViewSchemaHandler(params, extra) {

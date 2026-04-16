@@ -37,3 +37,9 @@ description: "思源笔记数据库操作工具说明文档。数据库操作工
 
 > 注意：工具目前不支持template、rollup和relation类型列的修改；
 
+## 基本流程
+
+1. 确定要操作的数据库，使用搜索数据库工具（siyuan_search_existing_databases）获取数据库avId和blockId，或创建一个新数据库（siyuan_create_database）；
+2. 根据需要获取数据库schema，确认要操作的列和行id等信息；
+3. 进行数据库操作，例如创建行、修改行内容等；
+4. 如果需要，可以再次获取数据库内容确认操作结果，或进行后续操作。
