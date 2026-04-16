@@ -1,4 +1,4 @@
-import { removeAttributeViewBlocks, removeAttributeViewKey, updateBlockAPI } from "@/syapi";
+import { removeAttributeViewBlocks, removeAttributeViewKey, removeBlockAPI, removeDocAPI, updateBlockAPI } from "@/syapi";
 
 export async function auditRedo(taskItem: any) {
     const {
@@ -23,6 +23,18 @@ export async function auditRedo(taskItem: any) {
         case "deleteDatabaseColumn": {
             const response = await removeAttributeViewKey(args.avId, args.columnId, false);
             break;
+        }
+        case "deleteDocument": {
+            const response = await removeDocAPI(args["box"], args["path"]);
+            
+            break;
+        }
+        case "deleteBlock": {
+            const response = await removeBlockAPI(modifiedIds[0]);
+            break;
+        }
+        default: {
+            throw new Error(`Unknown task type: ${taskType}`);
         }
     }
 }

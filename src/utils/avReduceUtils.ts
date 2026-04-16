@@ -1,6 +1,6 @@
 import { errorPush, logPush, warnPush } from "@/logger";
 import { isValidStr } from "./commonCheck";
-import { isValidIdFormat } from "@/syapi/custom";
+import { getBlockDBItem, isValidIdFormat } from "@/syapi/custom";
 
 export function reduceAvRowData(avRowDatas, columns) {
     const columnIdMap = new Map();
@@ -124,7 +124,7 @@ export function formatCellValueToDto(cellValue): AVCellValueDto {
     return result;
 }
 
-export function fromRowColumnDataVoListToUpdateAPIInfo(rowColumnDataVoList: RowColumnDataVo[], columns: ViewColumn[], rowId: string) {
+export async function fromRowColumnDataVoListToUpdateAPIInfo(rowColumnDataVoList: RowColumnDataVo[], columns: ViewColumn[], rowId: string) {
     const columnIdMap = new Map();
     const columnNameMap = new Map();
     let columnNameConflict = false;
@@ -153,17 +153,16 @@ export function fromRowColumnDataVoListToUpdateAPIInfo(rowColumnDataVoList: RowC
             }
         } else if (isValidStr(rowColumnDataVo.keyId)) {
             keySchema = columnIdMap.get(rowColumnDataVo.keyId);
-        } else {
-            wrongData.push({
-                "inputRowColumnData": rowColumnDataVo,
-                "error": "根据提供的列名称或列ID未找到对应的列字段定义"
-            });
         }
         if (!keySchema) {
+            wrongData.push({
+                "inputColumnData": rowColumnDataVo,
+                "error": "根据提供的列名称或列ID未找到对应的列字段定义"
+            });
             continue;
         }
         try {
-            const apiValue = fromCellValueValueVoToAPIValue(rowColumnDataVo.value, keySchema);
+            const apiValue = await fromCellValueValueVoToAPIValue(rowColumnDataVo.value, keySchema);
             // updateAPIInfo  keyID  itemID  value
             // https://github.com/siyuan-note/siyuan/issues/15310#issuecomment-3079412833
             result.push({
@@ -174,8 +173,8 @@ export function fromRowColumnDataVoListToUpdateAPIInfo(rowColumnDataVoList: RowC
         } catch (e) {
             errorPush("Error converting cell value for column", keySchema, "with input", rowColumnDataVo, "Error details:", e);
             wrongData.push({
-                "inputRowColumnData": rowColumnDataVo,
-                "error": "按照数据库列类型进行格式转换时出现错误：" + e?.message
+                "inputColumnData": rowColumnDataVo,
+                "error": "按照数据库列类型进行格式转换时出现错误：" + e?.message + "。请检查输入值的格式是否符合字段类型要求。"
             });
             continue;
         }
@@ -208,7 +207,7 @@ export class CellValueConversionError extends Error {
  * @param columnSchema 
  * @returns {[valueType]: {...}}
  */
-export function fromCellValueValueVoToAPIValue(vo: RowColumnDataValueVo, columnSchema: ViewColumn) {
+export async function fromCellValueValueVoToAPIValue(vo: RowColumnDataValueVo, columnSchema: ViewColumn) {
     const columnType = columnSchema.type;
     let result = {
     }
@@ -220,6 +219,13 @@ export function fromCellValueValueVoToAPIValue(vo: RowColumnDataValueVo, columnS
             if (!isValidStr(vo["content"])) {
                 throw new CellValueConversionError(ConversionErrorType.INVALID_FORMAT, "该列为block类型，content字段不能为空");
             }
+            if (isValidStr(vo.bindBlockId) && !isValidIdFormat(vo.bindBlockId)) {
+                throw new CellValueConversionError(ConversionErrorType.INVALID_FORMAT, "bindBlockId字段格式不正确，必须为合法的ID格式");
+            }
+            if (await getBlockDBItem(vo.bindBlockId) == null) {
+                throw new CellValueConversionError(ConversionErrorType.INVALID_FORMAT, `Target block with ID '${vo.bindBlockId}' does not exist. The provided bindBlockId must correspond to an existing block record in the database. No match found.`);
+            }
+
             valueObject = {
                 "content": vo.content,
                 "blockID": vo.bindBlockId,

@@ -723,7 +723,7 @@ export async function removeDocAPI(notebookid, path) {
     let url = "/api/filetree/removeDoc";
     let response = await postRequest({"notebook": notebookid, "path": path}, url);
     if (response.code == 0) {
-        return response.code;
+        return true;
     }
     warnPush("删除文档时发生错误", response.msg);
     return response.code;
@@ -1305,7 +1305,7 @@ export async function removeAttributeViewBlocks(avID: string, srcIDs: string[]) 
     }
     let response = await postRequest(postBody, url)
     if (response.code == 0) {
-        return response.data;
+        return true;
     } else {
         throw new Error("removeAttributeViewBlocks Failed: " + response.msg);
     }

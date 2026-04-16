@@ -9,7 +9,12 @@ function getPluginSettings() {
     return plugin?.mySettings;
 }
 
-
+/**
+ * 
+ * @param blockId 
+ * @param dbItem 
+ * @returns 返回true就是这个块需要被过滤，不能返回
+ */
 export async function filterBlock(blockId: string, dbItem: any|null): Promise<boolean> {
     const settings = getPluginSettings();
     const filterNotebooks = settings?.filterNotebooks.split("\n").map(id => id.trim()).filter(id => id);
@@ -59,10 +64,10 @@ export function mcpToolCheckPermissionWrapper(handler: (args: any, extra: any) =
             }
             const docDbItem = await getDocDBitem(args.docId);
             if (docDbItem == null) {
-                return createErrorResponse("The document identified by docId does not exist");
+                return createErrorResponse(`The document identified by ${args.docId} does not exist`);
             }
             if (await filterBlock(args.docId, docDbItem)) {
-                return createErrorResponse("Permission denied for this docId");
+                return createErrorResponse(`Permission denied for ${args.docId}. According to user settings, the current tool cannot access this document.`);
             }
         }
 
@@ -72,7 +77,7 @@ export function mcpToolCheckPermissionWrapper(handler: (args: any, extra: any) =
                 return createErrorResponse("Invalid blockId format. Must be a 14-digit timestamp(yyyyMMddHHmmss) followed by a 7-char alphanumeric suffix. Example: '20260414211243-1a2b3c4'");
             }
             if (await filterBlock(args.blockId, null)) {
-                return createErrorResponse("Permission denied for this blockId");
+                return createErrorResponse(`Permission denied for ${args.blockId}. According to user settings, the current tool cannot access this block.`);
             }
         }
 
@@ -82,10 +87,10 @@ export function mcpToolCheckPermissionWrapper(handler: (args: any, extra: any) =
                 return createErrorResponse("Invalid notebookId format. Must be a 14-digit timestamp(yyyyMMddHHmmss) followed by a 7-char alphanumeric suffix. Example: '20260414211243-1a2b3c4'");
             }
             if (!isValidNotebookId(args.notebookId)) {
-                return createErrorResponse("The notebook identified by " + args.notebookId + " does not exist");
+                return createErrorResponse(`The notebook identified by ${args.notebookId} does not exist`);
             }
             if (filterNotebook(args.notebookId)) {
-                return createErrorResponse("Permission denied for this notebookId");
+                return createErrorResponse(`Permission denied for ${args.notebookId}. According to user settings, the current tool cannot access this notebook.`);
             }
         }
 
@@ -96,13 +101,13 @@ export function mcpToolCheckPermissionWrapper(handler: (args: any, extra: any) =
             }
             const databaseBlockIds = await getDatabaseBlockId(args.avId);
             if (databaseBlockIds) {
-                for (const blockId of databaseBlockIds) {
-                    if (await filterBlock(blockId, null)) {
-                        return createErrorResponse("Permission Denied. The specified database block is excluded by the user settings.");
-                    }
+                // results.every 这里的逻辑是 有一个数据库对应的文档是可访问的，那么这个数据库就是可访问的
+                const canNotAccessFlag = await Promise.all(databaseBlockIds.map(async (id) => await filterBlock(id, null))).then(results => results.every((v): v is boolean => !!v));
+                if (canNotAccessFlag) {
+                    return createErrorResponse(`Permission Denied. According to user settings, the current tool cannot access this database block.`);
                 }
             } else {
-                return createErrorResponse("No database block found for the provided avId");
+                return createErrorResponse(`No database block found for the provided avId: ${args.avId}`);
             }
         }
 

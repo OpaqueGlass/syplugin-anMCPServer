@@ -223,7 +223,7 @@ async function updateBlockHandler(params, extra) {
     checkIdValid(id);
     const blockDbItem = await getBlockDBItem(id);
     if (blockDbItem == null) {
-        return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
+        return createErrorResponse("No corresponding block found for the provided ID. Please confirm that the ID corresponds to a valid block.");
     }
     if (await filterBlock(id, blockDbItem)) {
         return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
@@ -252,7 +252,7 @@ async function deleteBlockById(params, extra) {
     checkIdValid(blockId);
     const blockDbItem = await getBlockDBItem(blockId);
     if (blockDbItem == null) {
-        return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
+        return createErrorResponse("No corresponding block found for the provided ID. Please confirm that the ID corresponds to a valid block.");
     }
     if (blockDbItem.type === "d") {
         return createErrorResponse("Cannot delete document blocks using this API. Please use the delete document API instead.");
@@ -262,8 +262,8 @@ async function deleteBlockById(params, extra) {
     }
 
     const plugin = getPluginInstance();
-    const autoApproveLocalChange = plugin?.mySettings["autoApproveLocalChange"];
-    if (autoApproveLocalChange) {
+    const autoApproveDeleteChange = plugin?.mySettings["autoApproveDeleteChange"] ?? false;
+    if (autoApproveDeleteChange) {
         const response = await removeBlockAPI(blockId);
         if (!response) {
             return createErrorResponse("Failed to delete the block.");

@@ -19,6 +19,7 @@
         <el-radio-button label="desc">{{ lang("history_sort_desc") }}</el-radio-button>
         <el-radio-button label="asc">{{ lang("history_sort_asc") }}</el-radio-button>
       </el-radio-group>
+      <el-button size="small" type="primary" @click="handleSearch">{{ lang("Refresh") }}</el-button>
     </div>
     <el-table :data="tasks" style="width: 100%" v-loading="loading">
       <el-table-column prop="id" :label="lang('history_col_id')" width="80" />
@@ -27,7 +28,7 @@
         <template #default="{ row }">
           <div>
             <span v-for="id in limitedIds(row.modifiedIds)" :key="id" style="margin-right: 4px;">
-              <el-tag size="small" @click.stop="openSingleDoc(id)" style="cursor:pointer;">{{ id }}</el-tag>
+              <el-tag size="small" @click.stop="openSingleDoc(id, row)" style="cursor:pointer;">{{ id }}</el-tag>
             </span>
             <span v-if="row.modifiedIds.length > 5">
               <el-tag size="small" type="info" style="cursor:pointer;" @click.stop="showAllIds(row.modifiedIds)">+{{ row.modifiedIds.length - 5 }} {{ lang('history_more') }}</el-tag>
@@ -131,7 +132,7 @@ import { CodeDiff } from 'v-code-diff';
 import { lang } from '@/utils/lang';
 import { auditRedo } from '@/audit/auditRedoer';
 import { showPluginMessage } from '@/utils/common';
-import { getBlockDBItem } from '@/syapi/custom';
+import { getBlockDBItem, getDatabaseBlockId } from '@/syapi/custom';
 import { CONSTANTS } from '@/constants';
 import { logPush } from '@/logger';
 
@@ -227,7 +228,14 @@ const getStatusText = (status) => {
  * 单个ID点击打开文档
  * @param {string} docId - 文档的唯一ID
  */
-const openSingleDoc = async (docId: string) => {
+const openSingleDoc = async (docId: string, row) => {
+  // 处理数据库块跳转，从avId到blockId
+  if (row.taskType?.toLowerCase().includes("database")) {
+    const blockIds = await getDatabaseBlockId(docId);
+    if (blockIds != null && blockIds.length > 0) {
+      docId = blockIds[0];
+    }
+  }
   if (!await getBlockDBItem(docId)) {
     showPluginMessage(lang("message_id_not_exist"));
     return;

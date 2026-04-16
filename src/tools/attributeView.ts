@@ -11,6 +11,7 @@ import { logPush } from "@/logger";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { CONSTANTS } from "@/constants";
+import { getRowsByIdInAttributeView, isRowIdExistInAttributeView } from "@/utils/avUtils";
 
 
 const columnDataSchema = z.object({
@@ -271,10 +272,16 @@ async function addDatabaseRowHandler(params, extra) {
     const reqSrcData = {
         itemID: resultRowId,
     };
-    if (isValidStr(bindBlockId) && isValidIdFormat(bindBlockId)) {
+    if (isValidStr(bindBlockId)) {
+        if (!isValidIdFormat(bindBlockId)) {
+            return createErrorResponse("Invalid bindBlockId format. Must be a 14-digit timestamp(yyyyMMddHHmmss) followed by a 7-char alphanumeric suffix. Example: '20260414211243-1a2b3c4'");
+        }
         // Process the request
         reqSrcData["id"] = bindBlockId;
         reqSrcData["isDetached"] = false;
+        if (await getBlockDBItem(bindBlockId) == null) {
+            return createErrorResponse(`Target block with ID '${bindBlockId}' does not exist. The provided bindBlockId must correspond to an existing block record in the database. No match found.`);
+        }
     } else {
         reqSrcData["isDetached"] = true;
         reqSrcData["content"] = primaryColumnData;
@@ -283,7 +290,7 @@ async function addDatabaseRowHandler(params, extra) {
     // 2. 填充其他信息
     // 转换一下，需要将name的转换为keyID
     const columnsInfo = await getAttributeViewKeysByAvID(avId);
-    const [updateDataForOtherColumns, wrongData] = fromRowColumnDataVoListToUpdateAPIInfo(otherColumnData, columnsInfo, resultRowId);
+    const [updateDataForOtherColumns, wrongData] = await fromRowColumnDataVoListToUpdateAPIInfo(otherColumnData, columnsInfo, resultRowId);
     logPush("updateDataForOtherColumns", updateDataForOtherColumns);
     const batchSetResponse = await batchSetAttributeViewBlockAttrs(avId, updateDataForOtherColumns);
     // 需要返回行id
@@ -295,9 +302,12 @@ async function addDatabaseRowHandler(params, extra) {
 
 async function updateDatabaseRowHandler(params, extra) {
     const { avId, rowId, otherColumnData = [] } = params;
+    if (!isValidIdFormat(rowId)) {
+        return createErrorResponse("Invalid rowId format. Must be a 14-digit timestamp(yyyyMMddHHmmss) followed by a 7-char alphanumeric suffix. Example: '20260414211243-1a2b3c4'");
+    }
     // 转换一下，需要将name的转换为keyID
     const columnsInfo = await getAttributeViewKeysByAvID(avId);
-    const [updateDataForOtherColumns, wrongData] = fromRowColumnDataVoListToUpdateAPIInfo(otherColumnData, columnsInfo, rowId);
+    const [updateDataForOtherColumns, wrongData] = await fromRowColumnDataVoListToUpdateAPIInfo(otherColumnData, columnsInfo, rowId);
     logPush("updateDataForOtherColumns", updateDataForOtherColumns);
     const batchSetResponse = await batchSetAttributeViewBlockAttrs(avId, updateDataForOtherColumns);
     return createJsonResponse({
@@ -314,15 +324,34 @@ async function deleteDatabaseRowHandler(params, extra) {
     }
     const plugin = getPluginInstance();
     const autoApproveDeleteChange = plugin?.mySettings["autoApproveDeleteChange"] ?? false;
+    for (const rowId of rowIds) {
+        if (!isValidIdFormat(rowId)) {
+            return createErrorResponse("Invalid rowId format. Must be a 14-digit timestamp(yyyyMMddHHmmss) followed by a 7-char alphanumeric suffix. Example: '20260414211243-1a2b3c4'");
+        }
+        
+    }
+    const checkResult = await getRowsByIdInAttributeView(avId, rowIds);
+    if (checkResult.length !== rowIds.length) {
+        // 对比一下id，找不存在的id
+        const existingRowIds = new Set(checkResult.map(row => row.id));
+        const nonExistingRowIds = rowIds.filter(rowId => !existingRowIds.has(rowId));
+        return createErrorResponse(`The following rowIds do not exist in the specified database: ${nonExistingRowIds.join(", ")}`);
+    }
+
     if (autoApproveDeleteChange) {
         const response = await removeAttributeViewBlocks(avId, rowIds);
-        if (response == null) {
+        if (response === false) {
             return createErrorResponse("Failed to delete the database rows");
         }
         taskManager.insert(avId, data, "deleteDatabaseRow", data, TASK_STATUS.APPROVED);
         return createSuccessResponse("Block updated successfully.");
     } else {
-        taskManager.insert(avId, data, "deleteDatabaseRow", data, TASK_STATUS.PENDING);
+        const columnsInfo = await getAttributeViewKeysByAvID(avId);
+        taskManager.insert(avId, {
+            avId: avId,
+            deletedRowIds: rowIds,
+            deletedRowInfos: reduceAvRowData(checkResult, columnsInfo)
+        }, "deleteDatabaseRow", data, TASK_STATUS.PENDING);
         return createSuccessResponse("The request has been submitted and is pending user approval. Please remind the user to go to \"MCP Update Operation History\" (for Chinese User: \"MCP 修改操作记录\") for manual approval.");
     }
 }
@@ -352,11 +381,14 @@ async function updateDatabaseColumnHandler(params, extra) {
 }
 
 async function deleteDatabaseColumnHandler(params, extra) {
-    const { avId, columnId} = params;
+    const { avId, columnId } = params;
 
     const data = {
         avId,
         columnId,
+    }
+    if (!isValidIdFormat(avId) || !isValidIdFormat(columnId)) {
+        return createErrorResponse("Invalid avId or columnId format. Must be a 14-digit timestamp(yyyyMMddHHmmss) followed by a 7-char alphanumeric suffix. Example: '20260414211243-1a2b3c4'");
     }
     const plugin = getPluginInstance();
     const autoApproveDeleteChange = plugin?.mySettings["autoApproveDeleteChange"] ?? false;

@@ -88,7 +88,7 @@ async function moveBlockById(params, extra) {
     // 检查输入
     const dbItem = await getBlockDBItem(id);
     if (dbItem == null) {
-        return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
+        return createErrorResponse("No corresponding block found for the provided ID. Please confirm that the ID corresponds to a valid block.");
     }
     if (dbItem.type === "d") {
         return createErrorResponse("Document blocks cannot be moved using this tool. Please use the document moving tool instead.");

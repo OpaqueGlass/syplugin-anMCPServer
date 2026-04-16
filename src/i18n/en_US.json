@@ -12,7 +12,7 @@
   "setting_address": "Address",
   "setting_address_desp": "The address to which the MCP service binds, default is 127.0.0.1",
   "setting_port": "Port",
-  "setting_port_desp": "The port used by the MCP service. Fill in the application with: http://127.0.0.1:[port_number]/mcp",
+  "setting_port_desp": "The port used by the MCP service. Fill in the application with: http://127.0.0.1:[port_number]/mcp  . To use https, please refer to the 'Can I create an https-based service?' section in the README.md document.",
   "setting_autoStart": "Auto Start",
   "setting_autoStart_desp": "Control whether the MCP service starts with SiYuan",
   "setting_auth": "Client Access Control (Authentication Code / Token)",

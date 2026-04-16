@@ -81,7 +81,7 @@ async function kramdownReadHandler(params, extra) {
     // 检查输入
     const dbItem = await getBlockDBItem(id);
     if (dbItem == null) {
-        return createErrorResponse("Invalid block ID. Please check if the ID exists and is correct.");
+        return createErrorResponse("No corresponding block found for the provided ID. Please confirm that the ID corresponds to a valid block.");
     }
     if (await filterBlock(id, dbItem)) {
         return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");

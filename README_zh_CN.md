@@ -2,9 +2,9 @@
 
 > 为[思源笔记](https://github.com/siyuan-note/siyuan)提供MCP服务的插件。
 
-> 当前版本: v1.0.1
+> 当前版本: v1.1.0
 >
-> 修复：多实例连接时可能出现`Error: Already connected to a transport.`错误；
+> 新增：数据库基本操作工具组；新增：删除相关工具（块、文档）；新增：https连接；
 >
 > 其他详见[更新日志](./CHANGELOG.md)。
 
@@ -107,7 +107,7 @@
   - 为不同任务限制可用的工具，例如不需要操作模板时，禁用模板相关工具；
   - 插件提供了适用于部分任务类型的Prompt，需要在MCP客户端中使用相关提示词，具体操作方式请参考各客户端说明文档；
 - Q10: 可以创建基于https的服务吗？
-  - 可以，需要在 `工作空间/data/storage/petal/syplugin-anMCPServer`目录下放置 `server-key.pem`和`server-cert.pem` 两个文件，然后重启思源笔记；MCP服务启动时的通知消息以`with HTTPS`结尾则说明已经启用；
+  - 可以，但插件暂不支持同时运行http和https服务。要启用https，需要在 `工作空间/data/storage/petal/syplugin-anMCPServer`目录下放置 `server-key.pem`和`server-cert.pem` 两个文件，然后重启思源笔记；MCP服务启动时的通知消息以`with HTTPS`结尾则说明已经启用；（更推荐使用nginx反向代理）
   - Q10.1: MCP客户端提示`net::ERR_CERT_AUTHORITY_INVALID`
     - 自签名证书是这样的。看上一条，a）删除两个证书文件继续使用http；b）或者更换为由权威机构签发的证书；c）又或者将自签名的证书添加到信任列表中（不推荐）。
   - Q10.2: MCP客户端提示`net::ERR_EMPTY_RESPONSE`
