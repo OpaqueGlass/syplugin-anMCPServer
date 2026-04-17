@@ -51,6 +51,7 @@ body:
     attributes:
       label: Device and System Information
       description: |
+        Please provide specific version numbers instead of vague descriptions like 'latest version'.
         Example:
           - **Operating System**: Windows 11 24H2
           - **Siyuan**: v3.1.25
@@ -67,12 +68,14 @@ body:
     id: check_list
     attributes:
       label: Checklist
-      description: Before submitting, please confirm the following
+      description: |
+        To help us identify the problem quickly and avoid unnecessary back-and-forth, please confirm the following items.
       options:
-      - label: I have searched the issue list and found no similar reports
-        required: true
-      - label: I have updated the plugin to the latest version
-        required: true
+        - label: I have searched the issue list and believe this problem has not been reported yet.
+        - label: I have updated the plugin to the latest version.
+        - label: I have not read the options carefully; the developer may close this issue immediately.
+        - label: I believe this is a critical issue that needs urgent attention, and I have @mentioned the author in "Additional Information."
+        - label: I have provided both the SiYuan version and the plugin version.
 
   - type: textarea
     id: additional-info

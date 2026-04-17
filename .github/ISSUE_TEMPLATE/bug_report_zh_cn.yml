@@ -68,13 +68,14 @@ body:
     id: check_list
     attributes:
       label: 检查单
-      description: 在提交前，请确认这些事项。
+      description: |
+        为了让我们能第一时间精准定位问题，避免反复询问打扰，请确认以下事项。
       options:
       - label: 我已经查询了issue列表，我认为没有人反馈过类似问题；
       - label: 我已经将插件升级到最新版本；
-      - label: 我有填写思源版本号、插件版本号；
-      - label: 我是一个不看选项直接全部填“是”的用户；
-      - label: 我认为这个问题比较严重，需要尽快处理，且我在“其他补充信息”一栏通过@提及了仓库作者；
+      - label: 我没有认真阅读各个选项，开发者可以直接关闭我的issue；
+      - label: 我认为这个问题比较严重，需要尽快处理，我已在“其他补充信息”中 @ 了作者；
+      - label: 我填写了思源版本号、插件版本号；
 
   - type: textarea
     id: additional-info
