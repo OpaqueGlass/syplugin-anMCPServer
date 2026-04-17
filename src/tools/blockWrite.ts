@@ -268,7 +268,7 @@ async function deleteBlockById(params, extra) {
         if (!response) {
             return createErrorResponse("Failed to delete the block.");
         }
-        taskManager.insert(blockId, {}, "deleteBlock", {}, TASK_STATUS.APPROVED);
+        taskManager.insert(blockId, blockDbItem["markdown"], "deleteBlock", {}, TASK_STATUS.APPROVED);
         return createSuccessResponse("Block deleted successfully.");
     } else {
         taskManager.insert(blockId, blockDbItem["markdown"], "deleteBlock", {}, TASK_STATUS.PENDING);

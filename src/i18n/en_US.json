@@ -77,7 +77,7 @@
   "message_id_not_exist": "The corresponding block does not exist and may have been deleted.",
 
   "history_dialog_diff": "Difference",
-  "history_title": "History of Add/Modify Tasks",
+  "history_title": "History of Modify/Delete Tasks",
   "history_btn_pending": "Pending Only",
   "history_btn_all": "Show All",
   "history_sort": "Sort",
@@ -85,7 +85,7 @@
   "history_sort_asc": "Oldest First",
   "history_col_id": "Task ID",
   "history_col_type": "Type",
-  "history_col_objid": "Object ID (Add/Modify)",
+  "history_col_objid": "Object ID (Modify/Delete)",
   "history_col_status": "Status",
   "history_col_created": "Created At",
   "history_col_action": "Action",
@@ -122,5 +122,7 @@
   "dialog_panel_plugin_name": "plugin: anMCPServer",
   "msg_auth_code_please": "Please set an authentication code (authCode/token) for security reasons",
   "msg_save_and_restarting": "Settings saved, MCP service is restarting...",
+  "server_stopped": "MCP service has been stopped",
+  "refresh": "Refresh",
   "lang": "EN"
 }

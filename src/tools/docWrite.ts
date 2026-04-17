@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createErrorResponse, createSuccessResponse } from "../utils/mcpResponse";
-import { appendBlockAPI, createDocWithPath, removeDocAPI, renameDocAPI, renameNotebook } from "@/syapi";
+import { appendBlockAPI, createDocWithPath, getKramdown, removeDocAPI, renameDocAPI, renameNotebook } from "@/syapi";
 import { checkIdValid, getDocDBitem, isADocId } from "@/syapi/custom";
 import { McpToolsProvider } from "./baseToolProvider";
 import { debugPush } from "@/logger";
@@ -159,15 +159,16 @@ async function deleteByDocId(params, extra) {
     }
     const plugin = getPluginInstance();
     const autoApproveDeleteChange = plugin?.mySettings["autoApproveDeleteChange"] ?? false;
+    const kramdown = await getKramdown(docId);
     if (autoApproveDeleteChange) {
         const response = await removeDocAPI(docDbItem["box"], docDbItem["path"]);
         if (!response) {
             return createErrorResponse("Failed to delete document.");
         }
-        taskManager.insert(docId, {}, "deleteDocument", { docId }, TASK_STATUS.APPROVED);
+        taskManager.insert(docId, kramdown, "deleteDocument", { docId }, TASK_STATUS.APPROVED);
         return createSuccessResponse("Document deleted successfully.");
     } else {
-        taskManager.insert(docDbItem["id"], docDbItem["content"], "deleteDocument", { box: docDbItem["box"], path: docDbItem["path"] }, TASK_STATUS.PENDING);
+        taskManager.insert(docDbItem["id"], kramdown, "deleteDocument", { box: docDbItem["box"], path: docDbItem["path"] }, TASK_STATUS.PENDING);
         return createSuccessResponse("The request has been submitted and is pending user approval. Please remind the user to go to \"MCP Update Operation History\" (for Chinese User: \"MCP 修改操作记录\") for manual approval.");
     }
 }

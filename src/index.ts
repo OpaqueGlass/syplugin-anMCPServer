@@ -133,8 +133,10 @@ export default class OGanMCPServerPlugin extends Plugin {
                     allowedHosts: allowedHostsValue
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings).then(async ()=>{
-                    showPluginMessage(lang("msg_save_and_restarting"));
-                    this.myMCPServer.restart();
+                    if (this.myMCPServer.isRunning()) {
+                        showPluginMessage(lang("msg_save_and_restarting"), 2000);
+                        await this.myMCPServer.restart();
+                    }
                 });
 
             }

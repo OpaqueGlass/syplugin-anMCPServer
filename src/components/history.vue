@@ -19,7 +19,7 @@
         <el-radio-button label="desc">{{ lang("history_sort_desc") }}</el-radio-button>
         <el-radio-button label="asc">{{ lang("history_sort_asc") }}</el-radio-button>
       </el-radio-group>
-      <el-button size="small" type="primary" @click="handleSearch">{{ lang("Refresh") }}</el-button>
+      <el-button size="small" type="primary" @click="handleSearch">{{ lang("refresh") }}</el-button>
     </div>
     <el-table :data="tasks" style="width: 100%" v-loading="loading">
       <el-table-column prop="id" :label="lang('history_col_id')" width="80" />

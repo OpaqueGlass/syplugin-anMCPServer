@@ -518,6 +518,7 @@ export default class MyMCPServer {
             this.runningFlag = false;
             this.workingPort = -1;
             logPush("MCP服务关闭");
+            showMessage(lang("server_stopped") + ` [${lang("plugin_name")}]`, 2000);
         } catch (err) {
             showMessage(`${lang("server_stop_error")} ${err.message} ${lang("plugin_name")}`);
             errorPush("MCP服务关闭时出错", err);
