@@ -62,7 +62,7 @@ export default class MyMCPServer {
 
     mcpInitConfig = {
         "name": "siyuan",
-        "version": "1.1.0",
+        "version": "1.1.1",
     }
     constructor() {
         this.toolProviders = [
