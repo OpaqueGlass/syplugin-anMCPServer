@@ -7,13 +7,14 @@ import { isValidStr } from "@/utils/commonCheck";
 
 import { lang } from "@/utils/lang";
 import { filterBlock } from "@/utils/filterCheck";
+import { PermissionBit } from "@/constants";
 
 export class AttributeToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
         return [
             {
                 name: "siyuan_set_block_attributes",
-                description: "Set, update, or delete attributes for a specific block. To delete an attribute, set its value to an empty string.",
+                description: "Set, update, or delete attributes for a specific block. To delete an attribute, set its value to an empty string. This feature is also used to set the **name** (for search and reference), **alias** (multiple aliases can be configured by separating values with English commas), **bookmark**, and **memo** for blocks.",
                 schema: {
                     blockId: z.string().describe("The ID of the block to modify."),
                     attributes: z.record(z.string()).describe("An object of key-value pairs representing the attributes to set. Setting an attribute to an empty string ('') will delete it."),
@@ -54,10 +55,6 @@ async function setBlockAttributesHandler(params, extra) {
         return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
     }
 
-    if (await filterBlock(blockId, dbItem)) {
-        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
-    }
-
     if (typeof attributes !== 'object' || attributes === null) {
         return createErrorResponse("attributes must be an object.");
     }
@@ -76,6 +73,26 @@ async function setBlockAttributesHandler(params, extra) {
         }
         if (typeof attributes[key] !== 'string') {
             return createErrorResponse(`Invalid value for attribute '${key}'. Attribute values must be strings.`);
+        }
+        // key必须全部小写
+        if (key !== key.toLowerCase()) {
+            return createErrorResponse(`Invalid attribute name: '${key}'. Attribute names must be all lowercase.`);
+        }
+        // 去除custom-之后，key不能以阿拉伯数字开头
+        // siyuan://blocks/20210613004135-7td7u1o
+        if (key.startsWith('custom-')) {
+            const customPart = key.substring('custom-'.length);
+            if (/^[0-9]/.test(customPart)) {
+                return createErrorResponse(`Invalid custom attribute name: '${key}'. The part after 'custom-' cannot start with a number.`);
+            }
+        }
+        // bookmark类型，属性值不能使用特殊符号：*、_、[、]、!、\、`、<、>、&、~、$、(、)、{、}、= 和 #
+        // siyuan://blocks/20230928114129-dirvllf
+        if (key === 'bookmark') {
+            const value = attributes[key];
+            if (/[\\*_[\]!`<>&~$(){}=#]/.test(value)) {
+                return createErrorResponse(`Invalid value for 'bookmark' attribute. It cannot contain the following special characters: * _ [ ] ! \\ \` < > & ~ $ ( ) { } = #`);
+            }
         }
     }
 
@@ -101,9 +118,6 @@ async function getBlockAttributesHandler(params, extra) {
     const dbItem = await getBlockDBItem(blockId);
     if (dbItem == null) {
         return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
-    }
-    if (await filterBlock(blockId, dbItem)) {
-        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
 
     try {

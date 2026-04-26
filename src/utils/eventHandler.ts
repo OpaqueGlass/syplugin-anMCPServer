@@ -6,6 +6,7 @@ import { getPluginInstance } from "./pluginHelper";
 import { useConsumer, useProvider, useQueue } from "./indexerHelper";
 import { getSubDocIds } from "@/syapi/custom";
 import { useWsIndexQueue } from "./wsMainHelper";
+import { showPermissionSetterDialog } from "./permission/permissionDialogHelper";
 export default class EventHandler {
     private handlerBindList: Record<string, (arg1: CustomEvent)=>void> = {
         "ws-main": this.wsMainHandler.bind(this),
@@ -58,61 +59,28 @@ export default class EventHandler {
     }
     async openMenuDocTreeHandler(event: CustomEvent<IEventBusMap["open-menu-doctree"]>) {
         logPush("data", event.detail);
-        const provider = useProvider();
-        if (event.detail.type !== "notebook") {
-            if (event.detail.menu.menus && event.detail.menu.menus.length >= 1) {
-                event.detail.menu.addSeparator();
+        if (event.detail.menu.menus && event.detail.menu.menus.length >= 1) {
+            event.detail.menu.addSeparator();
+        }
+        event.detail.menu.addItem({
+            "label": "[anMCP] 设定权限",
+            "icon": "iconMessageQ",
+            "click": (element, mouseEvent)=>{
+                let parentIdList = [].map.call(event.detail.elements, (item)=>item.getAttribute("data-node-id"));
+                if (event.detail.type === "notebook") {
+                    parentIdList = [].map.call(event.detail.elements, (item)=>item.parentElement.getAttribute("data-url"));
+                }
+                parentIdList = parentIdList.filter(id=>id);
+                const resultIds = [];
+                resultIds.push(...parentIdList);
+                showPermissionSetterDialog(resultIds, event.detail.type === "notebook");
             }
-            event.detail.menu.addItem({
-                "label": "对所选文档进行索引",
-                "click": (element, mouseEvent)=>{
-                    const idList = [].map.call(event.detail.elements, (item)=>item.getAttribute("data-node-id"));
-                    const queue = useQueue();
-                    if (queue) {
-                        logPush("ids", idList);
-                        queue.batchAddToQueue(idList.map(item=>{return {"id": item}})).then(()=>{
-                                useConsumer()?.consume();
-                        });;
-                        logPush("Docs added", idList.length);
-                    }
-                }
-            });
-            event.detail.menu.addItem({
-                "label": "对所选文档及其下层文档进行索引",
-                "click": (element, mouseEvent)=>{
-                    let parentIdList = [].map.call(event.detail.elements, (item)=>item.getAttribute("data-node-id"));
-                    const resultIds = [];
-                    resultIds.push(...parentIdList);
-                    const handleSubIds = async (id)=>{
-                        try {
-                            const subDocIds = await getSubDocIds(id);
-                            if (subDocIds != null && subDocIds.length > 0) {
-                                resultIds.push(...subDocIds);
-                            }
-                        } catch (err) {
-                            debugPush("无子文档或其他错误", err);
-                        }
-                    };
-                    const idsPromise = parentIdList.map(item=>handleSubIds(item));
-                    Promise.all(idsPromise).then((item)=>{
-                        const queue = useQueue();
-                        if (queue) {
-                            logPush("ids", resultIds);
-                            queue.batchAddToQueue(resultIds.map(item=>{return {"id": item}})).then(()=>{
-                                useConsumer()?.consume();
-                            });
-                            logPush("Docs added", resultIds.length);
-                        }
-                    });
-                    
-                }
-            });
+        });
             // event.detail.menu.addItem({
             //     "lable": "移除索引",
             //     "click": (e)=>{
 
             //     }
             // })
-        }
     }
 }

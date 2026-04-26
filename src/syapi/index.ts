@@ -1165,7 +1165,8 @@ export async function searchTemplate(k:string): Promise<SearchTemplateResult[]> 
     }
     let response = await postRequest(postBody, url);
     if (response.code == 0) {
-        return response.data.blocks as SearchTemplateResult[];
+        // 兼容历史和更新的API返回值:)
+        return response.data.blocks ?? response.data.templates as SearchTemplateResult[];
     } else {
         throw new Error("searchTemplate Failed: " + response.msg);
     }

@@ -10,7 +10,7 @@ import { fromRowColumnDataVoListToUpdateAPIInfo, reduceAvRowData } from "@/utils
 import { logPush } from "@/logger";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
-import { CONSTANTS } from "@/constants";
+import { CONSTANTS, PermissionBit } from "@/constants";
 import { getRowsByIdInAttributeView, isRowIdExistInAttributeView } from "@/utils/avUtils";
 import { filterBlock } from "@/utils/filterCheck";
 
@@ -241,7 +241,7 @@ async function searchExistingDatabasesHandler(params, extra) {
             }))
         };
     });
-    const filterPromises = processedResults.map(result => filterBlock(result.blockID, null));
+    const filterPromises = processedResults.map(result => filterBlock(result.blockID, null, PermissionBit.Read));
     const filterFlags = await Promise.all(filterPromises);
     const filteredResult = processedResults.filter((_, index) => !filterFlags[index]);
     return createJsonResponse(filteredResult);

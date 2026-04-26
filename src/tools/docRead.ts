@@ -15,7 +15,7 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
             name: "siyuan_read_doc_content",
             description: 'Retrieve the content of a document or block by its ID',
             schema: {
-                id: z.string().describe("The unique identifier of the document or block"),
+                blockId: z.string().describe("The unique identifier of the document or block"),
                 offset: z.number().default(0).describe("The starting character offset for partial content reading (for pagination/large docs)"),
                 limit: z.number().default(10000).describe("The maximum number of characters to return in this request"),
             },
@@ -29,7 +29,7 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
             name: "siyuan_get_block_kramdown",
             description: 'Retrieve the complete Kramdown content from SiYuan Note based on the document or block ID. Unlike plain text, this Kramdown format preserves all rich formatting information, including colors, attributes, and IDs. This tool is mainly used to read block content before modification, ensuring that the original formatting is fully retained after updates.',
             schema: {
-                id: z.string().describe("The unique identifier of the block"),
+                blockId: z.string().describe("The unique identifier of the block"),
             },
             handler: kramdownReadHandler,
             // title: lang("tool_title_get_block_kramdown"),
@@ -41,25 +41,22 @@ export class DocReadToolProvider extends McpToolsProvider<any> {
 }
 
 async function blockReadHandler(params, extra) {
-    const { id, offset = 0, limit = 10000 } = params;
+    const { blockId, offset = 0, limit = 10000 } = params;
     debugPush("读取文档内容");
     // 检查输入
-    const dbItem = await getBlockDBItem(id);
+    const dbItem = await getBlockDBItem(blockId);
     if (dbItem == null) {
         return createErrorResponse("Invalid document or block ID. Please check if the ID exists and is correct.");
-    }
-    if (await filterBlock(id, dbItem)) {
-        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
     }
     let otherImg = [];
     if (dbItem.type != "d") {
         try {
-            otherImg = await getAssets(id);
+            otherImg = await getAssets(blockId);
         } catch (error) {
             errorPush("转换Assets为图片时出错", error);
         }
     }
-    const markdown = await exportMdContent({id, refMode: 4, embedMode: 1, yfm: false});
+    const markdown = await exportMdContent({id: blockId, refMode: 4, embedMode: 1, yfm: false});
     // 返回块内容时，不应当返回文档标题，需要判断设置项
     if (dbItem.type != "d" && isValidStr(markdown["content"]) && window.siyuan.config.export.addTitle) {
         markdown["content"] = markdown["content"].replace(/^#{1,6}\s+.*\n?/, '');
@@ -77,24 +74,21 @@ async function blockReadHandler(params, extra) {
 }
 
 async function kramdownReadHandler(params, extra) {
-    const { id } = params;
+    const { blockId } = params;
     // 检查输入
-    const dbItem = await getBlockDBItem(id);
+    const dbItem = await getBlockDBItem(blockId);
     if (dbItem == null) {
         return createErrorResponse("No corresponding block found for the provided ID. Please confirm that the ID corresponds to a valid block.");
-    }
-    if (await filterBlock(id, dbItem)) {
-        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
     }
     let otherImg = [];
     if (dbItem.type != "d") {
         try {
-            otherImg = await getAssets(id);
+            otherImg = await getAssets(blockId);
         } catch (error) {
             errorPush("转换Assets为图片时出错", error);
         }
     }
-    const kramdown = await getKramdown(id);
+    const kramdown = await getKramdown(blockId);
     const content = kramdown || "";
     return createJsonResponse({
         kramdown: content,

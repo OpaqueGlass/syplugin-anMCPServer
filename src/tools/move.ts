@@ -9,6 +9,7 @@ import { isContainerBlockType, isNonContainerBlockType, isValidNotebookId, isVal
 import { lang } from "@/utils/lang";
 import { filterBlock, filterNotebook } from "@/utils/filterCheck";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
+import { PermissionBit } from "@/constants";
 
 export class MoveBlockToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
@@ -29,7 +30,7 @@ export class MoveBlockToolProvider extends McpToolsProvider<any> {
             name: "siyuan_move_block_by_id",
             description: "移动指定类型的块（如段落、标题、超级块、表格等）到目标位置。注意：此工具不支持移动文档块(Document Block)。",
             schema: {
-                id: z.string().describe("需要移动的块的唯一 ID。"),
+                blockId: z.string().describe("需要移动的块的唯一 ID。"),
                 previousId: z.string().optional().describe("插入位置参考 ID。被移动的块将作为此 ID 对应块的后置兄弟节点。此参数不能传入文档ID。"),
                 parentId: z.string().optional().describe("插入位置的目标父块 ID。移动后的块将作为此父块的第一个子块。如果指定了 previousId，则忽略此参数。"),
                 moveWithSubBlocks: z.boolean().default(false).describe("移动标题块子块。若设为 true 且 id对应标题块时，则该标题及其下属的所有子块（包括低级别标题和段落）将作为一个整体进行移动。使用此项，将丢失原有的折叠状态，移动后标题块将被展开。"),
@@ -48,7 +49,7 @@ async function moveDocsByIds(params, extra) {
     debugPush("通过ID移动文档");
     // 检查输入
     if (isValidNotebookId(toId)) {
-        if (filterNotebook(toId)) {
+        if (await filterNotebook(toId, PermissionBit.Write)) {
             return createErrorResponse("The specified target notebook is excluded by the user settings. So cannot write or read. ");
         }
     } else {
@@ -56,7 +57,7 @@ async function moveDocsByIds(params, extra) {
         if (toDbItem == null) {
             return createErrorResponse("Invalid target document or notebook ID. Please check if the ID exists and is related to a document.");
         }
-        if (await filterBlock(toId, toDbItem)) {
+        if (await filterBlock(toId, toDbItem, PermissionBit.Write)) {
             return createErrorResponse("The specified target document or block is excluded by the user settings. So cannot write or read. ");
         }
     }
@@ -67,7 +68,7 @@ async function moveDocsByIds(params, extra) {
         if (dbItem == null) {
             return createErrorResponse(`Invalid document ID: ${id}. Please check if the ID exists and is related to a document.`);
         }
-        if (await filterBlock(id, dbItem)) {
+        if (await filterBlock(id, dbItem, PermissionBit.Write)) {
             return createErrorResponse(`The specified document ${id} is excluded by the user settings. So cannot write or read. `);
         }
         recoveryDocIds.push({
@@ -84,17 +85,17 @@ async function moveDocsByIds(params, extra) {
 }
 
 async function moveBlockById(params, extra) {
-    const { id, previousId, parentId, moveWithSubBlocks } = params;
+    const { blockId, previousId, parentId, moveWithSubBlocks } = params;
     // 检查输入
-    const dbItem = await getBlockDBItem(id);
+    const dbItem = await getBlockDBItem(blockId);
     if (dbItem == null) {
         return createErrorResponse("No corresponding block found for the provided ID. Please confirm that the ID corresponds to a valid block.");
     }
     if (dbItem.type === "d") {
         return createErrorResponse("Document blocks cannot be moved using this tool. Please use the document moving tool instead.");
     }
-    if (await filterBlock(id, dbItem)) {
-        return createErrorResponse(`The specified block ${id} is excluded by the user settings. So cannot write or read. `);
+    if (await filterBlock(blockId, dbItem, PermissionBit.Write)) {
+        return createErrorResponse(`The specified block ${blockId} is excluded by the user settings. So cannot write or read. `);
     }
     let moveType = "", moveToId = "";
     if (isValidStr(previousId)) {
@@ -111,7 +112,7 @@ async function moveBlockById(params, extra) {
     if (moveToIdDbItem == null) {
         return createErrorResponse(`Invalid ${moveType}. Please check if the ID exists and is correct.`);
     }
-    if (await filterBlock(moveToId, moveToIdDbItem)) {
+    if (await filterBlock(moveToId, moveToIdDbItem, PermissionBit.Write)) {
         return createErrorResponse(`The specified document or block ${moveToId} is excluded by the user settings. So cannot write or read. `);
     }
     // 避免移动到非容器块
@@ -127,20 +128,20 @@ async function moveBlockById(params, extra) {
     }
     // 开始移动
     if (dbItem.type === "h" && moveWithSubBlocks) {
-        await foldBlock(id);
+        await foldBlock(blockId);
     }
     try {
         if (moveType === "parentId") {
-            await moveBlock(id, undefined, moveToId);
+            await moveBlock(blockId, undefined, moveToId);
         } else {
-            await moveBlock(id, moveToId, undefined);
+            await moveBlock(blockId, moveToId, undefined);
         }
     }finally {
         if (dbItem.type === "h" && moveWithSubBlocks) {
             // 取消折叠
-            await unfoldBlock(id);
+            await unfoldBlock(blockId);
         }
     }
-    taskManager.insert(id, { moveType, moveToId }, "moveBlockById", { previousParentId: dbItem.parent_id }, TASK_STATUS.APPROVED);    
+    taskManager.insert(blockId, { moveType, moveToId }, "moveBlockById", { previousParentId: dbItem.parent_id }, TASK_STATUS.APPROVED);    
     return createSuccessResponse("Move block successfully.");
 }

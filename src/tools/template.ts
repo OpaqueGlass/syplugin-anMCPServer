@@ -8,6 +8,7 @@ import { filterBlock } from "@/utils/filterCheck";
 import { isValidHTML, validatePath } from "@/utils/commonCheck";
 import { wrapTemplateFilePath } from "@/utils/common";
 import item from "element-plus/lib/components/space/src/item.js";
+import { PermissionBit } from "@/constants";
 
 export class TemplateToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
@@ -137,8 +138,12 @@ async function searchTemplateTool(params, extra) {
     const response = await searchTemplate(k);
     const result = [];
     for (const item of response) {
+        let name = item.content.replaceAll("<mark>", "").replaceAll("</mark>", "");
+        if (name.startsWith("/")) {
+            name = name.substring(1);
+        }
         result.push({
-            name: item.content,
+            name,
         });
     }
     return createJsonResponse(result);
@@ -151,7 +156,7 @@ async function previewRenderedTemplateTool(params, extra) {
     if (doc == null) {
         return createErrorResponse("Document not found with id: " + id);
     }
-    const filterResult = await filterBlock(id, doc);
+    const filterResult = await filterBlock(id, doc, PermissionBit.Read);
     if (filterResult) {
         return createErrorResponse("The specified document is filtered and cannot be used as template context.");
     }
@@ -177,7 +182,7 @@ async function renderTemplateToDocTool(params, extra) {
     if (doc == null) {
         return createErrorResponse("Document not found with id: " + id);
     }
-    const filterResult = await filterBlock(id, doc);
+    const filterResult = await filterBlock(id, doc, PermissionBit.Write);
     if (filterResult) {
         return createErrorResponse("The specified document is filtered and cannot be used as template context.");
     }

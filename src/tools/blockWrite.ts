@@ -11,6 +11,7 @@ import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { getPluginInstance } from "@/utils/pluginHelper";
 import { extractNodeParagraphIds } from "@/utils/common";
 import { filterBlock } from "@/utils/filterCheck";
+import { PermissionBit } from "@/constants";
 
 export class BlockWriteToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
@@ -138,7 +139,7 @@ export async function insertBlockWithCheckWrapper(data, nextID, previousID, pare
     if (dbItem == null) {
         return createErrorResponse(`Invalid ${anchorType}: The specified block does not exist.`);
     }
-    if (await filterBlock(anchorID, dbItem)) {
+    if (await filterBlock(anchorID, dbItem, PermissionBit.Write)) {
         return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
 
@@ -162,7 +163,7 @@ async function prependBlockHandler(params, extra) {
     if (dbItem == null) {
         return createErrorResponse("Invalid parentID: The specified parent block does not exist.");
     }
-    if (await filterBlock(parentID, dbItem)) {
+    if (await filterBlock(parentID, dbItem, PermissionBit.Write)) {
         return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
     if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
@@ -189,7 +190,7 @@ async function appendBlockHandler(params, extra) {
     if (dbItem == null) {
         return createErrorResponse("Invalid parentID: The specified parent block does not exist.");
     }
-    if (await filterBlock(parentID, dbItem)) {
+    if (await filterBlock(parentID, dbItem, PermissionBit.Write)) {
         return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
     if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
@@ -225,7 +226,7 @@ async function updateBlockHandler(params, extra) {
     if (blockDbItem == null) {
         return createErrorResponse("No corresponding block found for the provided ID. Please confirm that the ID corresponds to a valid block.");
     }
-    if (await filterBlock(id, blockDbItem)) {
+    if (await filterBlock(id, blockDbItem, PermissionBit.Write)) {
         return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
     if (blockDbItem.type === "av") {
@@ -256,9 +257,6 @@ async function deleteBlockById(params, extra) {
     }
     if (blockDbItem.type === "d") {
         return createErrorResponse("Cannot delete document blocks using this API. Please use the delete document API instead.");
-    }
-    if (await filterBlock(blockId, blockDbItem)) {
-        return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
 
     const plugin = getPluginInstance();

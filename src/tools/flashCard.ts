@@ -7,7 +7,8 @@ import { McpToolsProvider } from "./baseToolProvider";
 import { z } from "zod";
 import { useWsIndexQueue } from "@/utils/wsMainHelper";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
-import { filterBlock } from "@/utils/filterCheck";
+import { filterBlock, filterDefault } from "@/utils/filterCheck";
+import { PermissionBit } from "@/constants";
 
 const TYPE_VALID_LIST = ["h1", "h2", "h3", "h4", "h5", "highlight", "superBlock"] as const;
 
@@ -19,7 +20,7 @@ export class FlashcardToolProvider extends McpToolsProvider<any> {
             schema: {
                 parentId: z.string().describe("The ID of the parent document where the new document will be created."),
                 docTitle: z.string().describe("The title of the new document that will contain the flashcards."),
-                type: z.enum(TYPE_VALID_LIST).describe("The block type to use when formatting flashcards (e.g., heading or highlight)."),
+                type: z.enum(TYPE_VALID_LIST).describe("The block type to use when formatting flashcards (e.g., h1, h2, ..., h5, superBlock or highlight)."),
                 deckId: z.string().optional().describe("The ID of the flashcard deck to which the new content belongs."),
                 markdownContent: z.string().describe("The Markdown-formatted content to append at the end of the new document."),
             },
@@ -67,7 +68,7 @@ async function addFlashCardMarkdown(params, extra) {
     let { parentId, docTitle, type, deckId, markdownContent } = params;
     let { sendNotification, _meta} = extra;
     
-    if (await filterBlock(parentId, null)) {
+    if (await filterBlock(parentId, null, PermissionBit.Write)) {
         return createErrorResponse("The specified document or block is excluded by the user settings, so cannot create a new note under it.");
     }
     // 默认deck
@@ -143,7 +144,7 @@ async function createFlashcardsHandler(params, extra) {
         if (dbItem == null) {
             return createErrorResponse(`Invalid block ID: ${blockId}. Please check if the ID exists and is correct.`);
         }
-        if (await filterBlock(blockId, dbItem)) {
+        if (await filterBlock(blockId, dbItem, PermissionBit.Read)) {
             continue;
         }
         filteredIds.push(blockId);

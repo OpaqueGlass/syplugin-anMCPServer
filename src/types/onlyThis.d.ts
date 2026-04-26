@@ -42,3 +42,6 @@ interface RowColumnDataVo {
     keyId?: string;
     value: RowColumnDataValueVo;
 }
+
+
+type PermissionSettings = {[key: string]: number};

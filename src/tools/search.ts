@@ -11,6 +11,7 @@ import { isSelectQuery } from "@/utils/commonCheck";
 import { getBlockDBItem } from "@/syapi/custom";
 import { filterBlock } from "@/utils/filterCheck";
 import sqlBlockDatabaseSchemaMD from "@/../static/database_schema.md";
+import { PermissionBit } from "@/constants";
 
 export class SearchToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
@@ -107,7 +108,7 @@ async function sqlHandler(params, extra) {
         for (const row of sqlResult) {
             const id = row['id'];
             const dbItem = await getBlockDBItem(id);
-            if (dbItem && await filterBlock(id, dbItem) === false) {
+            if (dbItem && await filterBlock(id, dbItem, PermissionBit.Read) === false) {
                 filteredResult.push(dbItem);
             }
         }

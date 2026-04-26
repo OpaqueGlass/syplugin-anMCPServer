@@ -21,6 +21,7 @@ import { MyIndexProvider } from "./indexer/myProvider";
 import { generateUUID, getFormattedTimestr, showPluginMessage, sleep } from "./utils/common";
 import { createApp } from "vue";
 import historyVue from "./components/history.vue";
+import permissionVue from "./components/permission.vue";
 import ElementPlus from 'element-plus';
 import { ConnectionLogger } from "./logger/connectionLogger";
 
@@ -38,6 +39,7 @@ const DEFAULT_SETTING = {
     filterDocuments: "",   // 多行文本，每行一个文档 id
     filterNotebooks: "",   // 多行文本，每行一个笔记本 id
     allowedHosts: "",
+    defaultPermission: 7, // 默认权限，0-7每个位代表不同权限，1=读，2=写，4=删除
 }
 
 export default class OGanMCPServerPlugin extends Plugin {
@@ -49,6 +51,8 @@ export default class OGanMCPServerPlugin extends Plugin {
     private eventHandler = null;
     private historyPage = null;
     private _historyVueApp = null;
+    private permissionPage = null;
+    private _permissionVueApp = null;
     public connectionLogger: ConnectionLogger = null;
     onload() {
         setLanguage(this.i18n);
@@ -98,6 +102,7 @@ export default class OGanMCPServerPlugin extends Plugin {
         const filterNotebookTextareaElem = document.createElement("textarea");
         const allowedHostsTextareaElem = document.createElement("textarea");
         const autoApproveDeleteChangeSwitchElem = document.createElement("input");
+        const defaultPermissionInputElem = document.createElement("input");
 
         this.setting = new Setting({
             confirmCallback: async () => {
@@ -130,7 +135,8 @@ export default class OGanMCPServerPlugin extends Plugin {
                     autoApproveDeleteChange: autoApproveDeleteChangeSwitchElem.checked,
                     filterDocuments: filterDocumentsValue,
                     filterNotebooks: filterNotebooksValue,
-                    allowedHosts: allowedHostsValue
+                    allowedHosts: allowedHostsValue,
+                    defaultPermission: defaultPermissionInputElem.value.trim() ? parseInt(defaultPermissionInputElem.value.trim()) : DEFAULT_SETTING.defaultPermission,
                 };
                 this.saveData(CONSTANTS.STORAGE_NAME + window.siyuan.config.system.id.substring(30, 36), this.mySettings).then(async ()=>{
                     if (this.myMCPServer.isRunning()) {
@@ -358,39 +364,80 @@ export default class OGanMCPServerPlugin extends Plugin {
             },
         });
 
-        // 新增：过滤文档（每行一个文档 id）
         this.setting.addItem({
-            title: lang("setting_filterDocId"),
-            direction: "row",
-            description: lang("setting_filterDocId_desp"),
+            title: lang("setting_defaultPermission"),
+            direction: "column",
+            description: lang("setting_defaultPermission_desp"),
             createActionElement: () => {
-                filterDocTextareaElem.className = "b3-text-field fn__block";
-                filterDocTextareaElem.placeholder = "每行一个文档 id";
-                filterDocTextareaElem.rows = 6;
-                filterDocTextareaElem.value = this.mySettings.filterDocuments ?? "";
-                filterDocTextareaElem.addEventListener("change", ()=>{
-                    this.mySettings['filterDocuments'] = filterDocTextareaElem.value;
+                defaultPermissionInputElem.className = "b3-text-field fn__flex-center fn__size200";
+                defaultPermissionInputElem.type = "number";
+                defaultPermissionInputElem.max = "7";
+                defaultPermissionInputElem.min = "0";
+                defaultPermissionInputElem.placeholder = lang("setting_defaultPermission_placeholder");
+                defaultPermissionInputElem.value = this.mySettings.defaultPermission.toString();
+                defaultPermissionInputElem.addEventListener("change", ()=>{
+                    this.mySettings['defaultPermission'] = defaultPermissionInputElem.value.trim() ? parseInt(defaultPermissionInputElem.value.trim()) : DEFAULT_SETTING.defaultPermission;
                 });
-                return filterDocTextareaElem;
+                return defaultPermissionInputElem;
             },
         });
 
-        // 新增：过滤笔记本 id（每行一个笔记本 id）
         this.setting.addItem({
-            title: lang("setting_filterNotebookId"),
-            direction: "row",
-            description: lang("setting_filterNotebookId_desp"),
+            title: lang("setting_permission"),
+            direction: "column",
+            description: lang("setting_permission_desp"),
             createActionElement: () => {
-                filterNotebookTextareaElem.className = "b3-text-field fn__block";
-                filterNotebookTextareaElem.placeholder = "每行一个笔记本 id";
-                filterNotebookTextareaElem.rows = 6;
-                filterNotebookTextareaElem.value = this.mySettings.filterNotebooks ?? "";
-                filterNotebookTextareaElem.addEventListener("change", ()=>{
-                    this.mySettings['filterNotebooks'] = filterNotebookTextareaElem.value;
+                const startStopBtnElem = document.createElement("button");
+                startStopBtnElem.className = "b3-button b3-button--outline fn__flex-center fn__size200";
+                startStopBtnElem.textContent = lang("setting_permission_btn");
+                startStopBtnElem.addEventListener("click", () => {
+                    openTab({
+                        app: this.app,
+                        custom: {
+                            icon: "iconHistory",
+                            title: lang("tab_permission_title"),
+                            id: this.name + "og_permission_page",
+                        },
+                    });
+                    window.siyuan.dialogs[0].destroy();
                 });
-                return filterNotebookTextareaElem;
+                return startStopBtnElem;
             },
         });
+
+        // // 新增：过滤文档（每行一个文档 id）
+        // this.setting.addItem({
+        //     title: lang("setting_filterDocId"),
+        //     direction: "row",
+        //     description: lang("setting_filterDocId_desp"),
+        //     createActionElement: () => {
+        //         filterDocTextareaElem.className = "b3-text-field fn__block";
+        //         filterDocTextareaElem.placeholder = "每行一个文档 id";
+        //         filterDocTextareaElem.rows = 6;
+        //         filterDocTextareaElem.value = this.mySettings.filterDocuments ?? "";
+        //         filterDocTextareaElem.addEventListener("change", ()=>{
+        //             this.mySettings['filterDocuments'] = filterDocTextareaElem.value;
+        //         });
+        //         return filterDocTextareaElem;
+        //     },
+        // });
+
+        // // 新增：过滤笔记本 id（每行一个笔记本 id）
+        // this.setting.addItem({
+        //     title: lang("setting_filterNotebookId"),
+        //     direction: "row",
+        //     description: lang("setting_filterNotebookId_desp"),
+        //     createActionElement: () => {
+        //         filterNotebookTextareaElem.className = "b3-text-field fn__block";
+        //         filterNotebookTextareaElem.placeholder = "每行一个笔记本 id";
+        //         filterNotebookTextareaElem.rows = 6;
+        //         filterNotebookTextareaElem.value = this.mySettings.filterNotebooks ?? "";
+        //         filterNotebookTextareaElem.addEventListener("change", ()=>{
+        //             this.mySettings['filterNotebooks'] = filterNotebookTextareaElem.value;
+        //         });
+        //         return filterNotebookTextareaElem;
+        //     },
+        // });
         this.setting.addItem({
             title: lang("setting_copyright"),
             direction: "column",
@@ -437,6 +484,39 @@ export default class OGanMCPServerPlugin extends Plugin {
             }
         });
 
+        this.permissionPage = this.addTab({
+            type: "og_permission_page",
+            init() {
+                infoPush("Loading");
+                // 创建 shadowRoot
+                const shadowHost = document.createElement("div");
+                shadowHost.style.height = "100%";
+                shadowHost.style.margin = "30px 30px";
+                this.element.appendChild(shadowHost);
+                const shadowRoot = shadowHost.attachShadow({ mode: "open" });
+                // 创建挂载点
+                const container = document.createElement("div");
+                container.id = "og-history-vue-root";
+                shadowRoot.appendChild(container);
+                // 注入 element-plus 样式
+                const styleElem = document.createElement("style");
+                fetch("/plugins/syplugin-anMCPServer/static/element-plus.css")
+                  .then(res => res.text())
+                  .then(css => { styleElem.textContent = css.replace(":root", ":host"); });
+                shadowRoot.prepend(styleElem);
+                // 挂载 Vue
+                that._permissionVueApp = createApp(permissionVue);
+                that._permissionVueApp.use(ElementPlus);
+                that._permissionVueApp.mount(container);
+            },
+            destroy() {
+                if (that._permissionVueApp) {
+                    that._permissionVueApp.unmount();
+                    that._permissionVueApp = null;
+                }
+            }
+        });
+
         this.addCommand({
             langKey: "shortcut_history",
             hotkey: "",
@@ -467,6 +547,21 @@ export default class OGanMCPServerPlugin extends Plugin {
                 });
             }
         });
+        // this.addTopBar({
+        //     "icon": "iconMessageQ",
+        //     "title": "权限总结页",
+        //     "callback": async ()=>{
+        //         infoPush(this.name)
+        //         openTab({
+        //             app: this.app,
+        //             custom: {
+        //                 icon: "iconHistory",
+        //                 title: lang("tab_title_history"),
+        //                 id: this.name + "og_permission_page",
+        //             },
+        //         });
+        //     }
+        // });
     }
 
     onLayoutReady() {

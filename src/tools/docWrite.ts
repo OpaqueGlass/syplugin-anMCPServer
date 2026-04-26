@@ -11,6 +11,7 @@ import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { filterBlock, filterNotebook } from "@/utils/filterCheck";
 import { isValidNotebookId } from "@/utils/commonCheck";
 import { getPluginInstance } from "@/utils/pluginHelper";
+import { PermissionBit } from "@/constants";
 
 export class DocWriteToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
@@ -18,7 +19,7 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
             name: "siyuan_append_markdown_to_doc",
             description: 'Append Markdown content to the end of a document in SiYuan by its ID.',
             schema: {
-                id: z.string().describe("The unique identifier of the document to which the Markdown content will be appended."),
+                docId: z.string().describe("The unique identifier of the document to which the Markdown content will be appended."),
                 markdownContent: z.string().describe("The Markdown-formatted text to append to the end of the specified document."),
             },
             handler: appendBlockHandler,
@@ -87,26 +88,23 @@ export class DocWriteToolProvider extends McpToolsProvider<any> {
 }
 
 async function appendBlockHandler(params, extra) {
-    const { id, markdownContent } = params;
+    const { docId, markdownContent } = params;
     debugPush("追加内容块API被调用");
-    checkIdValid(id);
-    if (!await isADocId(id)) {
+    checkIdValid(docId);
+    if (!await isADocId(docId)) {
         return createErrorResponse("Failed to append to document: The provided ID is not the document's ID.");
     }
-    if (await filterBlock(id, null)) {
-        return createErrorResponse("The specified document or block is excluded by the user settings. So cannot write or read. ");
-    }
-    const result = await appendBlockAPI(markdownContent, id);
+    const result = await appendBlockAPI(markdownContent, docId);
     if (result == null) {
         return createErrorResponse("Failed to append to the document");
     }
-    taskManager.insert(result.id, markdownContent, "appendToDocEnd", { docId: id }, TASK_STATUS.APPROVED);
+    taskManager.insert(result.id, markdownContent, "appendToDocEnd", { docId: docId }, TASK_STATUS.APPROVED);
     return createSuccessResponse("Successfully appended, the block ID for the new content is " + result.id);
 }
 
 async function createNewNoteUnder(params, extra) {
     const { parentId, title, markdownContent } = params;
-    if (await filterBlock(parentId, null)) {
+    if (await filterBlock(parentId, null, PermissionBit.Write)) {
         return createErrorResponse("The specified document or block is excluded by the user settings, so cannot create a new note under it.");
     }
     debugPush("添加新笔记被调用");
@@ -124,9 +122,6 @@ async function renameDocTool(params, extra) {
     if (docDbItem == null) {
         return createErrorResponse("Failed to rename document: No document found with the provided ID.");
     }
-    if (await filterBlock(docId, docDbItem)) {
-        return createErrorResponse("The specified document or block is excluded by the user settings, so cannot rename it.");
-    }
     const result = await renameDocAPI(docDbItem["box"], docDbItem["path"], newTitle);
     if (!result) {
         return createErrorResponse("Failed to rename document.");
@@ -137,9 +132,6 @@ async function renameDocTool(params, extra) {
 async function renameNotebookTool(params, extra) {
     const { notebookId, newTitle } = params;
     isValidNotebookId(notebookId);
-    if (filterNotebook(notebookId)) {
-        return createErrorResponse("The specified notebook is excluded by the user settings, so cannot rename it.");
-    }
     const result = await renameNotebook(notebookId, newTitle);
     if (!result) {
         return createErrorResponse("Failed to rename notebook.");
@@ -153,9 +145,6 @@ async function deleteByDocId(params, extra) {
     const docDbItem = await getDocDBitem(docId);
     if (docDbItem == null) {
         return createErrorResponse("Failed to delete document: No document found with the provided ID.");
-    }
-    if (await filterBlock(docId, docDbItem)) {
-        return createErrorResponse("The specified document or block is excluded by the user settings, so cannot delete it.");
     }
     const plugin = getPluginInstance();
     const autoApproveDeleteChange = plugin?.mySettings["autoApproveDeleteChange"] ?? false;
