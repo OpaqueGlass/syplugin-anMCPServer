@@ -4,6 +4,7 @@ export class CONSTANTS {
     public static readonly DATA_CHANGEABLE_COLUMN_TYPES: string[] = ["text", "number", "select", "mSelect", "date", "checkbox", "relation", "url", "email", "created", "updated", "lineNumber", "mAsset", "phone"];
     public static readonly ALL_COLUMN_TYPES: string[] = ["text", "number", "select", "mSelect", "date", "checkbox", "relation", "url", "email", "rollup", "template", "created", "updated", "lineNumber", "mAsset", "phone"];
     public static readonly PLUGIN_DATA_SAVEPATH: string = "/data/storage/petal/syplugin-anMCPServer/";
+    public static readonly VERSION_CODE: number = 2026042601;
 }
 
 export enum PermissionBit {

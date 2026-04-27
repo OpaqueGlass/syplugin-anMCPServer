@@ -5,6 +5,7 @@ import { PermissionBit } from "@/constants";
 import { getBlockDBItem } from "@/syapi/custom";
 import { showPluginMessage } from "../common";
 import { getNotebookInfoLocallyF } from "@/syapi";
+import { lang } from "../lang";
 
 
 export async function showPermissionSetterDialog(ids: string[], isNotebook: boolean): Promise<void> {
@@ -12,7 +13,7 @@ export async function showPermissionSetterDialog(ids: string[], isNotebook: bool
     let permissionCode: number = 0;
     let permissionFromId: string = "";
 
-    let docName = "";
+    let targetName = "";
 
     // 获取权限状态（仅针对单个 ID）
     if (!isBatch) {
@@ -20,36 +21,52 @@ export async function showPermissionSetterDialog(ids: string[], isNotebook: bool
         if (isNotebook) {
             const status = await getNotebookPermissionStatus(id);
             const notebookInfo = await getNotebookInfoLocallyF(id);
-            docName = notebookInfo ? notebookInfo.name : "未知笔记本";
+            targetName = notebookInfo ? notebookInfo.name : "unknown";
             permissionCode = status.permissionCode;
             permissionFromId = status.permissionFromId;
         } else {
             const dbItem = await getBlockDBItem(id);
             if (!dbItem) {
-                showPluginMessage("文档不存在，无法打开权限设置对话框");
+                showPluginMessage(lang("permission_doc_not_exist"));
                 return;
             }
             const status = await getBlockPermissionStatus(dbItem);
-            docName = dbItem.content;
+            targetName = dbItem.content;
             permissionCode = status.permissionCode;
             permissionFromId = status.permissionFromId;
         }
+    }
+    let permissionFromTypeText = "default";
+    let permissionFromIdClean = permissionFromId;
+    let jumpToPermissionSourceHtml = `<button class="b3-button b3-button--outline fn__flex-center" id='og-mcp-jumptosource'>${lang("permission_jump_to")}</button>`;
+    if (permissionFromId.startsWith("D ")) {
+        permissionFromTypeText = lang("permission_doc");
+        permissionFromIdClean = permissionFromId.substring(2);
+    } else if (permissionFromId.startsWith("N ")) {
+        permissionFromTypeText = lang("permission_notebook");
+        permissionFromIdClean = permissionFromId.substring(2);
+    } else {
+        jumpToPermissionSourceHtml = "";
+    }
+    if (permissionFromIdClean === ids[0]) {
+        permissionFromTypeText = lang("permission_itself");
+        jumpToPermissionSourceHtml = "";
     }
 
     // 构建对话框信息部分
     const headerHtml = isBatch 
         ? `<div style="margin-bottom: 16px; padding: 8px; background: var(--b3-theme-surface-light); border-radius: 4px;">
-             <span class="ft__info">批量操作：</span> 正在对 <b class="ft__highlight">${ids.length}</b> 个文档进行权限设置
+             ${lang("permission_batch_operation").replace("{count}", ids.length)}
            </div>`
         : `<div style="margin-bottom: 16px; font-size: 0.9em; opacity: 0.8; line-height: 1.6;">
-             <div>当前 ID: <code style="word-break: break-all;">${ids[0]}</code></div>
-             <div>当前文档：${docName}</div>
-             <div>权限来源: <span class="ft__info">${permissionFromId}</span></div>
-             <div>当前代码: <b class="ft__highlight">${permissionCode}</b></div>
+             <div>id: <code style="word-break: break-all;">${ids[0]}</code></div>
+             <div>${lang("permission_name")}：${targetName}</div>
+             <div>${lang("permission_inherit_from")}: ${permissionFromTypeText} ${permissionFromIdClean} ${jumpToPermissionSourceHtml} </div>
+             <div>${lang("permission_cur_per_code")}: <b class="ft__highlight">${permissionCode}</b></div>
            </div>`;
 
     const dialog = new Dialog({
-        title: `${isNotebook ? '笔记本' : '文档'} 权限设置 ${isBatch ? '(批量)' : ''}`,
+        title: `${lang("permission_mcp_dialog_title")} ${isBatch ? '' : targetName}`,
         content: `
 <div class="b3-dialog__content" style="padding: 20px;">
     ${headerHtml}
@@ -57,17 +74,17 @@ export async function showPermissionSetterDialog(ids: string[], isNotebook: bool
     <div class="fn__hr"></div>
 
     <div style="display: flex; gap: 20px; margin: 20px 0;">
-        <label class="fn__flex"><input type="checkbox" class="b3-switch" id="og-mcp-p-read" ${(!isBatch && (permissionCode & PermissionBit.Read)) ? 'checked' : ''}> <span style="margin-left:8px">读取 (4)</span></label>
-        <label class="fn__flex"><input type="checkbox" class="b3-switch" id="og-mcp-p-write" ${(!isBatch && (permissionCode & PermissionBit.Write)) ? 'checked' : ''}> <span style="margin-left:8px">写入 (2)</span></label>
-        <label class="fn__flex"><input type="checkbox" class="b3-switch" id="og-mcp-p-admin" ${(!isBatch && (permissionCode & PermissionBit.Destructive)) ? 'checked' : ''}> <span style="margin-left:8px">破坏性修改 (1)</span></label>
+        <label class="fn__flex"><input type="checkbox" class="b3-switch" id="og-mcp-p-read" ${(!isBatch && (permissionCode & PermissionBit.Read)) ? 'checked' : ''}> <span style="margin-left:8px">${lang("permission_r")}</span></label>
+        <label class="fn__flex"><input type="checkbox" class="b3-switch" id="og-mcp-p-write" ${(!isBatch && (permissionCode & PermissionBit.Write)) ? 'checked' : ''}> <span style="margin-left:8px">${lang("permission_w")}</span></label>
+        <label class="fn__flex"><input type="checkbox" class="b3-switch" id="og-mcp-p-admin" ${(!isBatch && (permissionCode & PermissionBit.Destructive)) ? 'checked' : ''}> <span style="margin-left:8px">${lang("permission_d")}</span></label>
     </div>
 
     <div class="b3-dialog__action">
-        <button class="b3-button b3-button--error fn__flex-center" id="og-mcp-btn-delete">删除自定义权限</button>
+        <button class="b3-button b3-button--error fn__flex-center" id="og-mcp-btn-delete">${lang("permission_delete_itself")}</button>
         <div class="fn__flex-1"></div>
-        <button class="b3-button b3-button--cancel" id="og-mcp-btn-cancel">取消</button>
+        <button class="b3-button b3-button--cancel" id="og-mcp-btn-cancel">${lang("history_msg_clean_cancel")}</button>
         <div class="fn__space"></div>
-        <button class="b3-button b3-button--main" id="og-mcp-btn-save">应用设置</button>
+        <button class="b3-button b3-button--main" id="og-mcp-btn-save">${lang("apply")}</button>
     </div>
 </div>`,
         width: "480px",
@@ -93,8 +110,8 @@ export async function showPermissionSetterDialog(ids: string[], isNotebook: bool
 
     // 删除逻辑
     contentElement.querySelector("#og-mcp-btn-delete").addEventListener("click", () => {
-        const msg = (isBatch ? `确定要删除这 ${ids.length} 个文档或笔记本的自定义权限吗？` : "确定要删除该文档或笔记本的自定义权限吗？") + " 这将使它们继承上级或默认权限。";
-        confirm("确认操作", msg, async () => {
+        const msg = (isBatch ? lang("permission_confirm_delete_batch").replace('{count}', ids.length) : lang("permission_confirm_delete").replace('{name}', targetName)) + " " + lang("permission_confirm_delete_desp");
+        confirm(lang("permission_confirm_delete_title"), msg, async () => {
             const promises = ids.map(id => 
                 isNotebook ? setNotebookPermission(id, undefined) : setBlockPermission(id, undefined)
             );
@@ -106,6 +123,17 @@ export async function showPermissionSetterDialog(ids: string[], isNotebook: bool
 
     // 取消
     contentElement.querySelector("#og-mcp-btn-cancel").addEventListener("click", () => {
+        dialog.destroy();
+    });
+
+    contentElement.querySelector("#og-mcp-jumptosource")?.addEventListener("click", () => {
+        if (permissionFromId.startsWith("D ")) {
+            const blockId = permissionFromId.substring(2);
+            showPermissionSetterDialog([blockId], false);
+        } else if (permissionFromId.startsWith("N ")) {
+            const notebookId = permissionFromId.substring(2);
+            showPermissionSetterDialog([notebookId], true);
+        }
         dialog.destroy();
     });
 }

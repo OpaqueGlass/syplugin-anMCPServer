@@ -1,26 +1,27 @@
 <template>
   <div :class="{'task-history': true, 'dark': darkModeFlag, 'container': true}">
-    
+
+    <el-button link type="primary" @click="refreshDict">{{ lang("refresh") }}</el-button>
     <section class="table-section">
-      <h3>组件权限管理 (Block Permissions)</h3>
+      <h3>{{ lang("permission_blocks") }}</h3>
       <div class="toolbar">
-        <el-button type="danger" @click="clearInvalidIds(true)" :loading="loading">清理无效 Block ID</el-button>
+        <el-button type="danger" @click="clearInvalidIds(true)" :loading="loading">{{lang("permission_clean")}}</el-button>
       </div>
       
       <el-table :data="pagedBlockData" style="width: 100%" v-loading="loading">
         <el-table-column prop="id" label="ID" width="180" />
-        <el-table-column prop="name" label="文档名称" />
-        <el-table-column label="权限 (R/W/D)">
+        <el-table-column prop="name" :label="lang('permission_name')" />
+        <el-table-column :label="lang('permission_permission') + ' (R/W/D)'">
           <template #default="scope">
             <el-tag :type="scope.row.r ? 'success' : 'info'">R</el-tag>
             <el-tag :type="scope.row.w ? 'warning' : 'info'" class="mx-1">W</el-tag>
             <el-tag :type="scope.row.d ? 'danger' : 'info'">D</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column :label="lang('permission_operation')" width="150">
           <template #default="scope">
-            <el-button link type="primary" @click="handleEdit([scope.row.id], false)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(scope.row.id, true)">删除</el-button>
+            <el-button link type="primary" @click="handleEdit([scope.row.id], false)">{{ lang("permission_edit") }}</el-button>
+            <el-button link type="danger" @click="handleDelete(scope.row.id, true)">{{ lang("permission_delete") }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -37,25 +38,25 @@
     <el-divider />
 
     <section class="table-section">
-      <h3>笔记本权限管理 (Notebook Permissions)</h3>
+      <h3>{{lang('permission_notebooks')}}</h3>
       <div class="toolbar">
-        <el-button type="danger" @click="clearInvalidIds(false)" :loading="loading">清理无效 Notebook ID</el-button>
+        <el-button type="danger" @click="clearInvalidIds(false)" :loading="loading">{{ lang('permission_clean') }}</el-button>
       </div>
 
       <el-table :data="notebookDataList" style="width: 100%" v-loading="loading">
         <el-table-column prop="id" label="ID" width="180" />
-        <el-table-column prop="name" label="笔记本名称" />
-        <el-table-column label="权限 (R/W/D)">
+        <el-table-column prop="name" :label="lang('permission_name')" />
+        <el-table-column :label="lang('permission_permission') + '(R/W/D)'">
           <template #default="scope">
             <el-tag :type="scope.row.r ? 'success' : 'info'">R</el-tag>
             <el-tag :type="scope.row.w ? 'warning' : 'info'" class="mx-1">W</el-tag>
             <el-tag :type="scope.row.d ? 'danger' : 'info'">D</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column :label="lang('permission_operation')" width="150">
           <template #default="scope">
-            <el-button link type="primary" @click="handleEdit([scope.row.id], true)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(scope.row.id, false)">删除</el-button>
+            <el-button link type="primary" @click="handleEdit([scope.row.id], true)">{{ lang('permission_edit') }}</el-button>
+            <el-button link type="danger" @click="handleDelete(scope.row.id, false)">{{ lang('permission_delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -68,6 +69,7 @@ import { isDarkMode, getNotebookInfoLocallyF  } from '@/syapi';
 import { getBlockDBItem } from '@/syapi/custom';
 import { showPluginMessage } from '@/utils/common';
 import { JSONStorage } from '@/utils/jsonStorageUtil';
+import { lang } from '@/utils/lang';
 import { showPermissionSetterDialog } from '@/utils/permission/permissionDialogHelper';
 import { useBlockPermissionJsonStorage, useNotebookPermissionJsonStorage } from '@/utils/permission/permissionStorageHelper';
 import { ref, computed, onMounted, reactive } from 'vue';

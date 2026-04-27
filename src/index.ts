@@ -24,6 +24,7 @@ import historyVue from "./components/history.vue";
 import permissionVue from "./components/permission.vue";
 import ElementPlus from 'element-plus';
 import { ConnectionLogger } from "./logger/connectionLogger";
+import { setBlockPermission, setNotebookPermission } from "./utils/permission/permissionStorageHelper";
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
@@ -40,6 +41,7 @@ const DEFAULT_SETTING = {
     filterNotebooks: "",   // 多行文本，每行一个笔记本 id
     allowedHosts: "",
     defaultPermission: 7, // 默认权限，0-7每个位代表不同权限，1=读，2=写，4=删除
+    "@version": CONSTANTS.VERSION_CODE,
 }
 
 export default class OGanMCPServerPlugin extends Plugin {
@@ -125,6 +127,7 @@ export default class OGanMCPServerPlugin extends Plugin {
                 const allowedHostsValue = allowedHostsTextareaElem.value ? allowedHostsTextareaElem.value.trim() : "";
 
                 this.mySettings = {
+                    "@version": CONSTANTS.VERSION_CODE,
                     autoStart: autoStartSwitchElem.checked,
                     address: addressInputElem.value,
                     port: portInputElem.value,
@@ -574,6 +577,25 @@ export default class OGanMCPServerPlugin extends Plugin {
             setIndexProvider(new MyIndexProvider(this.data["ragBaseUrl"], this.data["ragAuthKey"]));
             if (this.mySettings["autoStart"]) {
                 this.myMCPServer.start();
+            }
+            if (this.data[name]["@version"] === undefined || this.data[name]["@version"] < CONSTANTS.VERSION_CODE) {
+                // 版本更新，执行相应的升级逻辑
+                const docPermissionArray = this.mySettings.filterDocuments.split("\n").map(s => s.trim()).filter(s => s);
+                const notebookPermissionArray = this.mySettings.filterNotebooks.split("\n").map(s => s.trim()).filter(s => s);
+                for (let docId of docPermissionArray) {
+                    setBlockPermission(docId, 0);
+                }
+                for (let notebookId of notebookPermissionArray) {
+                    setNotebookPermission(notebookId, 0);
+                }
+                new Dialog({
+                    title: lang("update_dialog_title"),
+                    content: `<div class="b3-dialog__content" style="padding: 20px;">${lang("update_dialog_content")}</div>`,
+                    width: "60vw",
+                })
+                // END
+                this.mySettings["@version"] = CONSTANTS.VERSION_CODE;
+                this.saveData(name, this.mySettings);
             }
         })
     }
