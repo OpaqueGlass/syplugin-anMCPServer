@@ -5,6 +5,8 @@ import { debugPush, errorPush, logPush } from "@/logger";
 import { useConsumer, useProvider } from "@/utils/indexerHelper";
 import { lang } from "@/utils/lang";
 import { isPluginExist, showPluginMessage, sleep } from "@/utils/common";
+import { filterBlock } from "@/utils/filterCheck";
+import { PermissionBit } from "@/constants";
 
 let userAlerted = false;
 export class DocVectorSearchProvider extends McpToolsProvider<any> {
@@ -54,6 +56,12 @@ export class DocVectorSearchProvider extends McpToolsProvider<any> {
             },
             handler: async (params, extra) => {
                 const { text, serviceId } = params;
+                if (window["__opaqueGlassVectorIndexService"] == undefined || window["__opaqueGlassVectorIndexService"]["api"] == undefined) {
+                    logPush("ERROR: 服务异常", window["__opaqueGlassVectorIndexService"])
+                    return createErrorResponse("向量检索服务不可用或尚未初始化。");
+                }
+                // 可能是某处的竞态条件导致的，请求可用列表之后才可以query
+                const availableServices = await window["__opaqueGlassVectorIndexService"]["api"]["getAvailableServices"]();
                 const result = await window["__opaqueGlassVectorIndexService"]["api"]["query"](text, serviceId);
                 const TRIM_SIZE = 5;
                 for (const item of result) {
@@ -62,7 +70,20 @@ export class DocVectorSearchProvider extends McpToolsProvider<any> {
                     }
                 }
                 debugPush("RAG查询结果", result);
-                return createJsonResponse(result);
+                const filteredResult = [];
+                for (const item of result as RAGQueryResult[]) {
+                    let filtered = false;
+                    for (const blockId of item.ids || []) {
+                        filtered = await filterBlock(blockId, null, PermissionBit.Read)
+                        if (filtered === true) {
+                            break;
+                        }
+                    }
+                    if (!filtered) {
+                        filteredResult.push(item);
+                    }
+                }
+                return createJsonResponse(filteredResult);
             },
             // title: lang("tool_title_generate_answer_with_doc"),
             annotations: {
@@ -109,6 +130,9 @@ async function answerWithRAG(params, extra) {
             }
         }, maxDuration);
     }
+    if (provider == null) {
+        return createErrorResponse("向量检索服务不可用或尚未初始化。");
+    }
     try {
         const resultPromise = provider.query(question);
         const result = await Promise.race([
@@ -125,6 +149,20 @@ async function answerWithRAG(params, extra) {
             });
         }
         logPush("RAG result", result);
+        // 过滤内容
+        const filteredResult = [];
+        for (const item of result as RAGQueryResult[]) {
+            let filtered = false;
+            for (const blockId of item.ids || []) {
+                filtered = await filterBlock(blockId, null, PermissionBit.Read)
+                if (filtered === true) {
+                    break;
+                }
+            }
+            if (!filtered) {
+                filteredResult.push(item);
+            }
+        }
         return createJsonResponse(result);
     } catch (err) {
         finished = true;

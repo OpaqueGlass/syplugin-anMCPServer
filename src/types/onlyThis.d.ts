@@ -45,3 +45,8 @@ interface RowColumnDataVo {
 
 
 type PermissionSettings = {[key: string]: number};
+
+interface RAGQueryResult {
+  ids?: string[];
+  content: string;
+}
