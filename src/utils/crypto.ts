@@ -22,7 +22,7 @@ export async function calculateSHA256(fileOrString) {
 }
 
 export async function isAuthTokenValid(inputCode:string) {
-    inputCode += getAuthSalt();
+    inputCode += await getAuthSalt();
     inputCode = await calculateSHA256(inputCode);
     const plugin = getPluginInstance();
     if (plugin?.mySettings["authCode"] === inputCode) {
@@ -33,6 +33,6 @@ export async function isAuthTokenValid(inputCode:string) {
 }
 
 export async function encryptAuthCode(inputCode:string) {
-    inputCode += getAuthSalt();
+    inputCode += await getAuthSalt();
     return await calculateSHA256(inputCode);
 }

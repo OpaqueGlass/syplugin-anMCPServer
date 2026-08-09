@@ -131,7 +131,7 @@ async function renameDocTool(params, extra) {
 
 async function renameNotebookTool(params, extra) {
     const { notebookId, newTitle } = params;
-    isValidNotebookId(notebookId);
+    await isValidNotebookId(notebookId);
     const result = await renameNotebook(notebookId, newTitle);
     if (!result) {
         return createErrorResponse("Failed to rename notebook.");

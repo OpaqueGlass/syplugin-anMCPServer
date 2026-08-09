@@ -11,7 +11,7 @@ import { blobToBase64Object } from "@/utils/common";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { filterNotebook } from "@/utils/filterCheck";
 import { PermissionBit } from "@/constants";
-import { getNotebooksSync } from "@/utils/runtimeEnv";
+import { getNotebooks } from "@/utils/runtimeEnv";
 
 export class DailyNoteToolProvider extends McpToolsProvider<any> {
     
@@ -195,7 +195,7 @@ async function appendToDailynoteHandler(params, extra) {
 }
 
 async function listNotebookHandler(params, extra) {
-    const notebooks = getNotebooksSync();
+    const notebooks = await getNotebooks();
     if (!notebooks) {
         return createJsonResponse([]);
     }

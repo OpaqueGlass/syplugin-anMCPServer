@@ -143,7 +143,7 @@ export function mcpToolCheckPermissionWrapper(handler: (args: any, extra: any) =
             if (!isValidIdFormat(args.notebookId)) {
                 return createErrorResponse("Invalid notebookId format. Must be a 14-digit timestamp(yyyyMMddHHmmss) followed by a 7-char alphanumeric suffix. Example: '20260414211243-1a2b3c4'");
             }
-            if (!isValidNotebookId(args.notebookId)) {
+            if (!await isValidNotebookId(args.notebookId)) {
                 return createErrorResponse(`The notebook identified by ${args.notebookId} does not exist`);
             }
             if (await filterNotebook(args.notebookId, requiredPermissionBit)) {

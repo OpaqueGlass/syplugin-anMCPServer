@@ -5,7 +5,7 @@ import { isValidNotebookId, isValidStr } from "@/utils/commonCheck";
 export async function createNewDocWithParentId(parentId:string, title:string, markdownContent: string) {
     checkIdValid(parentId);
     // 判断是否是笔记本id
-    const notebookIdFlag = isValidNotebookId(parentId);
+    const notebookIdFlag = await isValidNotebookId(parentId);
     const newDocId = generateBlockId();
     const createParams = { 
         "notebook": parentId, 

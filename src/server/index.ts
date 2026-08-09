@@ -133,7 +133,7 @@ export default class MyMCPServer {
         try {
             // 插件环境：读取工作空间插件数据目录下的证书；CLI 环境：读取命令启动目录下的同名文件
             const certDir = isPluginEnv()
-                ? getWorkspaceDir() + '/data/storage/petal/syplugin-anMCPServer'
+                ? (await getWorkspaceDir()) + '/data/storage/petal/syplugin-anMCPServer'
                 : process.cwd();
             let keyFile = fs.readFileSync(nodePath.join(certDir, 'server-key.pem'));
             let certFile = fs.readFileSync(nodePath.join(certDir, 'server-cert.pem'));

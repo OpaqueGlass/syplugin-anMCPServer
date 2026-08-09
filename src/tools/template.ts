@@ -215,7 +215,7 @@ async function getRawTemplate(params, extra) {
     }
     const templateItem = await getTemplateItemByName(name);
     if (templateItem) {
-        const fileResponse = await getFileAPIv2(templateItem.path.replaceAll(getWorkspaceDir(), ""));
+        const fileResponse = await getFileAPIv2(templateItem.path.replaceAll(await getWorkspaceDir(), ""));
         if (!fileResponse) {
             return createErrorResponse("Failed to retrieve template file: " + name);
         }

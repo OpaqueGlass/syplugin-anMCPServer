@@ -1,5 +1,5 @@
 import { CONSTANTS } from "@/constants";
-import { getKernelConfig, getNotebooksSync } from "./runtimeEnv";
+import { getKernelConfig, getNotebooks } from "./runtimeEnv";
 
 /**
  * 判定字符串是否有效
@@ -39,8 +39,8 @@ export function isBlankStr(s: any): boolean {
 }
 
 let cacheIsMacOs = undefined;
-export function isMacOs() {
-	let platform = getKernelConfig()?.system?.os
+export async function isMacOs() {
+	let platform = (await getKernelConfig())?.system?.os
 		?? (typeof navigator !== "undefined" ? navigator.platform : undefined)
 		?? "ERROR";
     platform = platform.toUpperCase();
@@ -60,8 +60,8 @@ export function isMacOs() {
 	return isMacOSFlag;
 }
 
-export function isEventCtrlKey(event) {
-    if (isMacOs()) {
+export async function isEventCtrlKey(event) {
+    if (await isMacOs()) {
         return event.metaKey;
     }
     return event.ctrlKey;
@@ -71,8 +71,8 @@ export function isSelectQuery(sql: string): boolean {
     return sql.trim().toUpperCase().startsWith("SELECT");
 }
 
-export function isValidNotebookId(id: string) {
-    const notebooks = getNotebooksSync();
+export async function isValidNotebookId(id: string) {
+    const notebooks = await getNotebooks();
     const result = notebooks.find(item=>item.id === id);
     return result != null;
 }
@@ -154,9 +154,9 @@ const parseVersion = (version: string): number[] => {
  * @param version - 要比较的版本号字符串，例如 "3.1.23" 或 "3.2.1.1"
  * @returns boolean - 如果当前版本小于输入版本，则返回 true；否则（大于或等于）返回 false。
  */
-export function isCurrentVersionLessThan(version: string): boolean {
+export async function isCurrentVersionLessThan(version: string): Promise<boolean> {
     const parsedInputVersion = parseVersion(version);
-    const parsedCurrentVersion = parseVersion(getKernelConfig()?.system?.kernelVersion);
+    const parsedCurrentVersion = parseVersion((await getKernelConfig())?.system?.kernelVersion);
 
     const len = Math.max(parsedCurrentVersion.length, parsedInputVersion.length);
 

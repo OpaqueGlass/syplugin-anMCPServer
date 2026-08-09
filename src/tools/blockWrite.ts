@@ -112,7 +112,7 @@ async function insertBlockHandler(params, extra) {
  * @returns 请务必判断isError是否存在，存在时返回的是mcp Error格式的报错信息
  */
 export async function insertBlockWithCheckWrapper(data, nextID, previousID, parentID, dataType = "markdown") {
-    if (isValidNotebookId(nextID) || isValidNotebookId(previousID) || isValidNotebookId(parentID)) {
+    if (await isValidNotebookId(nextID) || await isValidNotebookId(previousID) || await isValidNotebookId(parentID)) {
         return createErrorResponse("nextID, previousID, and parentID must be block IDs, not notebook IDs.");
     }
     // 选择优先级：nextID > previousID > parentID，取第一个有效的进行校验
@@ -144,7 +144,7 @@ export async function insertBlockWithCheckWrapper(data, nextID, previousID, pare
     }
 
     // 仅当选中的锚点是 parentID 时，校验其是否为容器块（仅在旧版本需要此限制）
-    if (anchorType === "parentID" && isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
+    if (anchorType === "parentID" && isNonContainerBlockType(dbItem.type) && await isCurrentVersionLessThan("3.3.3")) {
         return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
     }
     const response = await insertBlockOriginAPI({data, dataType: "markdown", nextID, previousID, parentID});
@@ -156,7 +156,7 @@ async function prependBlockHandler(params, extra) {
     debugPush("前置内容块API被调用");
     // 检查块存在
     checkIdValid(parentID);
-    if (isValidNotebookId(parentID)) {
+    if (await isValidNotebookId(parentID)) {
         return createErrorResponse("parentID must be a block ID, not a notebook ID.");
     }
     const dbItem = await getBlockDBItem(parentID);
@@ -166,7 +166,7 @@ async function prependBlockHandler(params, extra) {
     if (await filterBlock(parentID, dbItem, PermissionBit.Write)) {
         return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
-    if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
+    if (isNonContainerBlockType(dbItem.type) && await isCurrentVersionLessThan("3.3.3")) {
         return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
     }
     // 执行
@@ -183,7 +183,7 @@ async function appendBlockHandler(params, extra) {
     debugPush("追加内容块API被调用");
     // 需要确认：1) 块存在 2) 块是文档块、不是notebook、不是paragraph
     checkIdValid(parentID);
-    if (isValidNotebookId(parentID)) {
+    if (await isValidNotebookId(parentID)) {
         return createErrorResponse("parentID must be a block ID, not a notebook ID.");
     }
     const dbItem = await getBlockDBItem(parentID);
@@ -193,7 +193,7 @@ async function appendBlockHandler(params, extra) {
     if (await filterBlock(parentID, dbItem, PermissionBit.Write)) {
         return createErrorResponse("The specified block is excluded by the user settings. Can't read or write.");
     }
-    if (isNonContainerBlockType(dbItem.type) && isCurrentVersionLessThan("3.3.3")) {
+    if (isNonContainerBlockType(dbItem.type) && await isCurrentVersionLessThan("3.3.3")) {
         return createErrorResponse("Invalid parentID: Cannot insert a block under a non-container block.");
     }
     //执行

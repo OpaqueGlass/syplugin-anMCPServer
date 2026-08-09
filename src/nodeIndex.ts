@@ -106,7 +106,7 @@ function pickLanguage() {
 async function loadPluginSettings(): Promise<any> {
     // 与插件侧一致：STORAGE_NAME + system.id 后 6 位，保存在插件数据目录下
     try {
-        const systemId: string = getKernelConfig()?.system?.id ?? "";
+        const systemId: string = (await getKernelConfig())?.system?.id ?? "";
         if (systemId.length >= 36) {
             const configKey = CONSTANTS.STORAGE_NAME + systemId.substring(30, 36);
             const saved = await getJSONFile(CONSTANTS.PLUGIN_DATA_SAVEPATH + configKey);

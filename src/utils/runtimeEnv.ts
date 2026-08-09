@@ -5,7 +5,7 @@
  * - 插件环境：直接读取 window.siyuan.*；
  * - CLI 环境：启动时调用 initKernelEnv()，通过 API 拉取内核配置
  *   （/api/file/getFile path=/conf/conf.json，返回值即 window.siyuan.config 的 json）
- *   与笔记本列表（/api/notebook/lsNotebooks），缓存供同步函数使用。
+ *   与笔记本列表（/api/notebook/lsNotebooks），缓存供异步函数使用。
  *
  * 注意：本文件仅允许依赖 @/syapi/apiClient（零依赖模块），避免循环引用。
  */
@@ -49,10 +49,10 @@ export async function refreshKernelConfig(): Promise<void> {
 }
 
 /**
- * 同步获取内核配置（即 window.siyuan.config 的等价物）。
+ * 异步获取内核配置（即 window.siyuan.config 的等价物）。
  * 插件环境：window.siyuan.config；CLI 环境：initKernelEnv() 拉取的缓存。
  */
-export function getKernelConfig(): any {
+export async function getKernelConfig(): Promise<any> {
     if (isPluginEnv()) {
         return (window as any).siyuan.config;
     }
@@ -84,15 +84,15 @@ export async function refreshNotebookCache(): Promise<void> {
 }
 
 /**
- * 同步获取笔记本列表（即 window.siyuan.notebooks 的等价物）。
- * CLI 环境下若缓存超过 TTL，会触发一次后台异步刷新（本次调用仍返回旧值）。
+ * 异步获取笔记本列表（即 window.siyuan.notebooks 的等价物）。
+ * 插件环境：window.siyuan.notebooks；CLI 环境下若缓存为空或超过 TTL，会 await 一次刷新后再返回（保证返回最新数据）。
  */
-export function getNotebooksSync(): any[] {
+export async function getNotebooks(): Promise<any[]> {
     if (isPluginEnv()) {
         return (window as any).siyuan.notebooks ?? [];
     }
-    if (notebookCache != null && Date.now() - notebookCacheTime > NOTEBOOK_CACHE_TTL_MS) {
-        refreshNotebookCache().catch(() => { /* 后台刷新失败时保留旧缓存 */ });
+    if (notebookCache == null || Date.now() - notebookCacheTime > NOTEBOOK_CACHE_TTL_MS) {
+        await refreshNotebookCache();
     }
     return notebookCache ?? [];
 }
@@ -115,11 +115,11 @@ export async function initKernelEnv(): Promise<void> {
 /* ------------------------------------------------------------------ */
 
 /** 鉴权码加密盐（插件与 CLI 使用同一工作空间时结果一致，保证格式兼容） */
-export function getAuthSalt(): string {
-    return getKernelConfig()?.system?.id ?? "glass";
+export async function getAuthSalt(): Promise<string> {
+    return (await getKernelConfig())?.system?.id ?? "glass";
 }
 
 /** 工作空间目录 */
-export function getWorkspaceDir(): string {
-    return getKernelConfig()?.system?.workspaceDir ?? "";
+export async function getWorkspaceDir(): Promise<string> {
+    return (await getKernelConfig())?.system?.workspaceDir ?? "";
 }

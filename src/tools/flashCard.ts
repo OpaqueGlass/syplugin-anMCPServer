@@ -79,7 +79,7 @@ async function addFlashCardMarkdown(params, extra) {
     if (!await isValidDeck(deckId)) {
         return createErrorResponse("制卡失败：卡包DeckId不存在，如果用户没有明确指定卡包名称或ID，可以将参数deckId设置为\"\"");
     }
-    if (type === "highlight" && !getKernelConfig()?.editor?.markdown?.inlineMath) {
+    if (type === "highlight" && !(await getKernelConfig())?.editor?.markdown?.inlineMath) {
         return createErrorResponse("制卡失败：高亮内容制卡需要用户启用Markdown标记语法，请提醒用户开启此功能（设置-编辑器-Markdown行级标记语法）");
     }
     const {result, newDocId} = await createNewDocWithParentId(parentId, docTitle, markdownContent);
@@ -197,7 +197,7 @@ async function parseDocAddCards(docId:string, addType: string, deckId: string) {
 }
 
 async function listDeck(params, extra) {
-    if (!getKernelConfig()?.flashcard?.deck) {
+    if (!(await getKernelConfig())?.flashcard?.deck) {
         return createSuccessResponse("用户禁用了卡包，在调用其他工具时，可以直接将参数deckId设置为\"\"");
     }
     const deckResponse = await getRiffDecks();

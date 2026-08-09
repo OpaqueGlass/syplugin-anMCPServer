@@ -5,7 +5,7 @@
 import { isValidStr } from "@/utils/commonCheck";
 import { warnPush, errorPush, debugPush, logPush } from "@/logger"
 import { getApiClient } from "./apiClient";
-import { getNotebooksSync } from "@/utils/runtimeEnv";
+import { getKernelConfig, getNotebooks } from "@/utils/runtimeEnv";
 /**向思源api发送请求
  * @param data 传递的信息（body）
  * @param url 请求的地址
@@ -556,9 +556,9 @@ export async function getNodebookList() {
  * @param {*} notebookId 为空获得所有笔记本信息
  * @returns 
  */
-export function getNotebookInfoLocallyF(notebookId = undefined) {
+export async function getNotebookInfoLocallyF(notebookId = undefined) {
     try {
-        const notebooks = getNotebooksSync();
+        const notebooks = await getNotebooks();
         if (!notebookId) return notebooks;
         for (let notebookInfo of notebooks) {
             if (notebookInfo.id == notebookId) {
@@ -578,11 +578,11 @@ export function getNotebookInfoLocallyF(notebookId = undefined) {
  * @param {*} notebookId 笔记本id，不传则为文档树排序
  * @returns 
  */
-export function getNotebookSortModeF(notebookId = undefined) {
+export async function getNotebookSortModeF(notebookId = undefined) {
     try {
-        let fileTreeSort = window.top.siyuan.config.fileTree.sort;
+        let fileTreeSort = (await getKernelConfig())?.fileTree?.sort;
         if (!notebookId) return fileTreeSort;
-        let notebookSortMode = window.document.querySelector(`.file-tree.sy__file ul[data-url='${notebookId}']`)?.getAttribute("data-sortmode") ?? getNotebookInfoLocallyF(notebookId).sortMode;
+        let notebookSortMode = window.document.querySelector(`.file-tree.sy__file ul[data-url='${notebookId}']`)?.getAttribute("data-sortmode") ?? (await getNotebookInfoLocallyF(notebookId))?.sortMode;
         if (typeof notebookSortMode === "string") {
             notebookSortMode = parseInt(notebookSortMode, 10);
         }

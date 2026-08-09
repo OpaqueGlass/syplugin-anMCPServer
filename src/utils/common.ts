@@ -154,7 +154,7 @@ let lastClickTime_openRefLinkByAPI = 0;
  * @param autoRemoveJudgeMiliseconds 自动判断是否移除当前Tab的时间间隔（0则 不自动判断）
  * @returns 
  */
-export function openRefLinkByAPI({mouseEvent, paramDocId = "", keyParam = {}, openInFocus = undefined, removeCurrentTab = undefined, autoRemoveJudgeMiliseconds = 0}: {mouseEvent?: MouseEvent, paramDocId?: string, keyParam?: any, openInFocus?: boolean, removeCurrentTab?: boolean, autoRemoveJudgeMiliseconds?: number}) {
+export async function openRefLinkByAPI({mouseEvent, paramDocId = "", keyParam = {}, openInFocus = undefined, removeCurrentTab = undefined, autoRemoveJudgeMiliseconds = 0}: {mouseEvent?: MouseEvent, paramDocId?: string, keyParam?: any, openInFocus?: boolean, removeCurrentTab?: boolean, autoRemoveJudgeMiliseconds?: number}) {
     let docId: string;
     if (mouseEvent && (mouseEvent.currentTarget as HTMLElement)?.getAttribute("data-node-id")) {
         docId = (mouseEvent.currentTarget as HTMLElement)?.getAttribute("data-node-id");
@@ -205,13 +205,13 @@ export function openRefLinkByAPI({mouseEvent, paramDocId = "", keyParam = {}, op
             zoomIn: openInFocus
         },
         position: positionKey,
-        keepCursor: isEventCtrlKey(keyParam) ? true : undefined,
+        keepCursor: await isEventCtrlKey(keyParam) ? true : undefined,
         removeCurrentTab: removeCurrentTab, // 目前这个选项的行为是：true，则当前页签打开；false，则根据思源设置：新页签打开
     };
     debugPush("打开文档执行参数", finalParam);
     openTab(finalParam);
     // 后台打开页签不可移除
-    if (removeCurrentTab && !isEventCtrlKey(keyParam)) {
+    if (removeCurrentTab && !await isEventCtrlKey(keyParam)) {
         debugPush("插件自行移除页签");
         removeCurrentTabF(needToCloseDocId);
         removeCurrentTab = false;

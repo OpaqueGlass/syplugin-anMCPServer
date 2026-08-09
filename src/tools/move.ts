@@ -48,7 +48,7 @@ async function moveDocsByIds(params, extra) {
     const { ids, toId } = params;
     debugPush("通过ID移动文档");
     // 检查输入
-    if (isValidNotebookId(toId)) {
+    if (await isValidNotebookId(toId)) {
         if (await filterNotebook(toId, PermissionBit.Write)) {
             return createErrorResponse("The specified target notebook is excluded by the user settings. So cannot write or read. ");
         }
