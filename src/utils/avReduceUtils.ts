@@ -245,15 +245,15 @@ export async function fromCellValueValueVoToAPIValue(vo: RowColumnDataValueVo, c
                 "formattedContent": ""
             }
             if (isValidStr(vo["startDate"])) {
-                result["content"] = new Date(vo["startDate"]).getTime();
-                result["isNotEmplty"] = true;
+                valueObject["content"] = new Date(vo["startDate"]).getTime();
+                valueObject["isNotEmpty"] = true;
             } else {
                 throw new CellValueConversionError(ConversionErrorType.INVALID_FORMAT, "该列为date类型，startDate字段不能为空");
             }
             if (isValidStr(vo["endDate"])) {
-                result["hasEndDate"] = true;
-                result["content2"] = new Date(vo["endDate"]).getTime();
-                result["isNotEmplty2"] = true;
+                valueObject["hasEndDate"] = true;
+                valueObject["content2"] = new Date(vo["endDate"]).getTime();
+                valueObject["isNotEmpty2"] = true;
             }
             break;
         }
@@ -310,7 +310,7 @@ export async function fromCellValueValueVoToAPIValue(vo: RowColumnDataValueVo, c
                     }
                 }
                 valueObject = {
-                    "blockID": vo as string[]
+                    "blockIDs": vo as string[]
                 }
             } else {
                 throw new CellValueConversionError(ConversionErrorType.INVALID_FORMAT, "该列为relation类型，值应该为字符串数组，且每个字符串为关联到的数据库中存在的行id");
