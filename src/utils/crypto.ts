@@ -1,5 +1,6 @@
 import { logPush } from "@/logger";
 import { getPluginInstance } from "./pluginHelper";
+import { getAuthSalt } from "./runtimeEnv";
 
 export async function calculateSHA256(fileOrString) {
   // 如果是字符串，先转成 ArrayBuffer
@@ -21,7 +22,7 @@ export async function calculateSHA256(fileOrString) {
 }
 
 export async function isAuthTokenValid(inputCode:string) {
-    inputCode += window?.siyuan?.config?.system?.id ?? "glass";
+    inputCode += getAuthSalt();
     inputCode = await calculateSHA256(inputCode);
     const plugin = getPluginInstance();
     if (plugin?.mySettings["authCode"] === inputCode) {
@@ -32,6 +33,6 @@ export async function isAuthTokenValid(inputCode:string) {
 }
 
 export async function encryptAuthCode(inputCode:string) {
-    inputCode += window?.siyuan?.config?.system?.id ?? "glass";
+    inputCode += getAuthSalt();
     return await calculateSHA256(inputCode);
 }

@@ -13,7 +13,20 @@ LEVEL 4 Err + Warn + Info + Log
 LEVEL 5 Err + Warn + Info + Log + Debug
 请注意，基于代码片段加入window下的debug设置，可能在刚载入挂件时无效
 */
+// CLI stdio 模式下，stdout 被 MCP 协议占用，所有日志必须走 stderr
+let g_forceStderr = false;
+export function setLoggerStderrMode(flag: boolean) {
+    g_forceStderr = flag;
+}
+
+export function setLoggerLevel(level: number) {
+    g_DEBUG = level;
+}
+
 export function commonPushCheck() {
+    if (typeof window === "undefined" || window.top == null) {
+        return g_DEBUG;
+    }
     if (window.top["OpaqueGlassDebugV2"] == undefined || window.top["OpaqueGlassDebugV2"][g_NAME] == undefined) {
         return g_DEBUG;
     }
@@ -26,19 +39,19 @@ export function isDebugMode() {
 
 export function debugPush(str: string, ...args: any[]) {
     if (commonPushCheck() >= 5) {
-        console.debug(`${g_FULLNAME}[D] ${new Date().toLocaleTimeString()} ${str}`, ...args);
+        (g_forceStderr ? console.error : console.debug)(`${g_FULLNAME}[D] ${new Date().toLocaleTimeString()} ${str}`, ...args);
     }
 }
 
 export function infoPush(str: string, ...args: any[]) {
     if (commonPushCheck() >= 3) {
-        console.info(`${g_FULLNAME}[I] ${new Date().toLocaleTimeString()} ${str}`, ...args);
+        (g_forceStderr ? console.error : console.info)(`${g_FULLNAME}[I] ${new Date().toLocaleTimeString()} ${str}`, ...args);
     }
 }
 
 export function logPush(str: string, ...args: any[]) {
     if (commonPushCheck() >= 4) {
-        console.log(`${g_FULLNAME}[L] ${new Date().toLocaleTimeString()} ${str}`, ...args);
+        (g_forceStderr ? console.error : console.log)(`${g_FULLNAME}[L] ${new Date().toLocaleTimeString()} ${str}`, ...args);
     }
 }
 
@@ -50,6 +63,6 @@ export function errorPush(str: string, ... args: any[]) {
 
 export function warnPush(str: string, ... args: any[]) {
     if (commonPushCheck() >= 2) {
-        console.warn(`${g_FULLNAME}[W] ${new Date().toLocaleTimeString()} ${str}`, ...args);
+        (g_forceStderr ? console.error : console.warn)(`${g_FULLNAME}[W] ${new Date().toLocaleTimeString()} ${str}`, ...args);
     }
 }

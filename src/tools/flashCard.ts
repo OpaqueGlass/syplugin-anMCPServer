@@ -9,6 +9,7 @@ import { useWsIndexQueue } from "@/utils/wsMainHelper";
 import { TASK_STATUS, taskManager } from "@/utils/historyTaskHelper";
 import { filterBlock, filterDefault } from "@/utils/filterCheck";
 import { PermissionBit } from "@/constants";
+import { getKernelConfig } from "@/utils/runtimeEnv";
 
 const TYPE_VALID_LIST = ["h1", "h2", "h3", "h4", "h5", "highlight", "superBlock"] as const;
 
@@ -78,7 +79,7 @@ async function addFlashCardMarkdown(params, extra) {
     if (!await isValidDeck(deckId)) {
         return createErrorResponse("制卡失败：卡包DeckId不存在，如果用户没有明确指定卡包名称或ID，可以将参数deckId设置为\"\"");
     }
-    if (type === "highlight" && !window.siyuan.config.editor.markdown.inlineMath) {
+    if (type === "highlight" && !getKernelConfig()?.editor?.markdown?.inlineMath) {
         return createErrorResponse("制卡失败：高亮内容制卡需要用户启用Markdown标记语法，请提醒用户开启此功能（设置-编辑器-Markdown行级标记语法）");
     }
     const {result, newDocId} = await createNewDocWithParentId(parentId, docTitle, markdownContent);
@@ -196,7 +197,7 @@ async function parseDocAddCards(docId:string, addType: string, deckId: string) {
 }
 
 async function listDeck(params, extra) {
-    if (!window.siyuan.config.flashcard.deck) {
+    if (!getKernelConfig()?.flashcard?.deck) {
         return createSuccessResponse("用户禁用了卡包，在调用其他工具时，可以直接将参数deckId设置为\"\"");
     }
     const deckResponse = await getRiffDecks();

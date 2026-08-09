@@ -8,6 +8,7 @@ import { debugPush, errorPush, logPush } from "@/logger";
 import { isValidStr } from "@/utils/commonCheck";
 import { lang } from "@/utils/lang";
 import { filterBlock } from "@/utils/filterCheck";
+import { getKernelConfig } from "@/utils/runtimeEnv";
 
 export class DocReadToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
@@ -58,7 +59,7 @@ async function blockReadHandler(params, extra) {
     }
     const markdown = await exportMdContent({id: blockId, refMode: 4, embedMode: 1, yfm: false});
     // 返回块内容时，不应当返回文档标题，需要判断设置项
-    if (dbItem.type != "d" && isValidStr(markdown["content"]) && window.siyuan.config.export.addTitle) {
+    if (dbItem.type != "d" && isValidStr(markdown["content"]) && getKernelConfig()?.export?.addTitle) {
         markdown["content"] = markdown["content"].replace(/^#{1,6}\s+.*\n?/, '');
     }
     const content = markdown["content"] || "";

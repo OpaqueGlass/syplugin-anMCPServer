@@ -180,4 +180,7 @@ class TaskManager {
 }
 
 export const taskManager = new TaskManager();
-taskManager.init();
+// 插件环境：模块加载时即初始化；CLI 环境：由 nodeIndex 在 ApiClient 配置完成后调用 init()
+if (typeof window !== "undefined") {
+    taskManager.init();
+}

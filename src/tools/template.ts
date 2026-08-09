@@ -7,8 +7,8 @@ import { getBlockDBItem, getChildDocumentIds, getDocDBitem, getSubDocIds } from 
 import { filterBlock } from "@/utils/filterCheck";
 import { isValidHTML, validatePath } from "@/utils/commonCheck";
 import { wrapTemplateFilePath } from "@/utils/common";
-import item from "element-plus/lib/components/space/src/item.js";
 import { PermissionBit } from "@/constants";
+import { getWorkspaceDir, isPluginEnv } from "@/utils/runtimeEnv";
 
 export class TemplateToolProvider extends McpToolsProvider<any> {
     async _getTools(): Promise<McpTool<any>[]> {
@@ -167,10 +167,18 @@ async function previewRenderedTemplateTool(params, extra) {
     const templateItem = await getTemplateItemByName(name);
     if (templateItem) {
         const template = await renderTemplate(id, templateItem.path);
-        const testLute = window.Lute.New();
-        const test = testLute.BlockDOM2Md(template);
+        // @ts-ignore CLI（Node.js）环境下没有 Lute，退化为直接返回渲染后的块 DOM
+        if (isPluginEnv() && typeof window !== "undefined" && window?.Lute?.New) {
+            // @ts-ignore
+            const testLute = window.Lute.New();
+            const test = testLute.BlockDOM2Md(template);
+            return createJsonResponse({
+                "renderedMarkdown": test,
+            });
+        }
         return createJsonResponse({
-            "renderedMarkdown": test,
+            "renderedBlockDOM": template,
+            "note": "Markdown preview is unavailable in CLI mode; returning rendered block DOM instead.",
         });
     }
     return createErrorResponse("Template not found: " + name);
@@ -207,7 +215,7 @@ async function getRawTemplate(params, extra) {
     }
     const templateItem = await getTemplateItemByName(name);
     if (templateItem) {
-        const fileResponse = await getFileAPIv2(templateItem.path.replaceAll(window.siyuan.config.system.workspaceDir, ""));
+        const fileResponse = await getFileAPIv2(templateItem.path.replaceAll(getWorkspaceDir(), ""));
         if (!fileResponse) {
             return createErrorResponse("Failed to retrieve template file: " + name);
         }

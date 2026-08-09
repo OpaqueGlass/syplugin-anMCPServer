@@ -1,4 +1,5 @@
 import { CONSTANTS } from "@/constants";
+import { getKernelConfig, getNotebooksSync } from "./runtimeEnv";
 
 /**
  * 判定字符串是否有效
@@ -39,7 +40,9 @@ export function isBlankStr(s: any): boolean {
 
 let cacheIsMacOs = undefined;
 export function isMacOs() {
-	let platform = window.top.siyuan.config.system.os ?? navigator.platform ?? "ERROR";
+	let platform = getKernelConfig()?.system?.os
+		?? (typeof navigator !== "undefined" ? navigator.platform : undefined)
+		?? "ERROR";
     platform = platform.toUpperCase();
     let isMacOSFlag = cacheIsMacOs;
     if (cacheIsMacOs == undefined) {
@@ -69,7 +72,7 @@ export function isSelectQuery(sql: string): boolean {
 }
 
 export function isValidNotebookId(id: string) {
-    const notebooks = window.siyuan.notebooks;
+    const notebooks = getNotebooksSync();
     const result = notebooks.find(item=>item.id === id);
     return result != null;
 }
@@ -153,7 +156,7 @@ const parseVersion = (version: string): number[] => {
  */
 export function isCurrentVersionLessThan(version: string): boolean {
     const parsedInputVersion = parseVersion(version);
-    const parsedCurrentVersion = parseVersion(window.siyuan.config.system.kernelVersion);
+    const parsedCurrentVersion = parseVersion(getKernelConfig()?.system?.kernelVersion);
 
     const len = Math.max(parsedCurrentVersion.length, parsedInputVersion.length);
 

@@ -150,7 +150,7 @@ export function getUpdateString(){
  */
 export function generateBlockId(){
     // @ts-ignore
-    if (window?.Lute?.NewNodeID) {
+    if (typeof window !== "undefined" && window?.Lute?.NewNodeID) {
         // @ts-ignore
         return window.Lute.NewNodeID();
     }

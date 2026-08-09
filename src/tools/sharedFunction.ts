@@ -1,12 +1,12 @@
 import { createDocWithPath } from "@/syapi";
-import { checkIdValid, getDocDBitem } from "@/syapi/custom";
+import { checkIdValid, generateBlockId, getDocDBitem } from "@/syapi/custom";
 import { isValidNotebookId, isValidStr } from "@/utils/commonCheck";
 
 export async function createNewDocWithParentId(parentId:string, title:string, markdownContent: string) {
     checkIdValid(parentId);
     // 判断是否是笔记本id
     const notebookIdFlag = isValidNotebookId(parentId);
-    const newDocId = window.Lute.NewNodeID();
+    const newDocId = generateBlockId();
     const createParams = { 
         "notebook": parentId, 
         "path": `/${newDocId}.sy`, "title": title, "md": markdownContent, "listDocTree": false };

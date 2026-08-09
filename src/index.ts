@@ -12,7 +12,7 @@ import MyMCPServer from "./server";
 import { setPluginInstance } from "./utils/pluginHelper";
 import { infoPush, isDebugMode, logPush } from "./logger";
 import { lang, setLanguage } from "./utils/lang";
-import { CONSTANTS } from "./constants";
+import { CONSTANTS, DEFAULT_SETTING } from "./constants";
 import { isAuthCodeSetted, isValidAuthCode, isValidStr } from "./utils/commonCheck";
 import { calculateSHA256, encryptAuthCode } from "./utils/crypto";
 import EventHandler from "./utils/eventHandler";
@@ -28,21 +28,6 @@ import { setBlockPermission, setNotebookPermission } from "./utils/permission/pe
 
 let STORAGE_NAME = CONSTANTS.STORAGE_NAME;
 
-const DEFAULT_SETTING = {
-    address: "127.0.0.1",
-    port: "16806",
-    autoStart: false,
-    readOnly: "allow_all", // "allow_all", "allow_non_destructive", "deny_all"
-    authCode: CONSTANTS.CODE_UNSET,
-    ragBaseUrl: undefined,
-    autoApproveLocalChange: false, // 是否自动批准原地更改
-    autoApproveDeleteChange: false, // 是否自动批准删除更改
-    filterDocuments: "",   // 多行文本，每行一个文档 id
-    filterNotebooks: "",   // 多行文本，每行一个笔记本 id
-    allowedHosts: "",
-    defaultPermission: 7, // 默认权限，0-7每个位代表不同权限，1=读，2=写，4=删除
-    "@version": CONSTANTS.VERSION_CODE,
-}
 
 export default class OGanMCPServerPlugin extends Plugin {
 

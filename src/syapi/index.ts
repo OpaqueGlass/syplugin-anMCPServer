@@ -2,26 +2,16 @@
  * API.js
  * 用于发送思源api请求。
  */
-import { getToken } from "@/utils/common";
 import { isValidStr } from "@/utils/commonCheck";
 import { warnPush, errorPush, debugPush, logPush } from "@/logger"
+import { getApiClient } from "./apiClient";
+import { getNotebooksSync } from "@/utils/runtimeEnv";
 /**向思源api发送请求
  * @param data 传递的信息（body）
  * @param url 请求的地址
  */
 export async function postRequest(data: any, url:string){
-    let result;
-    await fetch(url, {
-        body: JSON.stringify(data),
-        method: 'POST',
-        headers: {
-            // "Authorization": "Token "+ getToken(),
-            "Content-Type": "application/json"
-        }
-    }).then((response) => {
-        result = response.json();
-    });
-    return result;
+    return getApiClient().postJson(url, data);
 }
 
 export async function getResponseData(promiseResponse){
@@ -568,8 +558,9 @@ export async function getNodebookList() {
  */
 export function getNotebookInfoLocallyF(notebookId = undefined) {
     try {
-        if (!notebookId) return window.top.siyuan.notebooks;
-        for (let notebookInfo of window.top.siyuan.notebooks) {
+        const notebooks = getNotebooksSync();
+        if (!notebookId) return notebooks;
+        for (let notebookInfo of notebooks) {
             if (notebookInfo.id == notebookId) {
                 return notebookInfo;
             }
@@ -746,6 +737,10 @@ export async function renameDocAPI(notebookid, path, title) {
 }
 
 export function isDarkMode() {
+    if (typeof window === "undefined") {
+        // CLI（Node.js）环境无 UI，默认按浅色处理
+        return false;
+    }
     if (window.top.siyuan) {
         return window.top.siyuan.config.appearance.mode == 1 ? true : false;
     } else {
@@ -795,10 +790,7 @@ export async function createFolder(path:string) {
     const data = new FormData();
     data.append("path", path);
     data.append("isDir", "true");
-    return fetch(url, {
-        body: data,
-        method: 'POST',
-    }).then((response) => {
+    return getApiClient().postFormData(url, data).then((response) => {
         return response.json();
     });
     
@@ -827,13 +819,7 @@ export async function putJSONFile(path, object, format = false) {
     data.append("isDir", "false");
     data.append("modTime", new Date().valueOf().toString());
     data.append("file", file);
-    return fetch(url, {
-        body: data,
-        method: 'POST',
-        headers: {
-            "Authorization": "Token "+ getToken()
-        }
-    }).then((response) => {
+    return getApiClient().postFormData(url, data).then((response) => {
         return response.json();
     });
 }
@@ -858,13 +844,7 @@ export async function putStringFile(path, object, format = false) {
     data.append("modTime", Date.now().toString());
     data.append("file", file);
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            body: data,
-            headers: {
-                "Authorization": "Token " + getToken()
-            }
-        });
+        const response = await getApiClient().postFormData(url, data);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -898,14 +878,7 @@ export async function getFileAPI(path) {
     const url = "/api/file/getFile";
     let data = {"path": path};
     let result;
-    let response = await fetch(url, {
-        body: JSON.stringify(data),
-        method: 'POST',
-        headers: {
-            "Authorization": "Token "+ getToken(),
-            "Content-Type": "application/json"
-        }
-    });
+    let response = await getApiClient().postRaw(url, data);
     result = await response.text();
     try {
         let jsonresult = JSON.parse(result);
@@ -928,14 +901,7 @@ export async function getFileAPIv2(path:string) {
     const url = "/api/file/getFile";
     const data = { path };
     
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            "Authorization": "Token " + getToken(),
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    });
+    const response = await getApiClient().postRaw(url, data);
 
     const contentType = response.headers.get("Content-Type") || "";
 

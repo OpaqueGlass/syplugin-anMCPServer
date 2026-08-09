@@ -5,9 +5,10 @@ import { getPluginInstance } from "./pluginHelper";
 import { getCurrentDocIdF, isMobile } from "@/syapi";
 import { removeCurrentTabF } from "@/syapi/custom";
 import { lang } from "./lang";
+import { getApiClient } from "@/syapi/apiClient";
 
 export function getToken(): string {
-    return "";
+    return getApiClient().getApiKey() ?? "";
 }
 
 /**
@@ -283,6 +284,9 @@ export function getFormattedTimestr() {
 }
 
 export function isPluginExist(pluginName: string) {
+    if (typeof window === "undefined" || (window as any)?.siyuan?.ws?.app?.plugins == null) {
+        return false;
+    }
     const plugins = window.siyuan.ws.app.plugins;
     return plugins?.some((plugin) => plugin.name === pluginName);
 }

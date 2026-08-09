@@ -8,3 +8,6 @@ index.css
 index.js
 scripts/devInfo.json
 dev/
+.workbuddy/
+bin/
+*.log

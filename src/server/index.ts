@@ -33,9 +33,12 @@ import mdSyntaxMD from "@/../static/data_md_syntax_CN.md";
 import templateFunctionMD from "@/../static/data_template_action_CN.md";
 import sqlBlockDatabaseSchemaMD from "@/../static/database_schema.md";
 
+import { getWorkspaceDir, isPluginEnv } from '@/utils/runtimeEnv';
+
 const http = require("http");
 const https = require("https");
 const fs = require("fs");
+const nodePath = require("path");
 
 interface MCPTransportInfo {
     sessionId: string;
@@ -71,7 +74,6 @@ export default class MyMCPServer {
             new SearchToolProvider(),
             new DocReadToolProvider(),
             new RelationToolProvider(),
-            new DocVectorSearchProvider(),
             new FlashcardToolProvider(),
             new AttributeToolProvider(),
             new BlockWriteToolProvider(),
@@ -79,6 +81,10 @@ export default class MyMCPServer {
             new TemplateToolProvider(),
             new AttributeViewToolProvider(),
         ];
+        // vectorSearch 依赖浏览器环境（window 向量索引服务），CLI 下不注册
+        if (isPluginEnv()) {
+            this.toolProviders.push(new DocVectorSearchProvider());
+        }
     }
     cleanTransport(transportInfo: MCPTransportInfo) {
         const sessionId = transportInfo.sessionId;
@@ -125,8 +131,12 @@ export default class MyMCPServer {
             allowedHosts = undefined;
         }
         try {
-            let keyFile = fs.readFileSync(window.siyuan.config.system.workspaceDir + '/data/storage/petal/syplugin-anMCPServer/server-key.pem');
-            let certFile = fs.readFileSync(window.siyuan.config.system.workspaceDir + '/data/storage/petal/syplugin-anMCPServer/server-cert.pem');
+            // 插件环境：读取工作空间插件数据目录下的证书；CLI 环境：读取命令启动目录下的同名文件
+            const certDir = isPluginEnv()
+                ? getWorkspaceDir() + '/data/storage/petal/syplugin-anMCPServer'
+                : process.cwd();
+            let keyFile = fs.readFileSync(nodePath.join(certDir, 'server-key.pem'));
+            let certFile = fs.readFileSync(nodePath.join(certDir, 'server-cert.pem'));
             this.tryHttps = true;
             this.httpsOptions = {
                 key: keyFile,
