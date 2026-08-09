@@ -2,7 +2,7 @@
   "name": "syplugin-anMCPServer",
   "author": "OpaqueGlass",
   "url": "https://github.com/OpaqueGlass/syplugin-anMCPServer",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "minAppVersion": "2.9.0",
   "disabledInPublish": true,
   "backends": [
@@ -15,15 +15,11 @@
   ],
   "displayName": {
     "default": "A MCP server for Siyuan",
-    "zh_CN": "这是一个MCP服务端插件"
+    "zh-CN": "这是一个MCP服务端插件"
   },
   "description": {
     "default": "Start a MCP server in siyuan",
-    "zh_CN": "在思源中启动MCP服务"
-  },
-  "readme": {
-    "default": "README.md",
-    "zh_CN": "README_zh_CN.md"
+    "zh-CN": "在思源中启动MCP服务"
   },
   "funding": {
     "openCollective": "",
