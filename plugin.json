@@ -21,6 +21,10 @@
     "default": "Start a MCP server in siyuan",
     "zh-CN": "在思源中启动MCP服务"
   },
+  "readme": {
+    "default": "README.md",
+    "zh-CN": "README_zh_CN.md"
+  },
   "funding": {
     "openCollective": "",
     "patreon": "",
